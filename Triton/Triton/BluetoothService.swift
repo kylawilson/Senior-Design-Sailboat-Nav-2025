@@ -36,7 +36,7 @@ extension BluetoothService: CBCentralManagerDelegate {
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        print("Discovered \(peripheral.name)")
+        print("Discovered \(peripheral.name ?? "DEFAULT: noname")")
         
     }
 }
