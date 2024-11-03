@@ -8,5 +8,14 @@
 import Foundation
 import CoreBluetooth
 
-let tritonServiceUUID = "de7f5b6d-79b3-4afa-82ed-ecf20c4d5" //custom service UUID
-let tritonService = CBUUID(string: tritonServiceUUID)       //CBUUID for our custom service UUID
+enum ConnectionStatus {
+    case connected
+    case disconnected
+    case connecting
+    case disconnecting
+    case scanning
+    case error
+}
+
+let tritonServiceUUID : String = "de7f5b6d-79b3-4afa-82ed-ecf20c4d5" //custom service UUID
+let tritonService : CBUUID = CBUUID(string: tritonServiceUUID)       //CBUUID for our custom service UUID

@@ -10,6 +10,7 @@ import CoreBluetooth
 
 class BluetoothService: NSObject, ObservableObject {
     
+    @Published var connectionState: ConnectionStatus = .disconnected
     private var centralManager: CBCentralManager
     
     override init() {
@@ -21,6 +22,7 @@ class BluetoothService: NSObject, ObservableObject {
     }
     
     func scanForPeripherals() {
+        connectionState = .scanning
         centralManager.scanForPeripherals(withServices: [ tritonService ])
     }
 }
@@ -31,5 +33,10 @@ extension BluetoothService: CBCentralManagerDelegate {
         if central.state == .poweredOn {
             scanForPeripherals()
         }
+    }
+    
+    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        print("Discovered \(peripheral.name)")
+        
     }
 }
