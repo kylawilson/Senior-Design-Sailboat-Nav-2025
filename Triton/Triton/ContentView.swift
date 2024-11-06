@@ -8,12 +8,16 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    var btService: BluetoothService = BluetoothService()
+    
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+            Button(action: {
+                btService.scanForPeripherals()
+            }) {
+                Text("Scan")
+            }
         }
         .padding()
     }
