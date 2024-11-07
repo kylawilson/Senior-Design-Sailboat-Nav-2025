@@ -13,11 +13,11 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            Button(action: {
-                btService.scanForPeripherals()
-            }) {
-                Text("Scan")
-            }
+//            Button(action: {
+//                btService.scanForPeripherals()
+//            }) {
+//                Text("Scan")
+//            }
         }
         .padding()
     }

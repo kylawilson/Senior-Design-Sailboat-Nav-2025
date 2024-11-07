@@ -17,5 +17,5 @@ enum ConnectionStatus {
     case error
 }
 
-let tritonServiceUUID : String = "de7f5b6d-79b3-4afa-82ed-ecf20c4d5" //custom service UUID
+let tritonServiceUUID : String = "ec2ce16f-f774-4c1f-b3dd-a56b64bc9037" //custom service UUID
 let tritonService : CBUUID = CBUUID(string: tritonServiceUUID)       //CBUUID for our custom service UUID
