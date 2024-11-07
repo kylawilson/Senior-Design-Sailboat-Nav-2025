@@ -18,7 +18,7 @@ class BluetoothService: NSObject, ObservableObject {
         centralManager = CBCentralManager()
         super.init()
         //after super.init() , initialize to true value
-        centralManager = CBCentralManager(delegate: self, queue: nil)
+        centralManager = CBCentralManager.init(delegate: self, queue: nil)
     }
     
     func scanForPeripherals() {
@@ -31,6 +31,7 @@ extension BluetoothService: CBCentralManagerDelegate {
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         if central.state == .poweredOn {
+            print("scanning for peripherals")
             scanForPeripherals()
         }
     }
