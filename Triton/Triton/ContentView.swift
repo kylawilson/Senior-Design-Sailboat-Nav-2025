@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
+import CoreBluetooth
 
 struct ContentView: View {
     
-    var btService: BluetoothService = BluetoothService()
+    @ObservedObject var btService: BluetoothService = BluetoothService()
     
     var body: some View {
         VStack {
@@ -18,11 +19,17 @@ struct ContentView: View {
             }) {
                 Text("Scan")
             }
+            List(btService.discoveredPeripherals, id: \.identifier) { peripheral in
+                Text(peripheral.name ?? "Unnamed Peripheral")
+            }
+            .toolbar{ EditButton() }
+            .padding()
         }
-        .padding()
     }
 }
 
+
 #Preview {
-    ContentView()
+    var btService = BluetoothService()
+    ContentView(btService: btService)
 }

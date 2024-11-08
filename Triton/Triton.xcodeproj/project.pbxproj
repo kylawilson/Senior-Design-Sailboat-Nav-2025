@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		A97296DA2CDD6A8D008179B4 /* info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A97296D92CDD6A8D008179B4 /* info.plist */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		A955B1102CD31158005296D6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -31,7 +27,6 @@
 		A955B0FF2CD31154005296D6 /* Triton.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Triton.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A955B10F2CD31158005296D6 /* TritonTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TritonTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A955B1192CD31158005296D6 /* TritonUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TritonUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A97296D92CDD6A8D008179B4 /* info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -80,7 +75,6 @@
 		A955B0F62CD31154005296D6 = {
 			isa = PBXGroup;
 			children = (
-				A97296D92CDD6A8D008179B4 /* info.plist */,
 				A955B1012CD31154005296D6 /* Triton */,
 				A955B1122CD31158005296D6 /* TritonTests */,
 				A955B11C2CD31158005296D6 /* TritonUITests */,
@@ -218,7 +212,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A97296DA2CDD6A8D008179B4 /* info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,6 +399,7 @@
 				DEVELOPMENT_TEAM = QUKYBXQ3JB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -436,6 +430,7 @@
 				DEVELOPMENT_TEAM = QUKYBXQ3JB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
