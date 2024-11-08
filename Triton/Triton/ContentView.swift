@@ -19,17 +19,23 @@ struct ContentView: View {
             }) {
                 Text("Scan")
             }
-            List(btService.discoveredPeripherals, id: \.identifier) { peripheral in
-                Text(peripheral.name ?? "Unnamed Peripheral")
+            HStack {
+                List(btService.discoveredPeripherals, id: \.identifier) { peripheral in
+                    Text(peripheral.name ?? "Unnamed Peripheral")
+                    Button(action: {
+                        btService.connectToPeripheral(peripheral: peripheral)
+                    }) {
+                        Text("Connect")
+                            .foregroundColor(.blue)
+                    }
+                }
+                .padding()
             }
-            .toolbar{ EditButton() }
-            .padding()
         }
     }
 }
 
 
 #Preview {
-    var btService = BluetoothService()
-    ContentView(btService: btService)
+    ContentView()
 }

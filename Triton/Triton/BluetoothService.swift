@@ -28,6 +28,11 @@ class BluetoothService: NSObject, ObservableObject {
         connectionState = .scanning
         centralManager.scanForPeripherals(withServices: [ tritonService ])
     }
+    
+    func connectToPeripheral(peripheral: CBPeripheral) {
+        connectionState = .connecting
+        centralManager.connect(peripheral)
+    }
 }
 
 extension BluetoothService: CBCentralManagerDelegate {
