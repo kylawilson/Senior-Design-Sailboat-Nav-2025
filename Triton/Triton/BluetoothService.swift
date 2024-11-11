@@ -26,7 +26,7 @@ class BluetoothService: NSObject, ObservableObject {
     
     func scanForPeripherals() {
         connectionState = .scanning
-        centralManager.scanForPeripherals(withServices: [ tritonService ])
+        centralManager.scanForPeripherals(withServices: nil)
     }
     
     func connectToPeripheral(peripheral: CBPeripheral) {
@@ -39,14 +39,16 @@ extension BluetoothService: CBCentralManagerDelegate {
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         if central.state == .poweredOn {
-            print("scanning for peripherals")
-            scanForPeripherals()
+            print("Central Powered On")
+            //print("scanning for peripherals")
+            //scanForPeripherals()
         }
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        discoveredPeripherals.append(peripheral)
-        print("Discovered \(peripheral.name ?? "DEFAULT: noname")")
-        
+        if !discoveredPeripherals.contains(where: { $0.identifier == peripheral.identifier }) {
+            discoveredPeripherals.append(peripheral)
+            print("Discovered \(peripheral.name ?? peripheral.identifier.uuidString)")
+        }
     }
 }

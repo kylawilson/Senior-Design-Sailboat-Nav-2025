@@ -20,8 +20,9 @@ struct ContentView: View {
                 Text("Scan")
             }
             HStack {
+                //list the discovered peripherals
                 List(btService.discoveredPeripherals, id: \.identifier) { peripheral in
-                    Text(peripheral.name ?? "Unnamed Peripheral")
+                    Text(peripheral.name ?? peripheral.identifier.uuidString)
                     Button(action: {
                         btService.connectToPeripheral(peripheral: peripheral)
                     }) {
