@@ -12,7 +12,7 @@ class BluetoothService: NSObject, ObservableObject {
     
     @Published var connectionState: ConnectionStatus = .disconnected
     @Published var discoveredPeripherals: [ CBPeripheral ]
-    //@Published var dicoveredPeripheral: CBPeripheral
+    @Published var isScanning: Bool = false;
     private var centralManager: CBCentralManager
     
     override init() {
@@ -27,6 +27,13 @@ class BluetoothService: NSObject, ObservableObject {
     func scanForPeripherals() {
         connectionState = .scanning
         centralManager.scanForPeripherals(withServices: nil)
+        print("Scanning for peripherals")
+    }
+    
+    func stopScanningForPeripherals() {
+        connectionState = .disconnected
+        centralManager.stopScan()
+        print("Stopped scanning for peripherals")
     }
     
     func connectToPeripheral(peripheral: CBPeripheral) {

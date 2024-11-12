@@ -14,11 +14,17 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            Button(action: {
-                btService.scanForPeripherals()
-            }) {
-                Text("Scan")
-            }
+            Toggle("Scan", isOn: $btService.isScanning)
+                .onChange(of: btService.isScanning) {
+                    if btService.isScanning {
+                        btService.scanForPeripherals()
+                    } else {
+                        // Stop scanning
+                        btService.stopScanningForPeripherals()
+                    }
+                }
+
+            .padding()
             HStack {
                 //list the discovered peripherals
                 List(btService.discoveredPeripherals, id: \.identifier) { peripheral in
