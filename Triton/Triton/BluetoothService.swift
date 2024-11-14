@@ -122,7 +122,7 @@ extension BluetoothService: CBPeripheralDelegate {
         didDiscoverServices error: (any Error)? ) {
             guard let peripheralServices = peripheral.services else { return }
             for service in peripheralServices {
-                peripheral.discoverCharacteristics([TransferService.characteristicUUID], for: service)
+                peripheral.discoverCharacteristics([TransferService.tritonCharacteristicUUID], for: service)
             }
     }
 }
