@@ -9,7 +9,7 @@ import asyncio
 import struct
 from sys import exit
 
-serve = bluetooth.UUID(0x1848)
+serve = bluetooth.UUID(0x1848)  #is it ok if these are just whatever?
 charc = bluetooth.UUID(0x2A6E)
 IAM = "Central"
 
