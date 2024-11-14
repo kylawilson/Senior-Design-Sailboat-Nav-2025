@@ -17,5 +17,9 @@ enum ConnectionStatus {
     case error
 }
 
-let tritonServiceUUID : String = "ec2ce16f-f774-4c1f-b3dd-a56b64bc9037" //custom service UUID
-let tritonService : CBUUID = CBUUID(string: tritonServiceUUID)       //CBUUID for our custom service UUID
+struct TransferService {
+    //may need to add more service IDs - one for each device we connect to
+    static let tritonServiceUUID = CBUUID(string: "ec2ce16f-f774-4c1f-b3dd-a56b64bc9037") //custom service UUID
+    static let tritonCharacteristicUUID = CBUUID(string: "ec2ce16f-f774-4c1f-b3dd-a56b64bc9037") //I think we need one for each function the device performs
+}
+
