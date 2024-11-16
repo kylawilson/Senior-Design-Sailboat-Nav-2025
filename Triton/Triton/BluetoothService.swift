@@ -16,6 +16,7 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var isScanning: Bool = false
     private var centralManager: CBCentralManager
     private var connectedPeripheral: CBPeripheral?
+    private var transferCharacteristic: CBCharacteristic?
     
     override init() {
         //initialize to empty
@@ -29,8 +30,8 @@ class BluetoothService: NSObject, ObservableObject {
     
     func scanForPeripherals() {
         connectionState = .scanning
-        centralManager.scanForPeripherals(withServices: nil)    //scan for peripherals w all services
-        //centralManager.scanForPeripherals(withServices: [ tritonService ])    //scan fpr triton's service
+        //centralManager.scanForPeripherals(withServices: nil)    //scan for peripherals w all services
+        centralManager.scanForPeripherals(withServices: [ TransferService.tritonServiceUUID1, TransferService.tritonServiceUUID2 ])    //scan fpr triton's service
         print("Scanning for peripherals")
     }
     
@@ -42,8 +43,12 @@ class BluetoothService: NSObject, ObservableObject {
     
     func connectToPeripheral(peripheral: CBPeripheral) {
         //if connected to another peripheral, drop connection and connect to new peripheral
+        print("connecting")
         if (connectedPeripheral != nil) {
             centralManager.cancelPeripheralConnection(connectedPeripheral!)
+            connectionState = .connecting
+            centralManager.connect(peripheral, options: nil)
+        } else {
             connectionState = .connecting
             centralManager.connect(peripheral, options: nil)
         }
@@ -112,7 +117,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         peripheral.delegate = self
         
         //discover services on connected peripheral
-        peripheral.discoverServices([TransferService.tritonServiceUUID])
+        peripheral.discoverServices([TransferService.tritonServiceUUID1, TransferService.tritonServiceUUID2])
     }
 }
 
@@ -120,9 +125,43 @@ extension BluetoothService: CBPeripheralDelegate {
     func peripheral(
         _ peripheral: CBPeripheral,
         didDiscoverServices error: (any Error)? ) {
+            print("discovered services")
             guard let peripheralServices = peripheral.services else { return }
             for service in peripheralServices {
+                print(service)
                 peripheral.discoverCharacteristics([TransferService.tritonCharacteristicUUID], for: service)
             }
+    }
+    
+    func peripheral(
+        _ peripheral: CBPeripheral,
+        didDiscoverCharacteristicsFor service: CBService,
+        error: (any Error)? ) {
+        print("discovered characteristics")
+        guard let serviceCharacteristics = service.characteristics else { return }
+        for characteristic in serviceCharacteristics where characteristic.uuid == TransferService.tritonCharacteristicUUID {
+                    // If it is, subscribe to it
+                    transferCharacteristic = characteristic
+                    peripheral.setNotifyValue(true, for: characteristic)
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+            // Deal with errors (if any)
+            if let error = error {
+                os_log("Error changing notification state: %s", error.localizedDescription)
+                return
+            }
+            
+            // Exit if it's not the transfer characteristic
+        guard characteristic.uuid == TransferService.tritonCharacteristicUUID else { return }
+            
+        if characteristic.isNotifying {
+            // Notification has started
+            os_log("Notification began on %@", characteristic)
+        } else {
+            // Notification has stopped, so disconnect from the peripheral
+            os_log("Notification stopped on %@. Disconnecting", characteristic)
+        }     
     }
 }
