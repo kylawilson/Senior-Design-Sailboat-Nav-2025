@@ -267,7 +267,7 @@ class HelloWorldCharacteristic(GattCharacteristic):
     def __init__(self, bus, index, service):
         GattCharacteristic.__init__(self, bus, index,
                                      self.HELLO_WORLD_CHAR_UUID,
-                                     ['notify'], service)
+                                     ['notify', 'read'], service)
 
 
 def main(timeout=0):
