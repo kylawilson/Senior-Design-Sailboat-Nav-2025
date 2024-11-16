@@ -9,8 +9,8 @@ import asyncio
 import struct
 from sys import exit
 
-serve = bluetooth.UUID(0x1848)  #is it ok if these are just whatever?
-charc = bluetooth.UUID(0x2A6E)
+serve = bluetooth.UUID("ec2ce16f-f774-4c1f-b3dd-a56b64bc9037")  #is it ok if these are just whatever?
+charc = bluetooth.UUID("842c3d51-9599-4c9c-aa41-15a28cb48bce")
 IAM = "Central"
 
 if IAM not in ['Peripheral','Central']:
@@ -84,7 +84,8 @@ async def send_data_task(connection, characteristic):
             print("error no characteristic provided in send data")
             continue
 
-        message = f"("lat in degrees:", lat_in_degrees," long in degree: ", long_in_degrees, '\n')"
+        message = f"lat in degrees: {lat_in_degrees}, long in degrees: {long_in_degrees}\n"
+
 
         try:
             msg = encode_message(message)
