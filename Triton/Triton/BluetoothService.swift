@@ -16,13 +16,15 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var isScanning: Bool = false
     private var centralManager: CBCentralManager
     private var connectedPeripheral: CBPeripheral?
-    private var transferCharacteristic: CBCharacteristic?
+    private var transferCharacteristics = [ TransferService.tritonLongitudeCharacteristicUUID, TransferService.tritonCOGCharacteristicUUID, TransferService.tritonLatitudeCharacteristicUUID, TransferService.tritonDateCharacteristicUUID, TransferService.tritonAltitudeCharacteristicUUID, TransferService.tritonLatitudeIndicatorCharacteristicUUID, TransferService.tritonLongitudeIndicatorCharacteristicUUID ]
+    private var subscribedCharacteristics : [ CBCharacteristic ]
     
     override init() {
         //initialize to empty
         centralManager = CBCentralManager()
         discoveredPeripherals = []
         connectedPeripheral = nil
+        subscribedCharacteristics = []
         super.init()
         //after super.init() , initialize to true value
         centralManager = CBCentralManager.init(delegate: self, queue: nil)
@@ -142,10 +144,12 @@ extension BluetoothService: CBPeripheralDelegate {
         print("discovered characteristics")
             guard let serviceCharacteristics = service.characteristics else { return }
             for characteristic in serviceCharacteristics  {
-                    // If it is, subscribe to it
+                //subscribe only to the characteristics we want (in this case, GPS characteristics)
+                if transferCharacteristics.contains(characteristic.uuid) {
                     print(characteristic.uuid)
-                    transferCharacteristic = characteristic
+                    subscribedCharacteristics.append(characteristic)
                     peripheral.setNotifyValue(true, for: characteristic)
+                }
         }
     }
     
@@ -171,7 +175,7 @@ extension BluetoothService: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if let value = characteristic.value {
             // Process the received value
-            let receivedString = String(data: value, encoding: .utf8)
+            //let receivedString = String(data: value, encoding: .utf8)
             //print("Notification received: \(receivedString ?? "N/A")")
             let newval = value.map { String(format: "%02x", $0) }.joined()
             print("Notification received: \(newval)")
