@@ -17,17 +17,20 @@ void processGGA(const std::string& line) {
     // Ensure the line contains at least the required number of fields
     if (fields.size() >= 10) {
         std::string UTCtime = fields[1];
-        std::string Latitude = fields[2];
-        std::string latIndicator = fields[3];
+	if (fields[2] != "" && fields[3] != "" && fields[4] != "" && fields[5] != "" && fields[9] != ""){
+	        std::string Latitude = fields[2];
+	std::string latIndicator = fields[3];
         std::string Longitude = fields[4];
         std::string longIndicator = fields[5];
         std::string Altitude = fields[9]; // Value before the first 'M'
+	}
 	
-	if (Latitude != ""){
+
         // Print or use the extracted values
         std::cout << "GGA Data:" << std::endl;
         std::cout << "  UTCtime: " << UTCtime << std::endl;
-        std::cout << "  Latitude: " << Latitude << std::endl;
+       
+	std::cout << "  Latitude: " << Latitude << std::endl;
         std::cout << "  latIndicator: " << latIndicator << std::endl;
         std::cout << "  Longitude: " << Longitude << std::endl;
         std::cout << "  longIndicator: " << longIndicator << std::endl;
@@ -50,11 +53,14 @@ void processRMC(const std::string& line) {
 
     // Ensure the line contains at least the required number of fields
     if (fields.size() >= 9) {
+	if ((fields[7] != "" || fields[7] != "0.00") && (fields[8] != "" || fields[8])){
         std::string Speed = fields[7];
         std::string COG = fields[8];
+	}
+	if (fields[9] != "")
         std::string Date = fields[9];
 	
-	if (Date != ""){
+	if (Speed != "0.00" && (COG != "" || COG != "0.00")){
         // Print or use the extracted values
         std::cout << "RMC Data:" << std::endl;
         std::cout << "  Speed: " << Speed << std::endl;
@@ -88,7 +94,7 @@ int main() {
 			if (result.find("RMC") != std::string::npos) {
             			processRMC(result);
 			}
-		result += '\n';
+		result = '\n';
             }
             isEmptyLine = true;
         } else {
@@ -101,7 +107,7 @@ int main() {
     inputFile.close();
     
     // Print the result
-   std::cout << result << std::endl;
+   //std::cout << result << std::endl;
     
     return 0;
 }
