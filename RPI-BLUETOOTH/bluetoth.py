@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: LGPL-2.1-or-later
-
+#I implemented both longitude and latitude running under the assumption that they can come from the same charactertistic. Notify if more aspects are pulled from the GPS.
 import argparse
 import dbus
 import dbus.exceptions
@@ -160,9 +160,8 @@ class Application(dbus.service.Object):
         self.path = '/'
         self.services = []
         dbus.service.Object.__init__(self, bus, self.path)
-        self.add_service(HeartRateService(bus, 0))
-        self.add_service(GPSService(bus, 1))
-        self.add_service(TestService(bus, 2))
+        self.add_service(GPSservice(bus, 0))
+        self.add_service(TestService(bus, 1))
 
     def get_path(self):
         return dbus.ObjectPath(self.path)
@@ -360,29 +359,26 @@ class Descriptor(dbus.service.Object):
         raise NotSupportedException()
 
 
-class HeartRateService(Service):
+class GPSservice(Service):
     """
-    Fake Heart Rate Service that simulates a fake heart beat and control point
-    behavior.
-
     """
     HR_UUID = 'ec2ce16f-f774-4c1f-b3dd-a56b64bc9037'
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.HR_UUID, True)
-        self.add_characteristic(HeartRateMeasurementChrc(bus, 0, self))
-        self.add_characteristic(BodySensorLocationChrc(bus, 1, self))
-        self.add_characteristic(HeartRateControlPointChrc(bus, 2, self))
+        self.add_characteristic(GPSChrc(bus, 0, self))
+        self.add_characteristic(GPSChrc(bus, 1, self))
+        self.add_characteristic(GPSChrc(bus, 2, self))
         self.energy_expended = 0
 
 
-class HeartRateMeasurementChrc(Characteristic):
-    HR_MSRMT_UUID = '842c3d51-9599-4c9c-aa41-15a28cb48bce'
+class GPSChrc(Characteristic):
+    GPS_MSRMT_UUID = '842c3d51-9599-4c9c-aa41-15a28cb48bce'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
                 self, bus, index,
-                self.HR_MSRMT_UUID,
+                self.GPS_MSRMT_UUID,
                 ['notify'],
                 service)
         self.notifying = False
@@ -433,23 +429,8 @@ class HeartRateMeasurementChrc(Characteristic):
         self.notifying = False
         self._update_hr_msrmt_simulation()
 
-
-class BodySensorLocationChrc(Characteristic):
-    BODY_SNSR_LOC_UUID = '00002a38-0000-1000-8000-00805f9b34fb'
-
-    def __init__(self, bus, index, service):
-        Characteristic.__init__(
-                self, bus, index,
-                self.BODY_SNSR_LOC_UUID,
-                ['read'],
-                service)
-
-    def ReadValue(self, options):
-        # Return 'Chest' as the sensor location.
-        return [ 0x01 ]
-
-class HeartRateControlPointChrc(Characteristic):
-    HR_CTRL_PT_UUID = '00002a39-0000-1000-8000-00805f9b34fb'
+class GPSChrc(Characteristic):
+    HR_CTRL_PT_UUID = '842c3d51-9599-4c9c-aa41-15a28cb48bce'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
@@ -459,7 +440,7 @@ class HeartRateControlPointChrc(Characteristic):
                 service)
 
     def WriteValue(self, value, options):
-        print('Heart Rate Control Point WriteValue called')
+        print('something has been called')
 
         if len(value) != 1:
             raise InvalidValueLengthException()
@@ -474,22 +455,9 @@ class HeartRateControlPointChrc(Characteristic):
         self.service.energy_expended = 0
 
 
-class GPSService(Service):
-    """
-    Fake Battery service that emulates a draining battery.
-
-    """
-    GPS_UUID = 'ec2ce16f-f774-4c1f-b3dd-a56b64bc9037'
-
-    def __init__(self, bus, index):
-        Service.__init__(self, bus, index, self.GPS_UUID, True)
-        self.add_characteristic(LongitudeCharacteristic(bus, 0, self))
-
 
 class LongitudeCharacteristic(Characteristic):
     """
-    Fake Battery Level characteristic. The battery level is drained by 2 points
-    every 5 seconds.
 
     """
     LONG_UUID = '842c3d51-9599-4c9c-aa41-15a28cb48bce'
@@ -511,17 +479,6 @@ class LongitudeCharacteristic(Characteristic):
                 GATT_CHRC_IFACE,
                 { 'Value': [dbus.Byte(self.long)] }, [])
 
-    def drain_battery(self):
-        if not self.notifying:
-            return True
-        if self.long > 0:
-            self.long -= 2
-            if self.long < 0:
-                self.long = 0
-        print('Longitude: ' + repr(self.long))
-        self.notify_longitude()
-        return True
-
     def ReadValue(self, options):
         print('Longitude read: ' + repr(self.long))
         return [dbus.Byte(self.long)]
@@ -541,44 +498,30 @@ class LongitudeCharacteristic(Characteristic):
 
         self.notifying = False
 
-class LongitudeIndicatorCharacteristic(Characteristic):
+class LatitudeCharacteristic(Characteristic):
     """
-    Fake Battery Level characteristic. The battery level is drained by 2 points
-    every 5 seconds.
 
     """
-    BATTERY_LVL_UUID = '156a777b-a6b7-4a8c-b9a5-8e674db49320'
+    LATI_UUID = '842c3d51-9599-4c9c-aa41-15a28cb48bce'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
                 self, bus, index,
-                self.BATTERY_LVL_UUID,
+                self.LATI_UUID,
                 ['read', 'notify'],
                 service)
         self.notifying = False
-        self.battery_lvl = 100
         GLib.timeout_add(5000, self.drain_battery)
 
-    def notify_battery_level(self):
+    def notify_lat(self):
         if not self.notifying:
             return
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(self.battery_lvl)] }, [])
-
-    def drain_battery(self):
-        if not self.notifying:
-            return True
-        if self.battery_lvl > 0:
-            self.battery_lvl -= 2
-            if self.battery_lvl < 0:
-                self.battery_lvl = 0
-        print('Battery Level drained: ' + repr(self.battery_lvl))
-        self.notify_battery_level()
-        return True
+                { 'Lat': [dbus.Byte(self.battery_lvl)] }, [])
 
     def ReadValue(self, options):
-        print('Battery Level read: ' + repr(self.battery_lvl))
+        print('Latitude ' + repr(self.battery_lvl))
         return [dbus.Byte(self.battery_lvl)]
 
     def StartNotify(self):
@@ -782,6 +725,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args.timeout)
-
-
-
