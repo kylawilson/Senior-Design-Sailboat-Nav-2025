@@ -297,10 +297,17 @@ def main(timeout=0):
                                      error_handler=register_ad_error_cb)
 
     # Add the GATT service for notifications
+    gatt_manager = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, adapter),
+                                   "org.bluez.GattManager1")
     app = GattApplication(bus)
     hello_world_service = HelloWorldService(bus, 0)
     app.add_service(hello_world_service)
-    print(hello_world_service.characteristics)
+
+    # Register the GATT application
+    gatt_manager.RegisterApplication(app.get_path(), {},
+                                     reply_handler=register_ad_cb,
+                                     error_handler=register_ad_error_cb)
+
 
     if timeout > 0:
         threading.Thread(target=shutdown, args=(timeout,)).start()

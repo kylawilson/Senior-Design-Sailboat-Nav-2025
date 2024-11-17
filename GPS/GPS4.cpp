@@ -52,7 +52,7 @@ int main() {
 	    gps_file << c << std::endl;
             // Check for end of a line (NMEA sentence)
             if (c == '\n') {
-                if (gps_data.find("$GPRMC") != std::string::npos) {
+                if (gps_data.find("$GNRMC") != std::string::npos) {
                     // Process GPRMC sentence for time, latitude, longitude
                     auto tokens = split(gps_data, ',');
                     if (tokens.size() >= 10) {
@@ -77,8 +77,9 @@ int main() {
                         gps_file << "Longitude: " << longitude << " " << lon_direction << "\n";
 //			gps_file << "Tagline: " << c <<" ";
                     }
-                } else if (gps_data.find("$GPGGA") != std::string::npos) {
+                } else if (gps_data.find("$GNGGA") != std::string::npos) {
                     // Process GPGGA sentence for altitude and satellite count
+		    // Changed to GN instead of GP
                     auto tokens = split(gps_data, ',');
                     if (tokens.size() >= 10) {
                         std::string altitude = tokens[9];
