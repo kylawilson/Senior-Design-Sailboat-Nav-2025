@@ -24,12 +24,12 @@ void processGGA(const std::string& line) {
         std::string longIndicator = fields[5];
         std::string Altitude = fields[9]; // Value before the first 'M'
 	}
-	
+    }	
 
         // Print or use the extracted values
         std::cout << "GGA Data:" << std::endl;
         std::cout << "  UTCtime: " << UTCtime << std::endl;
-       
+       if (Latitude != "" && latIndicator != "" && Longitude != "" &&  longIndicator != ""){
 	std::cout << "  Latitude: " << Latitude << std::endl;
         std::cout << "  latIndicator: " << latIndicator << std::endl;
         std::cout << "  Longitude: " << Longitude << std::endl;
@@ -59,7 +59,7 @@ void processRMC(const std::string& line) {
 	}
 	if (fields[9] != "")
         std::string Date = fields[9];
-	
+    }	
 	if (Speed != "0.00" && (COG != "" || COG != "0.00")){
         // Print or use the extracted values
         std::cout << "RMC Data:" << std::endl;
