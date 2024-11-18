@@ -366,16 +366,15 @@ class GPSservice(Service):
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.GPS_UUID, True)
-        self.add_characteristic(GPSChrc(bus, 0, self))
-        self.add_characteristic(GPSChrc(bus, 1, self))
-        self.add_characteristic(GPSChrc(bus, 2, self))
-        self.add_characteristic(GPSChrc(bus, 3, self))
-        self.add_characteristic(GPSChrc(bus, 4, self))
-        self.add_characteristic(GPSChrc(bus, 5, self))
-        self.add_characteristic(GPSChrc(bus, 6, self))
-        self.add_characteristic(GPSChrc(bus, 7, self))
-        self.add_characteristic(GPSChrc(bus, 8, self))
-        self.add_characteristic(GPSChrc(bus, 9, self))
+        self.add_characteristic(LongitudeCharacteristic(bus, 0, self))
+        self.add_characteristic(LongitudeIndicatorCharacteristic(bus, 1, self))
+        self.add_characteristic(LatitudeCharacteristic(bus, 2, self))
+        self.add_characteristic(LatitudeIndicatorCharacteristic(bus, 3, self))
+        self.add_characteristic(GPSTimeCharacteristic(bus, 4, self))
+        self.add_characteristic(GPSAltitudeCharacteristic(bus, 5, self))
+        self.add_characteristic(GPSSpeedCharacteristic(bus, 6, self))
+        self.add_characteristic(GPSCOGCharacteristic(bus, 7, self))
+        self.add_characteristic(GPSDateCharacteristic(bus, 8, self))
         self.energy_expended = 0
 
 
@@ -436,33 +435,73 @@ class LongitudeCharacteristic(Characteristic):
                 ['read', 'notify'],
                 service)
         self.notifying = False
-        self.long = self.append(dbus.Byte(0x01))
-        GLib.timeout_add(5000)
-
+        self.long = 100
+        GLib.timeout_add(5000, self.drain_battery)
     def notify_longitude(self):
         if not self.notifying:
             return
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
                 { 'Value': [dbus.Byte(self.long)] }, [])
-
+    def drain_battery(self):
+        if not self.notifying:
+            return True
+        if self.long > 0:
+            self.long -= 2
+            if self.long < 0:
+                self.long = 0
+        print('Longitude: ' + repr(self.long))
+        self.notify_longitude()
+        return True
     def ReadValue(self, options):
         print('Longitude read: ' + repr(self.long))
         return [dbus.Byte(self.long)]
-
     def StartNotify(self):
         if self.notifying:
             print('Already notifying, nothing to do')
             return
         self.notifying = True
         self.notify_longitude()
-
     def StopNotify(self):
         if not self.notifying:
             print('Not notifying, nothing to do')
             return
-
         self.notifying = False
+
+    # def __init__(self, bus, index, service):
+    #     Characteristic.__init__(
+    #             self, bus, index,
+    #             self.LONG_UUID,
+    #             ['read', 'notify'],
+    #             service)
+    #     self.notifying = False
+    #     self.long = self.append(dbus.Byte(0x01))
+    #     GLib.timeout_add(5000)
+
+    # def notify_longitude(self):
+    #     if not self.notifying:
+    #         return
+    #     self.PropertiesChanged(
+    #             GATT_CHRC_IFACE,
+    #             { 'Value': [dbus.Byte(self.long)] }, [])
+
+    # def ReadValue(self, options):
+    #     print('Longitude read: ' + repr(self.long))
+    #     return [dbus.Byte(self.long)]
+
+    # def StartNotify(self):
+    #     if self.notifying:
+    #         print('Already notifying, nothing to do')
+    #         return
+    #     self.notifying = True
+    #     self.notify_longitude()
+
+    # def StopNotify(self):
+    #     if not self.notifying:
+    #         print('Not notifying, nothing to do')
+    #         return
+
+    #     self.notifying = False
 
 class LongitudeIndicatorCharacteristic(Characteristic):
     """
@@ -476,9 +515,9 @@ class LongitudeIndicatorCharacteristic(Characteristic):
                 self.LONG_INDI_UUID,
                 ['read', 'notify'],
                 service)
-        self.longindi = self.append(dbus.Byte(0x02))
+        self.longindi = dbus.Byte(0x02)
         self.notifying = False
-        GLib.timeout_add(5000)
+        #GLib.timeout_add(5000)
 
     def notify_longindi(self):
         if not self.notifying:
@@ -519,8 +558,8 @@ class LatitudeCharacteristic(Characteristic):
                 ['read', 'notify'],
                 service)
         self.notifying = False
-        self.lati = self.append(dbus.Byte(0x03))
-        GLib.timeout_add(5000)
+        self.lati = dbus.Byte(0x03)
+        #GLib.timeout_add(5000)
 
     def notify_lat(self):
         if not self.notifying:
@@ -561,8 +600,8 @@ class LatitudeIndicatorCharacteristic(Characteristic):
                 ['read', 'notify'],
                 service)
         self.notifying = False
-        self.latiindi = self.append(dbus.Byte(0x04))
-        GLib.timeout_add(5000)
+        self.latiindi = dbus.Byte(0x04)
+        #GLib.timeout_add(5000)
 
     def notify_lat(self):
         if not self.notifying:
@@ -590,7 +629,7 @@ class LatitudeIndicatorCharacteristic(Characteristic):
 
         self.notifying = False
 
-class TakeTimeCharacteristic(Characteristic):
+class GPSTimeCharacteristic(Characteristic):
     """
 
     """
@@ -602,8 +641,8 @@ class TakeTimeCharacteristic(Characteristic):
                 ['read', 'notify'],
                 service)
         self.notifying = False
-        self.time = self.append(dbus.Byte(0x05))
-        GLib.timeout_add(5000)
+        self.time = dbus.Byte(0x05)
+        #GLib.timeout_add(5000)
 
     def notify_lat(self):
         if not self.notifying:
@@ -631,7 +670,7 @@ class TakeTimeCharacteristic(Characteristic):
 
         self.notifying = False
 
-class AltitudeCharacteristic(Characteristic):
+class GPSAltitudeCharacteristic(Characteristic):
     """
 
     """
@@ -644,8 +683,8 @@ class AltitudeCharacteristic(Characteristic):
                 ['read', 'notify'],
                 service)
         self.notifying = False
-        self.alti = self.append(dbus.Byte(0x06))
-        GLib.timeout_add(5000)
+        self.alti = dbus.Byte(0x06)
+        #GLib.timeout_add(5000)
 
     def notify_lat(self):
         if not self.notifying:
@@ -673,7 +712,7 @@ class AltitudeCharacteristic(Characteristic):
 
         self.notifying = False
 
-class SpeedCharacteristic(Characteristic):
+class GPSSpeedCharacteristic(Characteristic):
     """
 
     """
@@ -686,8 +725,8 @@ class SpeedCharacteristic(Characteristic):
                 ['read', 'notify'],
                 service)
         self.notifying = False
-        self.speed = self.append(dbus.Byte(0x07))
-        GLib.timeout_add(5000)
+        self.speed = dbus.Byte(0x07)
+        #GLib.timeout_add(5000)
 
     def notify_lat(self):
         if not self.notifying:
@@ -715,7 +754,7 @@ class SpeedCharacteristic(Characteristic):
 
         self.notifying = False
 
-class COGCharacteristic(Characteristic):
+class GPSCOGCharacteristic(Characteristic):
     """
 
     """
@@ -727,9 +766,9 @@ class COGCharacteristic(Characteristic):
                 self.COG_UUID,
                 ['read', 'notify'],
                 service)
-        self.cog = self.append(dbus.Byte(0x08))
+        self.cog = dbus.Byte(0x08)
         self.notifying = False
-        GLib.timeout_add(5000, self.drain_battery)
+        #GLib.timeout_add(5000, self.drain_battery)
 
     def notify_lat(self):
         if not self.notifying:
@@ -757,7 +796,7 @@ class COGCharacteristic(Characteristic):
 
         self.notifying = False
 
-class DateCharacteristic(Characteristic):
+class GPSDateCharacteristic(Characteristic):
     """
 
     """
@@ -770,8 +809,8 @@ class DateCharacteristic(Characteristic):
                 ['read', 'notify'],
                 service)
         self.notifying = False
-        self.date = self.append(dbus.Byte(0x09))
-        GLib.timeout_add(5000)
+        self.date = dbus.Byte(0x09)
+        #GLib.timeout_add(5000)
 
     def notify_lat(self):
         if not self.notifying:

@@ -10,6 +10,8 @@
 
 #define GPS_SERIAL_PORT "/dev/serial0" // UART port for Raspberry Pi
 
+std::ofstream gps_file("gps_data1.txt", std::ios::app); // Append mode
+
 void processGGA(const std::string& line) {
     std::stringstream ss(line);
     std::string token;
@@ -24,8 +26,8 @@ void processGGA(const std::string& line) {
     if (fields.size() >= 10) {
 
         std::string UTCtime = fields[1];
-	std::string Latitude = fields[2];
-	std::string latIndicator = fields[3];
+	    std::string Latitude = fields[2];
+	    std::string latIndicator = fields[3];
         std::string Longitude = fields[4];
         std::string longIndicator = fields[5];
         std::string Altitude = fields[9]; // Value before the first 'M'
@@ -35,12 +37,18 @@ void processGGA(const std::string& line) {
         // Print or use the extracted values
         std::cout << "GGA Data:" << std::endl;
         std::cout << "  UTCtime: " << UTCtime << std::endl;
+        gps_file << "UTCtime: " << UTCtime << std::endl;
        if (fields[2] != "" && fields[3] != "" && fields[4] != "" &&  fields[5] != ""){
-	std::cout << "  Latitude: " << Latitude << std::endl;
+	    std::cout << "  Latitude: " << Latitude << std::endl;
+        gps_file << "Latitude: " << Latitude << std::endl;
         std::cout << "  latIndicator: " << latIndicator << std::endl;
+        gps_file << "latIndicator: " << latIndicator << std::endl;
         std::cout << "  Longitude: " << Longitude << std::endl;
+        gps_file << "Longitude: "<< Longitude << std::endl;
         std::cout << "  longIndicator: " << longIndicator << std::endl;
+        gps_file << "longIndicator: " << longIndicator << std::endl;
         std::cout << "  Altitude: " << Altitude << std::endl;
+        gps_file << "Altitude: " <<  Altitude << std::endl;
     	}
     } else {
         std::cerr << "Invalid GGA line: " << line << std::endl;
@@ -68,9 +76,12 @@ void processRMC(const std::string& line) {
         std::cout << "RMC Data:" << std::endl;
         std::cout << "  Speed: " << Speed << std::endl;
         std::cout << "  COG: " << COG << std::endl;
+        gps_file << "Speed: "  << Speed << std::endl;
+        gps_file << "COG: " << COG << std::endl;
 	}
 	if (Date != ""){
         std::cout << "  Date: " << Date << std::endl;
+        gps_file << "Date: " << Date << std::endl;
 	}
     } else {
         std::cerr << "Invalid RMC line: " << line << std::endl;
@@ -92,7 +103,7 @@ int main() {
     }
 
     // Open a file to save GPS data
-    std::ofstream gps_file("gps_data1.txt", std::ios::app); // Append mode
+    //std::ofstream gps_file("gps_data1.txt", std::ios::app); // Append mode
     if (!gps_file.is_open()) {
         std::cerr << "Failed to open gps_data.txt for writing." << std::endl;
         return 1;
@@ -108,7 +119,7 @@ int main() {
 	    //gps_file << c << std::endl;
             // Check for end of a line (NMEA sentence)
             if (c == '\n') {
-		gps_file << gps_data; //Saves Each line to the file?? (Hopefully)
+		//gps_file << gps_data; //Saves Each line to the file?? (Hopefully)
        		if (gps_data.find("GGA") != std::string::npos) {
             		processGGA(gps_data);
        		} 
