@@ -8,6 +8,7 @@ import dbus.mainloop.glib
 import dbus.service
 import time
 import threading
+import struct
 
 import array
 from gi.repository import GLib
@@ -147,7 +148,7 @@ class TestAdvertisement(Advertisement):
         self.add_service_uuid('A3A3')
         self.add_manufacturer_data(0xffff, [0x00, 0x01, 0x02, 0x03])
         self.add_service_data('9999', [0x00, 0x01, 0x02, 0x03, 0x04])
-        self.add_local_name('TestAdvertisement')
+        self.add_local_name('Triton1')
         self.include_tx_power = True
         self.add_data(0x26, [0x01, 0x01, 0x00])
 
@@ -358,6 +359,22 @@ class Descriptor(dbus.service.Object):
         print('Default WriteValue called, returning error')
         raise NotSupportedException()
 
+#global variables
+GPS_FILE = "/home/triton/Senior-Design-Sailboat-Nav-2025/GPS/gps_data1.txt"
+
+def read_gps_data(file_path):
+    """
+    Reads GPS data from a text file and yields it line by line.
+    """
+    print("calling read GPS data")
+    with open(file_path, 'r') as file:
+        print("opened file")
+        lines = file.readlines()
+        for i in range(0, len(lines), 2):  # Read two lines (UTCtime and Date)
+            utc_time = lines[i].split(": ")[1].strip()  # Extract UTC time
+            date = lines[i + 1].split(": ")[1].strip()  # Extract Date
+        return float(utc_time), date
+
 
 class GPSservice(Service):
     """
@@ -524,7 +541,7 @@ class LongitudeIndicatorCharacteristic(Characteristic):
             return
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Longitude Indicator': [dbus.Byte(self.longindi)] }, [])
+                { 'Value': [dbus.Byte(self.longindi)] }, [])
 
     def ReadValue(self, options):
         print('Latitude ' + repr(self.battery_lvl))
@@ -566,7 +583,7 @@ class LatitudeCharacteristic(Characteristic):
             return
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Lat': [dbus.Byte(self.lati)] }, [])
+                { 'Value': [dbus.Byte(self.lati)] }, [])
 
     def ReadValue(self, options):
         print('Latitude ' + repr(self.lati))
@@ -608,7 +625,7 @@ class LatitudeIndicatorCharacteristic(Characteristic):
             return
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Lat': [dbus.Byte(self.latiindi)] }, [])
+                { 'Value': [dbus.Byte(self.latiindi)] }, [])
 
     def ReadValue(self, options):
         print('Latitude Indicator ' + repr(self.latiinid))
@@ -641,15 +658,27 @@ class GPSTimeCharacteristic(Characteristic):
                 ['read', 'notify'],
                 service)
         self.notifying = False
-        self.time = dbus.Byte(0x05)
-        #GLib.timeout_add(5000)
+        self.time = 0
+        GLib.timeout_add(5000, self.get_data)
 
-    def notify_lat(self):
+    def get_data(self):
+        self.time, _ = read_gps_data(GPS_FILE)
+        if not self.notifying:
+            return True
+        if (self.time):
+            print('Time ' + repr(self.time))
+            self.notify_time()
+        return True
+
+
+    def notify_time(self):
         if not self.notifying:
             return
+        scaled_time = int(self.time * 1000)
+        time_bytes = struct.pack(">I", scaled_time)
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Lat': [dbus.Byte(self.time)] }, [])
+                { 'Value': [dbus.Byte(b) for b in time_bytes] }, [])
 
     def ReadValue(self, options):
         print('Time ' + repr(self.time))
@@ -661,7 +690,7 @@ class GPSTimeCharacteristic(Characteristic):
             return
 
         self.notifying = True
-        self.notify_battery_level()
+        self.notify_time()
 
     def StopNotify(self):
         if not self.notifying:
@@ -691,7 +720,7 @@ class GPSAltitudeCharacteristic(Characteristic):
             return
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Altitude': [dbus.Byte(self.alti)] }, [])
+                { 'Value': [dbus.Byte(self.alti)] }, [])
 
     def ReadValue(self, options):
         print('Altitude ' + repr(self.alti))
@@ -703,7 +732,7 @@ class GPSAltitudeCharacteristic(Characteristic):
             return
 
         self.notifying = True
-        self.notify_battery_level()
+        self.notify_lat()
 
     def StopNotify(self):
         if not self.notifying:
@@ -733,7 +762,7 @@ class GPSSpeedCharacteristic(Characteristic):
             return
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Lat': [dbus.Byte(self.speed)] }, [])
+                { 'Value': [dbus.Byte(self.speed)] }, [])
 
     def ReadValue(self, options):
         print('Speed ' + repr(self.speed))
@@ -775,7 +804,7 @@ class GPSCOGCharacteristic(Characteristic):
             return
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Lat': [dbus.Byte(self.cog)] }, [])
+                { 'Value': [dbus.Byte(self.cog)] }, [])
 
     def ReadValue(self, options):
         print('COG ' + repr(self.cog))
@@ -817,7 +846,7 @@ class GPSDateCharacteristic(Characteristic):
             return
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Lat': [dbus.Byte(self.date)] }, [])
+                { 'Value': [dbus.Byte(self.date)] }, [])
 
     def ReadValue(self, options):
         print('Date ' + repr(self.date))
@@ -1022,3 +1051,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args.timeout)
+
