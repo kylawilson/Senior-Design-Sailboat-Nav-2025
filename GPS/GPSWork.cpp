@@ -157,7 +157,7 @@ int main() {
         }
 
         // Sleep to prevent overwhelming the system with continuous file writes
-        usleep(100000);  // 100ms
+        usleep(1000000);  // 1000ms
     }
 
     // Close the file and serial port when the program ends
