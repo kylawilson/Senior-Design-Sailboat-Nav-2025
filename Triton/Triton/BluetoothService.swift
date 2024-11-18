@@ -14,10 +14,12 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var connectionState: ConnectionStatus = .disconnected
     @Published var discoveredPeripherals: [ CBPeripheral ]
     @Published var isScanning: Bool = false
+    @Published var gpsData = GPSData()
     private var centralManager: CBCentralManager
     private var connectedPeripheral: CBPeripheral?
     private var transferCharacteristics = [ TransferService.tritonLongitudeCharacteristicUUID, TransferService.tritonCOGCharacteristicUUID, TransferService.tritonLatitudeCharacteristicUUID, TransferService.tritonDateCharacteristicUUID, TransferService.tritonAltitudeCharacteristicUUID, TransferService.tritonLatitudeIndicatorCharacteristicUUID, TransferService.tritonLongitudeIndicatorCharacteristicUUID, TransferService.tritonTimeCharacteristicUUID, TransferService.tritonSpeedCharacteristicUUID]
     private var subscribedCharacteristics : [ CBCharacteristic ]
+    
     
     override init() {
         //initialize to empty
@@ -177,12 +179,45 @@ extension BluetoothService: CBPeripheralDelegate {
             // Process the received value
             //let receivedString = String(data: value, encoding: .utf8)
             //print("Notification received: \(receivedString ?? "N/A")")
-            //I guess could check based off of descriptor
-            updateCharacteristicUI(CBCharacteristic.)
             let newval = value.map { String(format: "%02x", $0) }.joined()
             print("Notification received: \(newval)")
+            updateCharacteristicUI(characteristic.uuid, newval)
         }
     }
     
-    func updateCharacteristicUI(_ uuid: CBUUID)
+    func updateCharacteristicUI(_ uuid: CBUUID, _ value: String ) {
+        switch (uuid) {
+        case TransferService.tritonDateCharacteristicUUID :
+            gpsData.date = value
+            break
+        case TransferService.tritonTimeCharacteristicUUID :
+            gpsData.time = value
+            break
+        case TransferService.tritonAltitudeCharacteristicUUID :
+            gpsData.altitude = value
+            break
+        case TransferService.tritonCOGCharacteristicUUID :
+            gpsData.COG = value
+            break
+        case TransferService.tritonSpeedCharacteristicUUID :
+            gpsData.speed = value
+            break
+        case TransferService.tritonLatitudeCharacteristicUUID :
+            gpsData.latitude = value
+            break
+        case TransferService.tritonLatitudeIndicatorCharacteristicUUID :
+            gpsData.latitudeInd = value
+            break
+        case TransferService.tritonLongitudeCharacteristicUUID :
+            gpsData.longitude = value
+            break
+        case TransferService.tritonLongitudeIndicatorCharacteristicUUID :
+            gpsData.longitudeInd = value
+            break
+        default:
+            print("NO MATCH FOR UUID, CANNOT UPDATE UI")
+            
+        }
+        
+    }
 }
