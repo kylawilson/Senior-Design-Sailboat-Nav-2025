@@ -15,28 +15,26 @@ void processGGA(const std::string& line) {
     }
 
     // Ensure the line contains at least the required number of fields
-    if (fields.size() >= 10) {
+   // if (fields.size() >= 10) { i dont think its needed?  (also if there are less fields identified, will lead to this whole step being skipped
 
         std::string UTCtime = fields[1];
-	std::string Latitude = fields[2];
-	std::string latIndicator = fields[3];
+	    std::string Latitude = fields[2];
+	    std::string latIndicator = fields[3];
         std::string Longitude = fields[4];
         std::string longIndicator = fields[5];
-        std::string Altitude = fields[9]; // Value before the first 'M'
-	
-    	
+        std::string Altitude = fields[6]; // Value before the first 'M'
 
         // Print or use the extracted values
         std::cout << "GGA Data:" << std::endl;
         std::cout << "  UTCtime: " << UTCtime << std::endl;
-       if (fields[2] != "" && fields[3] != "" && fields[4] != "" &&  fields[5] != ""){
-	std::cout << "  Latitude: " << Latitude << std::endl;
+       if (Latitude != "" && latIndicator != "" && Longitude != "" &&  longIndicator != "" && Altitude != ""){
+	    std::cout << "  Latitude: " << Latitude << std::endl;
         std::cout << "  latIndicator: " << latIndicator << std::endl;
         std::cout << "  Longitude: " << Longitude << std::endl;
         std::cout << "  longIndicator: " << longIndicator << std::endl;
-        std::cout << "  Altitude: " << Altitude << std::endl;
+        std::cout << "  Altitude: " << longIndicator << std::endl;
     	}
-    } else {
+    else {
         std::cerr << "Invalid GGA line: " << line << std::endl;
     }
 }
@@ -52,21 +50,21 @@ void processRMC(const std::string& line) {
     }
 
     // Ensure the line contains at least the required number of fields
-    if (fields.size() >= 9) {
+  //  if (fields.size() >= 9) { same thing as comment above
         std::string Speed = fields[7];
         std::string COG = fields[8];
         std::string Date = fields[9];
 
-	if (Speed != "0.00" && ((COG != "") || (COG != "0.00"))){
+	if (Speed != "0.00" && ((COG != "") || (COG != "0.00"))&& Date != ""){
         // Print or use the extracted values
         std::cout << "RMC Data:" << std::endl;
         std::cout << "  Speed: " << Speed << std::endl;
         std::cout << "  COG: " << COG << std::endl;
-	}
-	if (Date != ""){
         std::cout << "  Date: " << Date << std::endl;
 	}
-    } else {
+//	if (Date != ""){ consolidate all so it doesnt only run else statement on date (unless you want it like that?)
+     
+     else {
         std::cerr << "Invalid RMC line: " << line << std::endl;
     }
 }
