@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#I implemented both longitude and latitude running under the assumption that they can come from the same charactertistic. Notify if more aspects are pulled from the GPS.
+
 import argparse
 import dbus
 import dbus.exceptions
@@ -362,18 +362,25 @@ class Descriptor(dbus.service.Object):
 class GPSservice(Service):
     """
     """
-    HR_UUID = 'ec2ce16f-f774-4c1f-b3dd-a56b64bc9037'
+    GPS_UUID = 'ec2ce16f-f774-4c1f-b3dd-a56b64bc9037'
 
     def __init__(self, bus, index):
-        Service.__init__(self, bus, index, self.HR_UUID, True)
+        Service.__init__(self, bus, index, self.GPS_UUID, True)
         self.add_characteristic(GPSChrc(bus, 0, self))
         self.add_characteristic(GPSChrc(bus, 1, self))
         self.add_characteristic(GPSChrc(bus, 2, self))
+        self.add_characteristic(GPSChrc(bus, 3, self))
+        self.add_characteristic(GPSChrc(bus, 4, self))
+        self.add_characteristic(GPSChrc(bus, 5, self))
+        self.add_characteristic(GPSChrc(bus, 6, self))
+        self.add_characteristic(GPSChrc(bus, 7, self))
+        self.add_characteristic(GPSChrc(bus, 8, self))
+        self.add_characteristic(GPSChrc(bus, 9, self))
         self.energy_expended = 0
 
 
 class GPSChrc(Characteristic):
-    GPS_MSRMT_UUID = '842c3d51-9599-4c9c-aa41-15a28cb48bce'
+    GPS_MSRMT_UUID = 'ec2ce16f-f774-4c1f-b3dd-a56b64bc9037'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
@@ -382,31 +389,17 @@ class GPSChrc(Characteristic):
                 ['notify'],
                 service)
         self.notifying = False
-        self.hr_ee_count = 0
 
     def hr_msrmt_cb(self):
         value = []
         value.append(dbus.Byte(0x06))
-
         value.append(dbus.Byte(randint(90, 130)))
-
-        if self.hr_ee_count % 10 == 0:
-            value[0] = dbus.Byte(value[0] | 0x08)
-            value.append(dbus.Byte(self.service.energy_expended & 0xff))
-            value.append(dbus.Byte((self.service.energy_expended >> 8) & 0xff))
-
-        self.service.energy_expended = \
-                min(0xffff, self.service.energy_expended + 1)
-        self.hr_ee_count += 1
-
-        print('Updating value: ' + repr(value))
-
+        print('Updating GPS: ' + repr(value))
         self.PropertiesChanged(GATT_CHRC_IFACE, { 'Value': value }, [])
-
         return self.notifying
 
     def _update_hr_msrmt_simulation(self):
-        print('Update HR Measurement Simulation')
+        print('Update GPS')
 
         if not self.notifying:
             return
@@ -429,32 +422,6 @@ class GPSChrc(Characteristic):
         self.notifying = False
         self._update_hr_msrmt_simulation()
 
-class GPSChrc(Characteristic):
-    HR_CTRL_PT_UUID = '842c3d51-9599-4c9c-aa41-15a28cb48bce'
-
-    def __init__(self, bus, index, service):
-        Characteristic.__init__(
-                self, bus, index,
-                self.HR_CTRL_PT_UUID,
-                ['write'],
-                service)
-
-    def WriteValue(self, value, options):
-        print('something has been called')
-
-        if len(value) != 1:
-            raise InvalidValueLengthException()
-
-        byte = value[0]
-        print('Control Point value: ' + repr(byte))
-
-        if byte != 1:
-            raise FailedException("0x80")
-
-        print('Energy Expended field reset!')
-        self.service.energy_expended = 0
-
-
 
 class LongitudeCharacteristic(Characteristic):
     """
@@ -469,8 +436,8 @@ class LongitudeCharacteristic(Characteristic):
                 ['read', 'notify'],
                 service)
         self.notifying = False
-        self.long = 100
-        GLib.timeout_add(5000, self.drain_battery)
+        self.long = self.append(dbus.Byte(0x01))
+        GLib.timeout_add(5000)
 
     def notify_longitude(self):
         if not self.notifying:
@@ -487,7 +454,6 @@ class LongitudeCharacteristic(Characteristic):
         if self.notifying:
             print('Already notifying, nothing to do')
             return
-
         self.notifying = True
         self.notify_longitude()
 
@@ -498,27 +464,28 @@ class LongitudeCharacteristic(Characteristic):
 
         self.notifying = False
 
-class LatitudeCharacteristic(Characteristic):
+class LongitudeIndicatorCharacteristic(Characteristic):
     """
 
     """
-    LATI_UUID = '842c3d51-9599-4c9c-aa41-15a28cb48bce'
+    LONG_INDI_UUID = '156a777b-a6b7-4a8c-b9a5-8e674db49320'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
                 self, bus, index,
-                self.LATI_UUID,
+                self.LONG_INDI_UUID,
                 ['read', 'notify'],
                 service)
+        self.longindi = self.append(dbus.Byte(0x02))
         self.notifying = False
-        GLib.timeout_add(5000, self.drain_battery)
+        GLib.timeout_add(5000)
 
-    def notify_lat(self):
+    def notify_longindi(self):
         if not self.notifying:
             return
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Lat': [dbus.Byte(self.battery_lvl)] }, [])
+                { 'Longitude Indicator': [dbus.Byte(self.longindi)] }, [])
 
     def ReadValue(self, options):
         print('Latitude ' + repr(self.battery_lvl))
@@ -539,7 +506,298 @@ class LatitudeCharacteristic(Characteristic):
 
         self.notifying = False
 
+class LatitudeCharacteristic(Characteristic):
+    """
 
+    """
+    LATI_UUID = 'cc29cd0d-5a2a-43c6-bd68-3aea185c8605'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.LATI_UUID,
+                ['read', 'notify'],
+                service)
+        self.notifying = False
+        self.lati = self.append(dbus.Byte(0x03))
+        GLib.timeout_add(5000)
+
+    def notify_lat(self):
+        if not self.notifying:
+            return
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Lat': [dbus.Byte(self.lati)] }, [])
+
+    def ReadValue(self, options):
+        print('Latitude ' + repr(self.lati))
+        return [dbus.Byte(self.lati)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+
+        self.notifying = True
+        self.notify_battery_level()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+
+        self.notifying = False
+
+class LatitudeIndicatorCharacteristic(Characteristic):
+    """
+
+    """
+    LATI_INDI_UUID = '67fd8c36-b6f0-48e6-a672-03f0986fbca7'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.LATI_INDI_UUID,
+                ['read', 'notify'],
+                service)
+        self.notifying = False
+        self.latiindi = self.append(dbus.Byte(0x04))
+        GLib.timeout_add(5000)
+
+    def notify_lat(self):
+        if not self.notifying:
+            return
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Lat': [dbus.Byte(self.latiindi)] }, [])
+
+    def ReadValue(self, options):
+        print('Latitude Indicator ' + repr(self.latiinid))
+        return [dbus.Byte(self.battery_lvl)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+
+        self.notifying = True
+        self.notify_battery_level()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+
+        self.notifying = False
+
+class TakeTimeCharacteristic(Characteristic):
+    """
+
+    """
+    TIME_UUID = '70685f3a-dc84-4654-a31a-a3b87fb3817d'
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.TIME_UUID,
+                ['read', 'notify'],
+                service)
+        self.notifying = False
+        self.time = self.append(dbus.Byte(0x05))
+        GLib.timeout_add(5000)
+
+    def notify_lat(self):
+        if not self.notifying:
+            return
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Lat': [dbus.Byte(self.time)] }, [])
+
+    def ReadValue(self, options):
+        print('Time ' + repr(self.time))
+        return [dbus.Byte(self.time)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+
+        self.notifying = True
+        self.notify_battery_level()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+
+        self.notifying = False
+
+class AltitudeCharacteristic(Characteristic):
+    """
+
+    """
+    ALTI_UUID = 'b189e5f8-0217-47ad-b29e-35dc95386c87'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.ALTI_UUID,
+                ['read', 'notify'],
+                service)
+        self.notifying = False
+        self.alti = self.append(dbus.Byte(0x06))
+        GLib.timeout_add(5000)
+
+    def notify_lat(self):
+        if not self.notifying:
+            return
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Altitude': [dbus.Byte(self.alti)] }, [])
+
+    def ReadValue(self, options):
+        print('Altitude ' + repr(self.alti))
+        return [dbus.Byte(self.alti)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+
+        self.notifying = True
+        self.notify_battery_level()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+
+        self.notifying = False
+
+class SpeedCharacteristic(Characteristic):
+    """
+
+    """
+    WHEE_UUID = 'd8d76975-9d5d-41d2-b9d2-c9b861bbd80b'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.WHEE_UUID,
+                ['read', 'notify'],
+                service)
+        self.notifying = False
+        self.speed = self.append(dbus.Byte(0x07))
+        GLib.timeout_add(5000)
+
+    def notify_lat(self):
+        if not self.notifying:
+            return
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Lat': [dbus.Byte(self.speed)] }, [])
+
+    def ReadValue(self, options):
+        print('Speed ' + repr(self.speed))
+        return [dbus.Byte(self.speed)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+
+        self.notifying = True
+        self.notify_battery_level()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+
+        self.notifying = False
+
+class COGCharacteristic(Characteristic):
+    """
+
+    """
+    COG_UUID = 'e20c75dc-8dc5-4ecf-83bb-b87bc26963b4'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.COG_UUID,
+                ['read', 'notify'],
+                service)
+        self.cog = self.append(dbus.Byte(0x08))
+        self.notifying = False
+        GLib.timeout_add(5000, self.drain_battery)
+
+    def notify_lat(self):
+        if not self.notifying:
+            return
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Lat': [dbus.Byte(self.cog)] }, [])
+
+    def ReadValue(self, options):
+        print('COG ' + repr(self.cog))
+        return [dbus.Byte(self.cog)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+
+        self.notifying = True
+        self.notify_battery_level()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+
+        self.notifying = False
+
+class DateCharacteristic(Characteristic):
+    """
+
+    """
+    DIA_UUID = '0892b3f5-60d6-4d52-97f2-e7fb187d7253'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.DIA_UUID,
+                ['read', 'notify'],
+                service)
+        self.notifying = False
+        self.date = self.append(dbus.Byte(0x09))
+        GLib.timeout_add(5000)
+
+    def notify_lat(self):
+        if not self.notifying:
+            return
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Lat': [dbus.Byte(self.date)] }, [])
+
+    def ReadValue(self, options):
+        print('Date ' + repr(self.date))
+        return [dbus.Byte(self.date)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+
+        self.notifying = True
+        self.notify_battery_level()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+
+        self.notifying = False
 class TestService(Service):
     """
     Dummy test service that provides characteristics and descriptors that
