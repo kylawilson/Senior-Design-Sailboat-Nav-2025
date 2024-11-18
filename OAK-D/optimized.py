@@ -15,7 +15,7 @@ spatialLocationCalculator = pipeline.create(dai.node.SpatialLocationCalculator)
 
 camRgb: dai.node.Camera = pipeline.create(dai.node.Camera)
 camRgb.setBoardSocket(dai.CameraBoardSocket.CAM_A)
-camRgb.setSize((320, 240))  # Reduced resolution for better performance
+camRgb.setSize((640, 400))  # Reduced resolution for better performance
 
 xoutDepth = pipeline.create(dai.node.XLinkOut)
 xoutSpatialData = pipeline.create(dai.node.XLinkOut)
@@ -95,7 +95,7 @@ with dai.Device(pipeline) as device:
 
             if video.has():
                 frame = video.get().getCvFrame()
-                frame_resized = cv2.resize(frame, (320, 240))  # Reduced resolution for speed
+                frame_resized = cv2.resize(frame, (640, 400))  # Reduced resolution for speed
                 
                 # Prepare a copy of the depth frame for the heatmap
                 depthFrameColor = np.copy(depthFrame)  # Copy depth data for heatmap processing
