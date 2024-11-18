@@ -26,6 +26,22 @@ struct ContentView: View {
                         }
                     }
                 
+                ScrollView {
+                            VStack(spacing: 16) {
+                                // Create a tile for each piece of data in the struct
+                                TileView(label: "Date", value: btService.gpsData.date)
+                                TileView(label: "Time", value: btService.gpsData.time)
+                                TileView(label: "Longitude", value: btService.gpsData.longitude)
+                                TileView(label: "Longitude Indicator", value: btService.gpsData.longitudeInd)
+                                TileView(label: "Latitude", value: btService.gpsData.latitude)
+                                TileView(label: "Latitude Indicator", value: btService.gpsData.latitudeInd)
+                                TileView(label: "Altitude", value: btService.gpsData.altitude)
+                                TileView(label: "COG", value: btService.gpsData.COG)
+                                TileView(label: "Speed", value: btService.gpsData.speed)
+                            }
+                            .padding()  // Add some padding around the entire VStack
+                        }
+                
                 // List of discovered peripherals
                 if btService.discoveredPeripherals.isEmpty {
                     Text("No Triton found")
@@ -68,6 +84,26 @@ struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .padding()
         }
+    }
+}
+
+struct TileView: View {
+    var label: String
+    var value: String
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.headline)
+                .frame(width: 120, alignment: .leading) // Fixed width for the labels
+            Text(value)
+                .font(.body)
+                .foregroundColor(.secondary)  // Use secondary color for the value
+        }
+        .padding()
+        .background(Color.blue.opacity(0.1)) // Light background for each tile
+        .cornerRadius(8)  // Rounded corners
+        .shadow(radius: 5) // Optional: Add a shadow effect for each tile
     }
 }
 
