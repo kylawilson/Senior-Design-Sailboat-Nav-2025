@@ -17,7 +17,7 @@ spatialLocationCalculator = pipeline.create(dai.node.SpatialLocationCalculator)
 
 camRgb: dai.node.Camera = pipeline.create(dai.node.Camera)
 camRgb.setBoardSocket(dai.CameraBoardSocket.CAM_A)
-camRgb.setSize((640,400))
+camRgb.setSize((320,240))
 
 xoutDepth = pipeline.create(dai.node.XLinkOut)
 xoutSpatialData = pipeline.create(dai.node.XLinkOut)
@@ -96,7 +96,7 @@ with dai.Device(pipeline) as device:
 
             if video.has():
                 frame = video.get().getCvFrame()
-                frame_resized = cv2.resize(frame, (640, 400))
+                frame_resized = cv2.resize(frame, (320, 240))
                 
                 # Prepare a copy of the depth frame for the heatmap
                 depthFrameColor = np.copy(depthFrame)  # Copy depth data for heatmap processing
@@ -166,12 +166,12 @@ with dai.Device(pipeline) as device:
                     cv2.putText(frame_resized, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
 
                     # Draw the ROI rectangle on the depth heatmap
-                    cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, thickness=2)
-                    cv2.putText(depthFrameColor, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
+                    #cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, thickness=2)
+                    #cv2.putText(depthFrameColor, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
 
                 # Show both the normal video feed and the depth heatmap with the ROIs overlaid
                 cv2.imshow("video", frame_resized)  # Normal video feed
-                cv2.imshow("depth", depthFrameColor)  # Heatmap (depth) feed
+                #cv2.imshow("depth", depthFrameColor)  # Heatmap (depth) feed
 
             if cv2.waitKey(1) == ord('q'):
                 break
