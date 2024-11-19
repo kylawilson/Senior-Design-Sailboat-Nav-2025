@@ -370,9 +370,17 @@ def read_gps_data(file_path):
     with open(file_path, 'r') as file:
         print("opened file")
         lines = file.readlines()
-        for i in range(0, len(lines), 2):  # Read two lines (UTCtime and Date)
+        for i in range(0, len(lines), 9):  # Read two lines (UTCtime and Date)
             utc_time = lines[i].split(": ")[1].strip()  # Extract UTC time
-            date = lines[i + 1].split(": ")[1].strip()  # Extract Date
+            lat = lines[i + 1].split(": ")[1].strip()  # Extract latitude
+            latInd = lines[i + 2].split(": ")[1].strip()  # Extract latitude indicator
+            long = lines[i + 3].split(": ")[1].strip()  # Extract UTC time
+            longInd = lines[i + 4].split(": ")[1].strip()  # Extract Date
+            altitude = lines[i + 5].split(": ")[1].strip()  # Extract Date
+            speed = lines[i + 6].split(": ")[1].strip()  # Extract UTC time
+            COG = lines[i + 7].split(": ")[1].strip()  # Extract Date
+            date = lines[i + 8].split(": ")[1].strip()  # Extract Date
+
         return float(utc_time), date
 
 
