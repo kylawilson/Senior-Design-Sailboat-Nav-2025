@@ -381,7 +381,7 @@ def read_gps_data(file_path):
             COG = lines[i + 7].split(": ")[1].strip()  # Extract Date
             date = lines[i + 8].split(": ")[1].strip()  # Extract Date
 
-        return float(utc_time), date
+        return float(utc_time), lat, latInd, long, longInd, altitude, speed, COG, date
 
 
 class GPSservice(Service):
@@ -461,7 +461,7 @@ class LongitudeCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.long = 100
-        GLib.timeout_add(5000, self.drain_battery)
+        GLib.timeout_add(1000, self.drain_battery)
     def notify_longitude(self):
         if not self.notifying:
             return
@@ -542,7 +542,16 @@ class LongitudeIndicatorCharacteristic(Characteristic):
                 service)
         self.longindi = dbus.Byte(0x02)
         self.notifying = False
-        #GLib.timeout_add(5000)
+        GLib.timeout_add(1000, self.get_data)
+
+    def get_data(self):
+        _, _, _, _, self.longindi, _, _, _, _ = read_gps_data(GPS_FILE)
+        if not self.notifying:
+            return True
+        if (self.longindi):
+            print('Longitude Indicator ' + repr(self.longindi))
+            self.notify_longindi()
+        return True
 
     def notify_longindi(self):
         if not self.notifying:
@@ -584,7 +593,17 @@ class LatitudeCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.lati = dbus.Byte(0x03)
-        #GLib.timeout_add(5000)
+        GLib.timeout_add(1000, self.get_data)
+
+    def get_data(self):
+        _, self.lati, _, _, _, _, _, _, _ = read_gps_data(GPS_FILE)
+        if not self.notifying:
+            return True
+        if (self.lati):
+            print('Latitude ' + repr(self.lati))
+            self.notify_lat()
+        return True
+
 
     def notify_lat(self):
         if not self.notifying:
@@ -626,9 +645,18 @@ class LatitudeIndicatorCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.latiindi = dbus.Byte(0x04)
-        #GLib.timeout_add(5000)
+        GLib.timeout_add(1000, self.get_data)
 
-    def notify_lat(self):
+    def get_data(self):
+        _, _, self.latiind, _, _, _, _, _, _ = read_gps_data(GPS_FILE)
+        if not self.notifying:
+            return True
+        if (self.latiind):
+            print('Latitude Indicator ' + repr(self.latiind))
+            self.notify_latiind()
+        return True
+
+    def notify_latiind(self):
         if not self.notifying:
             return
         self.PropertiesChanged(
@@ -667,7 +695,7 @@ class GPSTimeCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.time = 0
-        GLib.timeout_add(5000, self.get_data)
+        GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
         self.time, _ = read_gps_data(GPS_FILE)
@@ -721,9 +749,19 @@ class GPSAltitudeCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.alti = dbus.Byte(0x06)
-        #GLib.timeout_add(5000)
+        GLib.timeout_add(1000, self.get_data)
 
-    def notify_lat(self):
+    def get_data(self):
+        _, _, _, _, _, self.alti, _, _, _ = read_gps_data(GPS_FILE)
+        if not self.notifying:
+            return True
+        if (self.alti):
+            print('Altitude ' + repr(self.alti))
+            self.notify_alt()
+        return True
+
+
+    def notify_alt(self):
         if not self.notifying:
             return
         self.PropertiesChanged(
@@ -763,9 +801,19 @@ class GPSSpeedCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.speed = dbus.Byte(0x07)
-        #GLib.timeout_add(5000)
+        GLib.timeout_add(1000, self.get_data)
 
-    def notify_lat(self):
+    def get_data(self):
+        _, _, _, _, _, _, self.speed, _, _ = read_gps_data(GPS_FILE)
+        if not self.notifying:
+            return True
+        if (self.speed):
+            print('Speed ' + repr(self.speed))
+            self.notify_speed()
+        return True
+
+
+    def notify_speed(self):
         if not self.notifying:
             return
         self.PropertiesChanged(
@@ -805,9 +853,19 @@ class GPSCOGCharacteristic(Characteristic):
                 service)
         self.cog = dbus.Byte(0x08)
         self.notifying = False
-        #GLib.timeout_add(5000, self.drain_battery)
+        GLib.timeout_add(1000, self.get_data)
 
-    def notify_lat(self):
+    def get_data(self):
+        _, _, _, _, _, _, _, self.cog, _ = read_gps_data(GPS_FILE)
+        if not self.notifying:
+            return True
+        if (self.cog):
+            print('COG ' + repr(self.cog))
+            self.notify_cog()
+        return True
+
+
+    def notify_cog(self):
         if not self.notifying:
             return
         self.PropertiesChanged(
@@ -847,9 +905,19 @@ class GPSDateCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.date = dbus.Byte(0x09)
-        #GLib.timeout_add(5000)
+        GLib.timeout_add(1000, self.get_data)
 
-    def notify_lat(self):
+    def get_data(self):
+        _, _, _, _, _, _, _, _, self.date = read_gps_data(GPS_FILE)
+        if not self.notifying:
+            return True
+        if (self.date):
+            print('Date ' + repr(self.date))
+            self.notify_date()
+        return True
+
+
+    def notify_date(self):
         if not self.notifying:
             return
         self.PropertiesChanged(
