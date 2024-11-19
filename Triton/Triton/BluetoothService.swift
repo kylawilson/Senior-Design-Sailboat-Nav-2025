@@ -120,9 +120,11 @@ extension BluetoothService: CBCentralManagerDelegate {
         _ central: CBCentralManager,
         didConnect peripheral: CBPeripheral
     ) {
+        
         //connected to the peripheral
         os_log("Connected to %@", peripheral)
         
+        connectionState = .connected
         connectedPeripheral = peripheral
         
         // Make sure we get the discovery callbacks
@@ -141,8 +143,6 @@ extension BluetoothService: CBPeripheralDelegate {
             guard let peripheralServices = peripheral.services else { print("This sux"); return }
             for service in peripheralServices {
                 print(service.uuid)
-                //peripheral.discoverCharacteristics([TransferService.tritonCharacteristicUUID], for: service)
-                //discover all characteristics for now
                 peripheral.discoverCharacteristics(nil, for: service)
             }
     }
