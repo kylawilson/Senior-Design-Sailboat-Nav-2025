@@ -79,6 +79,8 @@ void processRMC(const std::string& line) {
         std::string Speed = fields[7];
         std::string COG = fields[8];
         std::string Date = fields[9];
+        std::string formatted_date = Date.substr(0, 2) + Date.substr(2, 2) + Date.substr(4, 2);
+
 
         if (Speed != "0.00" && (!COG.empty() && COG != "0.00")) {
             // Print or use the extracted values
@@ -95,8 +97,8 @@ void processRMC(const std::string& line) {
         }
 
         if (!Date.empty()) {
-            std::cout << "  Date: " << Date << std::endl;
-            gps_file << "Date: " << Date << std::endl;
+            std::cout << "  Date: " << formatted_date << std::endl;
+            gps_file << "Date: " << formatted_date << std::endl;
         }
     } else {
         std::cerr << "Invalid RMC line: " << line << std::endl;
@@ -145,6 +147,7 @@ int main() {
 
                 // Check for end of a line (NMEA sentence)
                 if (c == '\n') {
+                    std::cout << gps_data << std::endl;
                     if (gps_data.find("GGA") != std::string::npos) {
                         processGGA(gps_data);
                     } 
