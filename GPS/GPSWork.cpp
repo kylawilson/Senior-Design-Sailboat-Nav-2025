@@ -6,11 +6,19 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include <chrono>
+#include <sys/time.h>
+//#include <chrono>
 
 #define GPS_SERIAL_PORT "/dev/serial0" // UART port for Raspberry Pi
 
 std::ofstream gps_file; // Output file stream for GPS data
+
+
+long getCurrentTimeInMilliseconds() {
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
 
 void processGGA(const std::string& line) {
     std::stringstream ss(line);
@@ -139,8 +147,8 @@ int main() {
 
         // Collect GPS data for 100 milliseconds
         gps_data.clear();
-        auto start_time = std::chrono::steady_clock::now();
-        while (std::chrono::steady_clock::now() - start_time < std::chrono::milliseconds(100)) {
+        long start_time = getCurrentTimeInMilliseconds();
+        while (getCurrentTimeInMilliseconds() - start_time < 100) {
             if (serialDataAvail(serial_fd)) {
                 char c = serialGetchar(serial_fd);
                 gps_data += c;
