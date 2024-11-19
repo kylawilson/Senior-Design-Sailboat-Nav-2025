@@ -181,38 +181,38 @@ extension BluetoothService: CBPeripheralDelegate {
             //print("Notification received: \(receivedString ?? "N/A")")
             let newval = value.map { String(format: "%02x", $0) }.joined()
             print("Notification received: \(newval)")
-            updateCharacteristicUI(characteristic.uuid, newval)
+            updateCharacteristicUI(characteristic.uuid, value)
         }
     }
     
-    func updateCharacteristicUI(_ uuid: CBUUID, _ value: String ) {
+    func updateCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {
         switch (uuid) {
         case TransferService.tritonDateCharacteristicUUID :
-            gpsData.date = value
+            gpsData.date = String(data: value, encoding: .utf8) ?? "N/A"
             break
         case TransferService.tritonTimeCharacteristicUUID :
-            gpsData.time = value
+            gpsData.time = String(data: value, encoding: .utf8) ?? "N/A"
             break
         case TransferService.tritonAltitudeCharacteristicUUID :
-            gpsData.altitude = value
+            gpsData.altitude = value.map { String(format: "%02d", $0) }.joined()
             break
         case TransferService.tritonCOGCharacteristicUUID :
-            gpsData.COG = value
+            gpsData.COG = value.map { String(format: "%02d", $0) }.joined()
             break
         case TransferService.tritonSpeedCharacteristicUUID :
-            gpsData.speed = value
+            gpsData.speed = value.map { String(format: "%02d", $0) }.joined()
             break
         case TransferService.tritonLatitudeCharacteristicUUID :
-            gpsData.latitude = value
+            gpsData.latitude = value.map { String(format: "%02d", $0) }.joined()
             break
         case TransferService.tritonLatitudeIndicatorCharacteristicUUID :
-            gpsData.latitudeInd = value
+            gpsData.latitudeInd = value.map { String(format: "%02d", $0) }.joined()
             break
         case TransferService.tritonLongitudeCharacteristicUUID :
-            gpsData.longitude = value
+            gpsData.longitude = value.map { String(format: "%02d", $0) }.joined()
             break
         case TransferService.tritonLongitudeIndicatorCharacteristicUUID :
-            gpsData.longitudeInd = value
+            gpsData.longitudeInd = value.map { String(format: "%02d", $0) }.joined()
             break
         default:
             print("NO MATCH FOR UUID, CANNOT UPDATE UI")
