@@ -1,6 +1,9 @@
-UTCtime: 051057.000
+UTCtime: 003232.868
 Latitude: 
 latIndicator: 
 Longitude: 
 longIndicator: 
 Altitude: 
+Speed: 
+COG: 
+Date: 060180

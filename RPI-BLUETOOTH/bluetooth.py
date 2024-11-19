@@ -9,6 +9,7 @@ import dbus.service
 import time
 import threading
 import struct
+import subprocess
 
 import array
 from gi.repository import GLib
@@ -365,20 +366,33 @@ def read_gps_data(file_path):
     """
     Reads GPS data from a text file and yields it line by line.
     """
+
+    utc_time = None
+    lat = None
+    latInd = None
+    long = None
+    longInd = None
+    altitude = None
+
     with open(file_path, 'r') as file:
         lines = file.readlines()
-        for i in range(0, len(lines), 9):  # Read two lines (UTCtime and Date)
+        if len(lines) % 6 != 0:
+            print("Warning: File does not contain complete blocks of 9 lines.")
+            print(len(lines))
+
+        for i in range(0, len(lines), 6):  # Read two lines (UTCtime and Date)
             utc_time = lines[i].split(": ")[1].strip()  # Extract UTC time
             lat = lines[i + 1].split(": ")[1].strip()  # Extract latitude
             latInd = lines[i + 2].split(": ")[1].strip()  # Extract latitude indicator
             long = lines[i + 3].split(": ")[1].strip()  # Extract longitude
             longInd = lines[i + 4].split(": ")[1].strip()  # Extract longitude indicator
             altitude = lines[i + 5].split(": ")[1].strip()  # Extract altitude
-            speed = lines[i + 6].split(": ")[1].strip()  # Extract speed
-            COG = lines[i + 7].split(": ")[1].strip()  # Extract COG
-            date = lines[i + 8].split(": ")[1].strip()  # Extract date
+            # speed = lines[i + 6].split(": ")[1].strip()  # Extract speed
+            # COG = lines[i + 7].split(": ")[1].strip()  # Extract COG
+            # date = lines[i + 8].split(": ")[1].strip()  # Extract date
 
-        return utc_time, lat, latInd, long, longInd, altitude, speed, COG, date
+        #return utc_time, lat, latInd, long, longInd, altitude, speed, COG, date
+        return utc_time, lat, latInd, long, longInd, altitude
 
 
 class GPSservice(Service):
@@ -394,54 +408,11 @@ class GPSservice(Service):
         self.add_characteristic(LatitudeIndicatorCharacteristic(bus, 3, self))
         self.add_characteristic(GPSTimeCharacteristic(bus, 4, self))
         self.add_characteristic(GPSAltitudeCharacteristic(bus, 5, self))
-        self.add_characteristic(GPSSpeedCharacteristic(bus, 6, self))
-        self.add_characteristic(GPSCOGCharacteristic(bus, 7, self))
-        self.add_characteristic(GPSDateCharacteristic(bus, 8, self))
+        # self.add_characteristic(GPSSpeedCharacteristic(bus, 6, self))
+        # self.add_characteristic(GPSCOGCharacteristic(bus, 7, self))
+        # self.add_characteristic(GPSDateCharacteristic(bus, 8, self))
         self.energy_expended = 0
 
-
-class GPSChrc(Characteristic):
-    GPS_MSRMT_UUID = 'ec2ce16f-f774-4c1f-b3dd-a56b64bc9037'
-
-    def __init__(self, bus, index, service):
-        Characteristic.__init__(
-                self, bus, index,
-                self.GPS_MSRMT_UUID,
-                ['notify'],
-                service)
-        self.notifying = False
-
-    def hr_msrmt_cb(self):
-        value = []
-        value.append(dbus.Byte(0x06))
-        value.append(dbus.Byte(randint(90, 130)))
-        print('Updating GPS: ' + repr(value))
-        self.PropertiesChanged(GATT_CHRC_IFACE, { 'Value': value }, [])
-        return self.notifying
-
-    def _update_hr_msrmt_simulation(self):
-        print('Update GPS')
-
-        if not self.notifying:
-            return
-
-        GLib.timeout_add(1000, self.hr_msrmt_cb)
-
-    def StartNotify(self):
-        if self.notifying:
-            print('Already notifying, nothing to do')
-            return
-
-        self.notifying = True
-        self._update_hr_msrmt_simulation()
-
-    def StopNotify(self):
-        if not self.notifying:
-            print('Not notifying, nothing to do')
-            return
-
-        self.notifying = False
-        self._update_hr_msrmt_simulation()
 
 
 class LongitudeCharacteristic(Characteristic):
@@ -461,7 +432,7 @@ class LongitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, self.long, _, _, _, _, _ = read_gps_data(GPS_FILE)
+        _, _, _, self.long, _, _ = read_gps_data(GPS_FILE)
         if not self.notifying:
             return True
         if (self.long):
@@ -513,7 +484,7 @@ class LongitudeIndicatorCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, self.longindi, _, _, _, _ = read_gps_data(GPS_FILE)
+        _, _, _, _, self.longindi, _ = read_gps_data(GPS_FILE)
         if not self.notifying:
             return True
         if (self.longindi):
@@ -565,7 +536,7 @@ class LatitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, self.lati, _, _, _, _, _, _, _ = read_gps_data(GPS_FILE)
+        _, self.lati, _, _, _, _ = read_gps_data(GPS_FILE)
         if not self.notifying:
             return True
         if (self.lati):
@@ -618,7 +589,7 @@ class LatitudeIndicatorCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, self.latiind, _, _, _, _, _, _ = read_gps_data(GPS_FILE)
+        _, _, self.latiindi, _, _, _ = read_gps_data(GPS_FILE)
         if not self.notifying:
             return True
         if (self.latiindi):
@@ -669,7 +640,7 @@ class GPSTimeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        self.time, _, _, _, _, _, _, _, _ = read_gps_data(GPS_FILE)
+        self.time, _, _, _, _, _ = read_gps_data(GPS_FILE)
         if not self.notifying:
             return True
         if (self.time):
@@ -722,7 +693,7 @@ class GPSAltitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, _, self.alti, _, _, _ = read_gps_data(GPS_FILE)
+        _, _, _, _, _, self.alti = read_gps_data(GPS_FILE)
         if not self.notifying:
             return True
         if (self.alti):
@@ -954,6 +925,11 @@ def shutdown(timeout):
 
 def main(timeout = 0):
     global mainloop
+
+    
+    # process = subprocess.Popen(["/home/triton/Senior-Design-Sailboat-Nav-2025/GPS/GPS"], stdout=subprocess.PIPE)
+    # output = process.stdout.read().decode()
+    # print(f"Python received: {output}")
 
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
