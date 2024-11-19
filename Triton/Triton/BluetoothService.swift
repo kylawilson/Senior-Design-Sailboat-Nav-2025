@@ -114,6 +114,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: (any Error)? ) {
         os_log("Disconnected from %@", peripheral)
+        connectionState = .disconnected
     }
     
     func centralManager(
@@ -164,15 +165,11 @@ extension BluetoothService: CBPeripheralDelegate {
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-            // Deal with errors (if any)
-            if let error = error {
-                os_log("Error changing notification state: %s", error.localizedDescription)
-                return
-            }
-            
-            // Exit if it's not the transfer characteristic
-        //guard characteristic.uuid == TransferService.tritonCharacteristicUUID else { return }
-            
+        // Deal with errors (if any)
+        if let error = error {
+            os_log("Error changing notification state: %s", error.localizedDescription)
+            return
+        }
         if characteristic.isNotifying {
             // Notification has started
             os_log("Notification began on %@", characteristic)
@@ -193,6 +190,14 @@ extension BluetoothService: CBPeripheralDelegate {
         }
     }
     
+    func peripheral(
+        _ peripheral: CBPeripheral,
+        didModifyServices invalidatedServices: [CBService] )
+    {
+        print("Peripheral modified services. Disconnect and attempt reconnect")
+        centralManager.cancelPeripheralConnection(peripheral)
+    }
+    
     func updateCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {
         switch (uuid) {
         case TransferService.tritonDateCharacteristicUUID :
@@ -202,25 +207,25 @@ extension BluetoothService: CBPeripheralDelegate {
             gpsData.time = String(data: value, encoding: .utf8) ?? "N/A"
             break
         case TransferService.tritonAltitudeCharacteristicUUID :
-            gpsData.altitude = value.map { String(format: "%02d", $0) }.joined()
+            gpsData.altitude = String(data: value, encoding: .utf8) ?? "N/A"
             break
         case TransferService.tritonCOGCharacteristicUUID :
-            gpsData.COG = value.map { String(format: "%02d", $0) }.joined()
+            gpsData.COG = String(data: value, encoding: .utf8) ?? "N/A"
             break
         case TransferService.tritonSpeedCharacteristicUUID :
-            gpsData.speed = value.map { String(format: "%02d", $0) }.joined()
+            gpsData.speed = String(data: value, encoding: .utf8) ?? "N/A"
             break
         case TransferService.tritonLatitudeCharacteristicUUID :
-            gpsData.latitude = value.map { String(format: "%02d", $0) }.joined()
+            gpsData.latitude = String(data: value, encoding: .utf8) ?? "N/A"
             break
         case TransferService.tritonLatitudeIndicatorCharacteristicUUID :
-            gpsData.latitudeInd = value.map { String(format: "%02d", $0) }.joined()
+            gpsData.latitudeInd = String(data: value, encoding: .utf8) ?? "N/A"
             break
         case TransferService.tritonLongitudeCharacteristicUUID :
-            gpsData.longitude = value.map { String(format: "%02d", $0) }.joined()
+            gpsData.longitude = String(data: value, encoding: .utf8) ?? "N/A"
             break
         case TransferService.tritonLongitudeIndicatorCharacteristicUUID :
-            gpsData.longitudeInd = value.map { String(format: "%02d", $0) }.joined()
+            gpsData.longitudeInd = String(data: value, encoding: .utf8) ?? "N/A"
             break
         default:
             print("NO MATCH FOR UUID, CANNOT UPDATE UI")

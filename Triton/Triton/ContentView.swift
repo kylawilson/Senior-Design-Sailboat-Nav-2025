@@ -14,72 +14,45 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
-                // Scan toggle
-                
-//                Toggle("Scan for Devices", isOn: $btService.isScanning)
-//                    .toggleStyle(SwitchToggleStyle(tint: .blue))
-//                    .padding()
-//                    .onChange(of: btService.isScanning) { newValue in
-//                        if newValue {
-//                            btService.scanForPeripherals()
-//                        } else {
-//                            btService.stopScanningForPeripherals()
-//                        }
-//                    }
-                
+                HStack {
+                    Text("Connection State: \(btService.connectionState)")
+                        .font(.body)
+                        .fontWeight(.bold)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
+                        .padding(.top, 20)
+                    Button(action: {
+                        btService.scanForPeripherals() // Call the reconnection function
+                    }) {
+                        Text("Reconnect")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .padding(.horizontal)
+                    }
+                }
+                                
                 ScrollView {
-                            VStack(spacing: 16) {
-                                // Create a tile for each piece of data in the struct
-                                TileView(label: "Date", value: btService.gpsData.date)
-                                TileView(label: "Time Since Startup", value: btService.gpsData.time)
-                                TileView(label: "Longitude", value: btService.gpsData.longitude)
-                                TileView(label: "Longitude Indicator", value: btService.gpsData.longitudeInd)
-                                TileView(label: "Latitude", value: btService.gpsData.latitude)
-                                TileView(label: "Latitude Indicator", value: btService.gpsData.latitudeInd)
-                                TileView(label: "Altitude", value: btService.gpsData.altitude)
-                                TileView(label: "COG", value: btService.gpsData.COG)
-                                TileView(label: "Speed", value: btService.gpsData.speed)
-                            }
-                            .padding()  // Add some padding around the entire VStack
-                        }
-                
-                // List of discovered peripherals
-//                if btService.discoveredPeripherals.isEmpty {
-//                    Text("No Triton found")
-//                        .foregroundColor(.gray)
-//                        .italic()
-//                        .padding()
-//                } else {
-//                    List {
-//                        ForEach(btService.discoveredPeripherals, id: \.identifier) { peripheral in
-//                            HStack {
-//                                VStack(alignment: .leading) {
-//                                    Text(peripheral.name ?? "Unknown Device")
-//                                        .font(.headline)
-//                                    Text(peripheral.identifier.uuidString)
-//                                        .font(.subheadline)
-//                                        .foregroundColor(.gray)
-//                                }
-//                                
-//                                Spacer()
-//                                
-//                                Button(action: {
-//                                    btService.connectToPeripheral(peripheral: peripheral)
-//                                }) {
-//                                    Text("Connect")
-//                                        .padding(.horizontal, 12)
-//                                        .padding(.vertical, 6)
-//                                        .background(Color.blue)
-//                                        .foregroundColor(.white)
-//                                        .cornerRadius(8)
-//                                }
-//                            }
-//                            .padding(.vertical, 8)
-//                        }
-//                    }
-//                }
-//                
-//                Spacer()
+                    VStack(spacing: 16) {
+                        // Create a tile for each piece of data in the struct
+                        //TileView(label: "Date", value: btService.gpsData.date)
+                        TileView(label: "Time Since Startup", value: btService.gpsData.time)
+                        TileView(label: "Longitude", value: btService.gpsData.longitude)
+                        TileView(label: "Longitude Indicator", value: btService.gpsData.longitudeInd)
+                        TileView(label: "Latitude", value: btService.gpsData.latitude)
+                        TileView(label: "Latitude Indicator", value: btService.gpsData.latitudeInd)
+                        TileView(label: "Altitude", value: btService.gpsData.altitude)
+                        //TileView(label: "COG", value: btService.gpsData.COG)
+                        //TileView(label: "Speed", value: btService.gpsData.speed)
+                    }
+                    .padding()  // Add some padding around the entire VStack
+                }
             }
             .navigationTitle("Connect to Your Triton!")
             .navigationBarTitleDisplayMode(.inline)
