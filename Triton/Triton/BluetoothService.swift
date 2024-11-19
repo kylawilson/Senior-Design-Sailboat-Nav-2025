@@ -65,6 +65,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         switch (central.state) {
         case .poweredOn:
             os_log("CBManager is powered on")
+            scanForPeripherals()
         case .poweredOff:
             os_log("CBManager is not powered on")
             return
@@ -97,6 +98,11 @@ extension BluetoothService: CBCentralManagerDelegate {
             discoveredPeripherals.append(peripheral)
             print("Discovered \(peripheral.name ?? peripheral.identifier.uuidString)")
         }
+        if connectedPeripheral == nil && peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF" {
+            print("Discovered target peripheral, auto-connecting...")
+            stopScanningForPeripherals()
+            connectToPeripheral(peripheral: peripheral)
+        }
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
@@ -116,6 +122,8 @@ extension BluetoothService: CBCentralManagerDelegate {
     ) {
         //connected to the peripheral
         os_log("Connected to %@", peripheral)
+        
+        connectedPeripheral = peripheral
         
         // Make sure we get the discovery callbacks
         peripheral.delegate = self

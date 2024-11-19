@@ -15,22 +15,23 @@ struct ContentView: View {
         NavigationView {
             VStack(spacing: 20) {
                 // Scan toggle
-                Toggle("Scan for Devices", isOn: $btService.isScanning)
-                    .toggleStyle(SwitchToggleStyle(tint: .blue))
-                    .padding()
-                    .onChange(of: btService.isScanning) { newValue in
-                        if newValue {
-                            btService.scanForPeripherals()
-                        } else {
-                            btService.stopScanningForPeripherals()
-                        }
-                    }
+                
+//                Toggle("Scan for Devices", isOn: $btService.isScanning)
+//                    .toggleStyle(SwitchToggleStyle(tint: .blue))
+//                    .padding()
+//                    .onChange(of: btService.isScanning) { newValue in
+//                        if newValue {
+//                            btService.scanForPeripherals()
+//                        } else {
+//                            btService.stopScanningForPeripherals()
+//                        }
+//                    }
                 
                 ScrollView {
                             VStack(spacing: 16) {
                                 // Create a tile for each piece of data in the struct
                                 TileView(label: "Date", value: btService.gpsData.date)
-                                TileView(label: "Time", value: btService.gpsData.time)
+                                TileView(label: "Time Since Startup", value: btService.gpsData.time)
                                 TileView(label: "Longitude", value: btService.gpsData.longitude)
                                 TileView(label: "Longitude Indicator", value: btService.gpsData.longitudeInd)
                                 TileView(label: "Latitude", value: btService.gpsData.latitude)
@@ -43,42 +44,42 @@ struct ContentView: View {
                         }
                 
                 // List of discovered peripherals
-                if btService.discoveredPeripherals.isEmpty {
-                    Text("No Triton found")
-                        .foregroundColor(.gray)
-                        .italic()
-                        .padding()
-                } else {
-                    List {
-                        ForEach(btService.discoveredPeripherals, id: \.identifier) { peripheral in
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(peripheral.name ?? "Unknown Device")
-                                        .font(.headline)
-                                    Text(peripheral.identifier.uuidString)
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                }
-                                
-                                Spacer()
-                                
-                                Button(action: {
-                                    btService.connectToPeripheral(peripheral: peripheral)
-                                }) {
-                                    Text("Connect")
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(Color.blue)
-                                        .foregroundColor(.white)
-                                        .cornerRadius(8)
-                                }
-                            }
-                            .padding(.vertical, 8)
-                        }
-                    }
-                }
-                
-                Spacer()
+//                if btService.discoveredPeripherals.isEmpty {
+//                    Text("No Triton found")
+//                        .foregroundColor(.gray)
+//                        .italic()
+//                        .padding()
+//                } else {
+//                    List {
+//                        ForEach(btService.discoveredPeripherals, id: \.identifier) { peripheral in
+//                            HStack {
+//                                VStack(alignment: .leading) {
+//                                    Text(peripheral.name ?? "Unknown Device")
+//                                        .font(.headline)
+//                                    Text(peripheral.identifier.uuidString)
+//                                        .font(.subheadline)
+//                                        .foregroundColor(.gray)
+//                                }
+//                                
+//                                Spacer()
+//                                
+//                                Button(action: {
+//                                    btService.connectToPeripheral(peripheral: peripheral)
+//                                }) {
+//                                    Text("Connect")
+//                                        .padding(.horizontal, 12)
+//                                        .padding(.vertical, 6)
+//                                        .background(Color.blue)
+//                                        .foregroundColor(.white)
+//                                        .cornerRadius(8)
+//                                }
+//                            }
+//                            .padding(.vertical, 8)
+//                        }
+//                    }
+//                }
+//                
+//                Spacer()
             }
             .navigationTitle("Connect to Your Triton!")
             .navigationBarTitleDisplayMode(.inline)
