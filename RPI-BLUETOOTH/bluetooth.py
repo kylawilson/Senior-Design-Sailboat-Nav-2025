@@ -379,17 +379,17 @@ def read_gps_data(file_path):
         if len(lines) % 6 != 0:
             print("Warning: File does not contain complete blocks of 9 lines.")
             print(len(lines))
-
-        for i in range(0, len(lines), 6):  # Read two lines (UTCtime and Date)
-            utc_time = lines[i].split(": ")[1].strip()  # Extract UTC time
-            lat = lines[i + 1].split(": ")[1].strip()  # Extract latitude
-            latInd = lines[i + 2].split(": ")[1].strip()  # Extract latitude indicator
-            long = lines[i + 3].split(": ")[1].strip()  # Extract longitude
-            longInd = lines[i + 4].split(": ")[1].strip()  # Extract longitude indicator
-            altitude = lines[i + 5].split(": ")[1].strip()  # Extract altitude
-            # speed = lines[i + 6].split(": ")[1].strip()  # Extract speed
-            # COG = lines[i + 7].split(": ")[1].strip()  # Extract COG
-            # date = lines[i + 8].split(": ")[1].strip()  # Extract date
+        else:
+            for i in range(0, len(lines), 6):  # Read two lines (UTCtime and Date)
+                utc_time = lines[i].split(": ")[1].strip()  # Extract UTC time
+                lat = lines[i + 1].split(": ")[1].strip()  # Extract latitude
+                latInd = lines[i + 2].split(": ")[1].strip()  # Extract latitude indicator
+                long = lines[i + 3].split(": ")[1].strip()  # Extract longitude
+                longInd = lines[i + 4].split(": ")[1].strip()  # Extract longitude indicator
+                altitude = lines[i + 5].split(": ")[1].strip()  # Extract altitude
+                # speed = lines[i + 6].split(": ")[1].strip()  # Extract speed
+                # COG = lines[i + 7].split(": ")[1].strip()  # Extract COG
+                # date = lines[i + 8].split(": ")[1].strip()  # Extract date
 
         #return utc_time, lat, latInd, long, longInd, altitude, speed, COG, date
         return utc_time, lat, latInd, long, longInd, altitude

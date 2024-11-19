@@ -139,9 +139,9 @@ with dai.Device(pipeline) as device:
                     
                     distance = sum(distance_history[ROI_ID]) / len(distance_history[ROI_ID])
 
-                    if distance <= 3000 and distance > 2000:
+                    if distance <= 2500 and distance > 1500:
                         color = yellow
-                    elif distance <= 2000:
+                    elif distance <= 1500:
                         color = red
                         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         if safedist[ROI_ID]:
@@ -158,12 +158,12 @@ with dai.Device(pipeline) as device:
                     cv2.putText(frame_resized, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
 
                     # Draw the ROI rectangle on the depth heatmap
-                    #cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, thickness=2)
-                    #cv2.putText(depthFrameColor, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
+                    cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, thickness=2)
+                    cv2.putText(depthFrameColor, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
 
                 # Show both normal video feed and depth heatmap with ROIs overlaid
                 cv2.imshow("video", frame_resized)  # Normal video feed
-                #cv2.imshow("depth", depthFrameColor)  # Heatmap (depth) feed
+                cv2.imshow("depth", depthFrameColor)  # Heatmap (depth) feed
 
             if cv2.waitKey(1) == ord('q'):
                 break
