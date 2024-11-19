@@ -49,8 +49,13 @@ void processGGA(const std::string& line) {
             gps_file << "Latitude: " << Latitude << std::endl;
             std::cout << "  latIndicator: " << latIndicator << std::endl;
             gps_file << "latIndicator: " << latIndicator << std::endl;
-            std::cout << "  Longitude: " << Longitude << std::endl;
-            gps_file << "Longitude: " << Longitude << std::endl;
+            if (longIndicator == "W"){
+                std::cout << "  Longitude: " << "-" << Longitude << std::endl;
+                gps_file << "Longitude: " << "-" << Longitude << std::endl;
+            } else{
+                std::cout << "  Longitude: " << Longitude << std::endl;
+                gps_file << "Longitude: " << Longitude << std::endl;
+            }
             std::cout << "  longIndicator: " << longIndicator << std::endl;
             gps_file << "longIndicator: " << longIndicator << std::endl;
             std::cout << "  Altitude: " << Altitude << std::endl;
@@ -113,6 +118,7 @@ void processRMC(const std::string& line) {
     }
 }
 
+
 int main() {
     // Initialize WiringPi
     if (wiringPiSetup() == -1) {
@@ -155,13 +161,13 @@ int main() {
 
                 // Check for end of a line (NMEA sentence)
                 if (c == '\n') {
-                    std::cout << gps_data << std::endl;
+                    //std::cout << gps_data << std::endl;
                     if (gps_data.find("GGA") != std::string::npos) {
                         processGGA(gps_data);
                     } 
-                    if (gps_data.find("RMC") != std::string::npos) {
-                        processRMC(gps_data);
-                    }
+                    // if (gps_data.find("RMC") != std::string::npos) {
+                    //     processRMC(gps_data);
+                    // }
                     gps_data.clear();  // Clear after processing the data
                 }
             }
