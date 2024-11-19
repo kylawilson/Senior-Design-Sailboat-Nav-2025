@@ -6,11 +6,19 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include <chrono>
+#include <sys/time.h>
+//#include <chrono>
 
 #define GPS_SERIAL_PORT "/dev/serial0" // UART port for Raspberry Pi
 
 std::ofstream gps_file; // Output file stream for GPS data
+
+
+long getCurrentTimeInMilliseconds() {
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
 
 void processGGA(const std::string& line) {
     std::stringstream ss(line);
@@ -79,6 +87,8 @@ void processRMC(const std::string& line) {
         std::string Speed = fields[7];
         std::string COG = fields[8];
         std::string Date = fields[9];
+        std::string formatted_date = Date.substr(0, 2) + Date.substr(2, 2) + Date.substr(4, 2);
+
 
         if (Speed != "0.00" && (!COG.empty() && COG != "0.00")) {
             // Print or use the extracted values
@@ -95,8 +105,8 @@ void processRMC(const std::string& line) {
         }
 
         if (!Date.empty()) {
-            std::cout << "  Date: " << Date << std::endl;
-            gps_file << "Date: " << Date << std::endl;
+            std::cout << "  Date: " << formatted_date << std::endl;
+            gps_file << "Date: " << formatted_date << std::endl;
         }
     } else {
         std::cerr << "Invalid RMC line: " << line << std::endl;
@@ -137,14 +147,15 @@ int main() {
 
         // Collect GPS data for 100 milliseconds
         gps_data.clear();
-        auto start_time = std::chrono::steady_clock::now();
-        while (std::chrono::steady_clock::now() - start_time < std::chrono::milliseconds(100)) {
+        long start_time = getCurrentTimeInMilliseconds();
+        while (getCurrentTimeInMilliseconds() - start_time < 100) {
             if (serialDataAvail(serial_fd)) {
                 char c = serialGetchar(serial_fd);
                 gps_data += c;
 
                 // Check for end of a line (NMEA sentence)
                 if (c == '\n') {
+                    std::cout << gps_data << std::endl;
                     if (gps_data.find("GGA") != std::string::npos) {
                         processGGA(gps_data);
                     } 

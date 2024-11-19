@@ -141,7 +141,7 @@ class Advertisement(dbus.service.Object):
         print('%s: Released!' % self.path)
 
 
-class TestAdvertisement(Advertisement):
+class GPSAdvertisement(Advertisement):
 
     def __init__(self, bus, index):
         Advertisement.__init__(self, bus, index, 'peripheral')
@@ -162,7 +162,6 @@ class Application(dbus.service.Object):
         self.services = []
         dbus.service.Object.__init__(self, bus, self.path)
         self.add_service(GPSservice(bus, 0))
-        self.add_service(TestService(bus, 1))
 
     def get_path(self):
         return dbus.ObjectPath(self.path)
@@ -366,22 +365,20 @@ def read_gps_data(file_path):
     """
     Reads GPS data from a text file and yields it line by line.
     """
-    print("calling read GPS data")
     with open(file_path, 'r') as file:
-        print("opened file")
         lines = file.readlines()
         for i in range(0, len(lines), 9):  # Read two lines (UTCtime and Date)
             utc_time = lines[i].split(": ")[1].strip()  # Extract UTC time
             lat = lines[i + 1].split(": ")[1].strip()  # Extract latitude
             latInd = lines[i + 2].split(": ")[1].strip()  # Extract latitude indicator
-            long = lines[i + 3].split(": ")[1].strip()  # Extract UTC time
-            longInd = lines[i + 4].split(": ")[1].strip()  # Extract Date
-            altitude = lines[i + 5].split(": ")[1].strip()  # Extract Date
-            speed = lines[i + 6].split(": ")[1].strip()  # Extract UTC time
-            COG = lines[i + 7].split(": ")[1].strip()  # Extract Date
-            date = lines[i + 8].split(": ")[1].strip()  # Extract Date
+            long = lines[i + 3].split(": ")[1].strip()  # Extract longitude
+            longInd = lines[i + 4].split(": ")[1].strip()  # Extract longitude indicator
+            altitude = lines[i + 5].split(": ")[1].strip()  # Extract altitude
+            speed = lines[i + 6].split(": ")[1].strip()  # Extract speed
+            COG = lines[i + 7].split(": ")[1].strip()  # Extract COG
+            date = lines[i + 8].split(": ")[1].strip()  # Extract date
 
-        return float(utc_time), lat, latInd, long, longInd, altitude, speed, COG, date
+        return utc_time, lat, latInd, long, longInd, altitude, speed, COG, date
 
 
 class GPSservice(Service):
@@ -459,74 +456,45 @@ class LongitudeCharacteristic(Characteristic):
                 self.LONG_UUID,
                 ['read', 'notify'],
                 service)
+        self.long = dbus.Byte(0x02)
         self.notifying = False
-        self.long = 100
-        GLib.timeout_add(1000, self.drain_battery)
-    def notify_longitude(self):
-        if not self.notifying:
-            return
-        self.PropertiesChanged(
-                GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(self.long)] }, [])
-    def drain_battery(self):
+        GLib.timeout_add(1000, self.get_data)
+
+    def get_data(self):
+        _, _, _, self.long, _, _, _, _, _ = read_gps_data(GPS_FILE)
         if not self.notifying:
             return True
-        if self.long > 0:
-            self.long -= 2
-            if self.long < 0:
-                self.long = 0
-        print('Longitude: ' + repr(self.long))
-        self.notify_longitude()
+        if (self.long):
+            print('Longitude ' + repr(self.long))
+            self.notify_long()
         return True
+
+    def notify_long(self):
+        if not self.notifying:
+            return
+        long_bytes = [dbus.Byte(ord(c)) for c in self.long]
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Value': [dbus.Byte(b) for b in long_bytes] }, [])
+
     def ReadValue(self, options):
-        print('Longitude read: ' + repr(self.long))
+        print('Longitude ' + repr(self.long))
         return [dbus.Byte(self.long)]
+
     def StartNotify(self):
         if self.notifying:
             print('Already notifying, nothing to do')
             return
+
         self.notifying = True
-        self.notify_longitude()
+        self.notify_long()
+
     def StopNotify(self):
         if not self.notifying:
             print('Not notifying, nothing to do')
             return
+
         self.notifying = False
-
-    # def __init__(self, bus, index, service):
-    #     Characteristic.__init__(
-    #             self, bus, index,
-    #             self.LONG_UUID,
-    #             ['read', 'notify'],
-    #             service)
-    #     self.notifying = False
-    #     self.long = self.append(dbus.Byte(0x01))
-    #     GLib.timeout_add(5000)
-
-    # def notify_longitude(self):
-    #     if not self.notifying:
-    #         return
-    #     self.PropertiesChanged(
-    #             GATT_CHRC_IFACE,
-    #             { 'Value': [dbus.Byte(self.long)] }, [])
-
-    # def ReadValue(self, options):
-    #     print('Longitude read: ' + repr(self.long))
-    #     return [dbus.Byte(self.long)]
-
-    # def StartNotify(self):
-    #     if self.notifying:
-    #         print('Already notifying, nothing to do')
-    #         return
-    #     self.notifying = True
-    #     self.notify_longitude()
-
-    # def StopNotify(self):
-    #     if not self.notifying:
-    #         print('Not notifying, nothing to do')
-    #         return
-
-    #     self.notifying = False
 
 class LongitudeIndicatorCharacteristic(Characteristic):
     """
@@ -556,13 +524,14 @@ class LongitudeIndicatorCharacteristic(Characteristic):
     def notify_longindi(self):
         if not self.notifying:
             return
+        longindi_bytes = [dbus.Byte(ord(c)) for c in self.longindi]
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(self.longindi)] }, [])
+                { 'Value': [dbus.Byte(b) for b in longindi_bytes] }, [])
 
     def ReadValue(self, options):
-        print('Latitude ' + repr(self.battery_lvl))
-        return [dbus.Byte(self.battery_lvl)]
+        print('Longitude Indicator ' + repr(self.longindi))
+        return [dbus.Byte(self.longindi)]
 
     def StartNotify(self):
         if self.notifying:
@@ -570,7 +539,7 @@ class LongitudeIndicatorCharacteristic(Characteristic):
             return
 
         self.notifying = True
-        self.notify_battery_level()
+        self.notify_longindi()
 
     def StopNotify(self):
         if not self.notifying:
@@ -608,9 +577,10 @@ class LatitudeCharacteristic(Characteristic):
     def notify_lat(self):
         if not self.notifying:
             return
+        lati_bytes = [dbus.Byte(ord(c)) for c in self.lati]
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(self.lati)] }, [])
+                { 'Value': [dbus.Byte(b) for b in lati_bytes] }, [])
 
     def ReadValue(self, options):
         print('Latitude ' + repr(self.lati))
@@ -651,21 +621,22 @@ class LatitudeIndicatorCharacteristic(Characteristic):
         _, _, self.latiind, _, _, _, _, _, _ = read_gps_data(GPS_FILE)
         if not self.notifying:
             return True
-        if (self.latiind):
-            print('Latitude Indicator ' + repr(self.latiind))
-            self.notify_latiind()
+        if (self.latiindi):
+            print('Latitude Indicator ' + repr(self.latiindi))
+            self.notify_latiindi()
         return True
 
-    def notify_latiind(self):
+    def notify_latiindi(self):
         if not self.notifying:
             return
+        latiindi_bytes = [dbus.Byte(ord(c)) for c in self.latiindi]
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(self.latiindi)] }, [])
+                { 'Value': [dbus.Byte(b) for b in latiindi_bytes] }, [])
 
     def ReadValue(self, options):
-        print('Latitude Indicator ' + repr(self.latiinid))
-        return [dbus.Byte(self.battery_lvl)]
+        print('Latitude Indicator ' + repr(self.latiinidi))
+        return [dbus.Byte(self.latiindi)]
 
     def StartNotify(self):
         if self.notifying:
@@ -673,7 +644,7 @@ class LatitudeIndicatorCharacteristic(Characteristic):
             return
 
         self.notifying = True
-        self.notify_battery_level()
+        self.notify_latiindi()
 
     def StopNotify(self):
         if not self.notifying:
@@ -698,7 +669,7 @@ class GPSTimeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        self.time, _ = read_gps_data(GPS_FILE)
+        self.time, _, _, _, _, _, _, _, _ = read_gps_data(GPS_FILE)
         if not self.notifying:
             return True
         if (self.time):
@@ -710,8 +681,7 @@ class GPSTimeCharacteristic(Characteristic):
     def notify_time(self):
         if not self.notifying:
             return
-        scaled_time = int(self.time * 1000)
-        time_bytes = struct.pack(">I", scaled_time)
+        time_bytes = [dbus.Byte(ord(c)) for c in self.time]
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
                 { 'Value': [dbus.Byte(b) for b in time_bytes] }, [])
@@ -764,9 +734,10 @@ class GPSAltitudeCharacteristic(Characteristic):
     def notify_alt(self):
         if not self.notifying:
             return
+        alti_bytes = [dbus.Byte(ord(c)) for c in self.alti]
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(self.alti)] }, [])
+                { 'Value': [dbus.Byte(b) for b in alti_bytes] }, [])
 
     def ReadValue(self, options):
         print('Altitude ' + repr(self.alti))
@@ -778,7 +749,7 @@ class GPSAltitudeCharacteristic(Characteristic):
             return
 
         self.notifying = True
-        self.notify_lat()
+        self.notify_alt()
 
     def StopNotify(self):
         if not self.notifying:
@@ -816,9 +787,10 @@ class GPSSpeedCharacteristic(Characteristic):
     def notify_speed(self):
         if not self.notifying:
             return
+        speed_bytes = [dbus.Byte(ord(c)) for c in self.speed]
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(self.speed)] }, [])
+                { 'Value': [dbus.Byte(b) for b in speed_bytes] }, [])
 
     def ReadValue(self, options):
         print('Speed ' + repr(self.speed))
@@ -830,7 +802,7 @@ class GPSSpeedCharacteristic(Characteristic):
             return
 
         self.notifying = True
-        self.notify_battery_level()
+        self.notify_speed()
 
     def StopNotify(self):
         if not self.notifying:
@@ -868,9 +840,10 @@ class GPSCOGCharacteristic(Characteristic):
     def notify_cog(self):
         if not self.notifying:
             return
+        cog_bytes = [dbus.Byte(ord(c)) for c in self.cog]
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(self.cog)] }, [])
+                { 'Value': [dbus.Byte(b) for b in cog_bytes] }, [])
 
     def ReadValue(self, options):
         print('COG ' + repr(self.cog))
@@ -882,7 +855,7 @@ class GPSCOGCharacteristic(Characteristic):
             return
 
         self.notifying = True
-        self.notify_battery_level()
+        self.notify_cogl()
 
     def StopNotify(self):
         if not self.notifying:
@@ -920,9 +893,10 @@ class GPSDateCharacteristic(Characteristic):
     def notify_date(self):
         if not self.notifying:
             return
+        date_bytes = [dbus.Byte(ord(c)) for c in self.date]
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(self.date)] }, [])
+                { 'Value': [dbus.Byte(b) for b in date_bytes] }, [])
 
     def ReadValue(self, options):
         print('Date ' + repr(self.date))
@@ -932,55 +906,8 @@ class GPSDateCharacteristic(Characteristic):
         if self.notifying:
             print('Already notifying, nothing to do')
             return
-
         self.notifying = True
-        self.notify_battery_level()
-
-    def StopNotify(self):
-        if not self.notifying:
-            print('Not notifying, nothing to do')
-            return
-
-        self.notifying = False
-class TestService(Service):
-    """
-    Dummy test service that provides characteristics and descriptors that
-    exercise various API functionality.
-
-    """
-    TEST_SVC_UUID = '12345678-1234-5678-1234-56789abcdef0'
-
-    def __init__(self, bus, index):
-        Service.__init__(self, bus, index, self.TEST_SVC_UUID, True)
-        self.add_characteristic(TestCharacteristic(bus, 0, self))
-
-class TestCharacteristic(Characteristic):
-    """
-    Dummy test characteristic. Allows writing arbitrary bytes to its value, and
-    contains "extended properties", as well as a test descriptor.
-
-    """
-    TEST_CHRC_UUID = '12345678-1234-5678-1234-56789abcdef1'
-
-    def __init__(self, bus, index, service):
-        Characteristic.__init__(
-                self, bus, index,
-                self.TEST_CHRC_UUID,
-                ['read', 'write', 'writable-auxiliaries', 'notify'],
-                service)
-        self.notifying = False
-        self.value = []
-        self.add_descriptor(TestDescriptor(bus, 0, self))
-        self.add_descriptor(
-                CharacteristicUserDescriptionDescriptor(bus, 1, self))
-
-    def StartNotify(self):
-        if self.notifying:
-            print('Already notifying, nothing to do')
-            return
-
-        self.notifying = True
-        self.notify_battery_level()
+        self.notify_date()
 
     def StopNotify(self):
         if not self.notifying:
@@ -989,59 +916,7 @@ class TestCharacteristic(Characteristic):
 
         self.notifying = False
 
-    def ReadValue(self, options):
-        print('TestCharacteristic Read: ' + repr(self.value))
-        return self.value
 
-    def WriteValue(self, value, options):
-        print('TestCharacteristic Write: ' + repr(value))
-        self.value = value
-
-
-class TestDescriptor(Descriptor):
-    """
-    Dummy test descriptor. Returns a static value.
-
-    """
-    TEST_DESC_UUID = '12345678-1234-5678-1234-56789abcdef2'
-
-    def __init__(self, bus, index, characteristic):
-        Descriptor.__init__(
-                self, bus, index,
-                self.TEST_DESC_UUID,
-                ['read', 'write'],
-                characteristic)
-
-    def ReadValue(self, options):
-        return [
-                dbus.Byte('T'), dbus.Byte('e'), dbus.Byte('s'), dbus.Byte('t')
-        ]
-
-
-class CharacteristicUserDescriptionDescriptor(Descriptor):
-    """
-    Writable CUD descriptor.
-
-    """
-    CUD_UUID = '2901'
-
-    def __init__(self, bus, index, characteristic):
-        self.writable = 'writable-auxiliaries' in characteristic.flags
-        self.value = array.array('B', b'This is a characteristic for testing')
-        self.value = self.value.tolist()
-        Descriptor.__init__(
-                self, bus, index,
-                self.CUD_UUID,
-                ['read', 'write'],
-                characteristic)
-
-    def ReadValue(self, options):
-        return self.value
-
-    def WriteValue(self, value, options):
-        if not self.writable:
-            raise NotPermittedException()
-        self.value = value
 
 def register_app_cb():
     print('GATT application registered')
@@ -1099,7 +974,7 @@ def main(timeout = 0):
                                 LE_ADVERTISING_MANAGER_IFACE)
 
     app = Application(bus)
-    test_advertisement = TestAdvertisement(bus, 0)
+    gps_advertisement = GPSAdvertisement(bus, 0)
 
     mainloop = GLib.MainLoop()
 
@@ -1108,15 +983,15 @@ def main(timeout = 0):
     service_manager.RegisterApplication(app.get_path(), {},
                                     reply_handler=register_app_cb,
                                     error_handler=register_app_error_cb)
-    ad_manager.RegisterAdvertisement(test_advertisement.get_path(), {},
+    ad_manager.RegisterAdvertisement(gps_advertisement.get_path(), {},
                                      reply_handler=register_ad_cb,
                                      error_handler=register_ad_error_cb)
 
     mainloop.run()
 
-    ad_manager.UnregisterAdvertisement(test_advertisement)
+    ad_manager.UnregisterAdvertisement(gps_advertisement)
     print('Advertisement unregistered')
-    dbus.service.Object.remove_from_connection(test_advertisement)
+    dbus.service.Object.remove_from_connection(gps_advertisement)
 
 if __name__ == '__main__':
     
