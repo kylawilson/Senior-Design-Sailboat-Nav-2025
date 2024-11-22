@@ -24,9 +24,9 @@ struct ContentView: View {
                         .cornerRadius(10)
                         .padding(.top, 20)
                     Button(action: {
-                        btService.scanForPeripherals() // Call the reconnection function
+                        btService.disconnect()
                     }) {
-                        Text("Reconnect")
+                        Text("Disconnect")
                             .font(.headline)
                             .fontWeight(.bold)
                             .padding()
@@ -42,7 +42,7 @@ struct ContentView: View {
                     VStack(spacing: 16) {
                         // Create a tile for each piece of data in the struct
                         //TileView(label: "Date", value: btService.gpsData.date)
-                        TileView(label: "Time Since Startup", value: btService.gpsData.time)
+                        TileView(label: "UTC Time", value: btService.gpsData.time)
                         TileView(label: "Longitude", value: btService.gpsData.longitude)
                         TileView(label: "Longitude Indicator", value: btService.gpsData.longitudeInd)
                         TileView(label: "Latitude", value: btService.gpsData.latitude)

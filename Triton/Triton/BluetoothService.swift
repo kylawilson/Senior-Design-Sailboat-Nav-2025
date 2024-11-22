@@ -57,6 +57,20 @@ class BluetoothService: NSObject, ObservableObject {
             centralManager.connect(peripheral, options: nil)
         }
     }
+    
+    func reconnect() {
+        //if there is a connected peripheral, then drop the connection
+        if connectedPeripheral != nil {
+            centralManager.cancelPeripheralConnection(connectedPeripheral!)
+        }
+        self.scanForPeripherals()
+    }
+    
+    func disconnect() {
+        if connectedPeripheral != nil {
+            centralManager.cancelPeripheralConnection(connectedPeripheral!)
+        }
+    }
 }
 
 extension BluetoothService: CBCentralManagerDelegate {
@@ -115,6 +129,8 @@ extension BluetoothService: CBCentralManagerDelegate {
         error: (any Error)? ) {
         os_log("Disconnected from %@", peripheral)
         connectionState = .disconnected
+        connectedPeripheral = nil
+        discoveredPeripherals = []
     }
     
     func centralManager(
