@@ -35,14 +35,14 @@ class BluetoothService: NSObject, ObservableObject {
     func scanForPeripherals() {
         connectionState = .scanning
         //centralManager.scanForPeripherals(withServices: nil)    //scan for peripherals w all services
-        centralManager.scanForPeripherals(withServices: [ TransferService.tritonAdvertisingServiceUUID ])    //scan fpr triton's service
-        print("Scanning for peripherals")
+        centralManager.scanForPeripherals(withServices: [ TransferService.tritonAdvertisingServiceUUID ])    //scan for triton's service
+        os_log("Scanning for peripherals")
     }
     
     func stopScanningForPeripherals() {
         connectionState = .disconnected
         centralManager.stopScan()
-        print("Stopped scanning for peripherals")
+        os_log("Stopped scanning for peripherals")
     }
     
     func connectToPeripheral(peripheral: CBPeripheral) {
@@ -157,7 +157,7 @@ extension BluetoothService: CBPeripheralDelegate {
         _ peripheral: CBPeripheral,
         didDiscoverServices error: (any Error)? ) {
             print("discovered %@", peripheral)
-            guard let peripheralServices = peripheral.services else { print("This sux"); return }
+            guard let peripheralServices = peripheral.services else { os_log("Error in didDiscoverServices"); return }
             for service in peripheralServices {
                 print(service.uuid)
                 peripheral.discoverCharacteristics(nil, for: service)
