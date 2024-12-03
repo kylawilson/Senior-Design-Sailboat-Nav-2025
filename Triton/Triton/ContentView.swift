@@ -24,12 +24,13 @@ struct ContentView: View {
                                 .fontWeight(.bold)
                                 .padding()
                                 .frame(maxWidth: .infinity)
-                                .background(Color.red)
+                                .background((btService.connectionState != .connected) ? Color.gray : Color.red)
                                 .foregroundColor(.white)
                                 .cornerRadius(10)
                                 .padding(.horizontal)
                         }
                         .disabled(btService.connectionState != .connected)
+                        .opacity((btService.connectionState != .connected) ? 0.6 : 1.0)
                         Button(action: {
                             btService.reconnect()
                         }) {
@@ -38,12 +39,13 @@ struct ContentView: View {
                                 .fontWeight(.bold)
                                 .padding()
                                 .frame(maxWidth: .infinity)
-                                .background(Color.green)
+                                .background((btService.connectionState != .disconnected) ? Color.gray : Color.green)
                                 .foregroundColor(.white)
                                 .cornerRadius(10)
                                 .padding(.horizontal)
                         }
                         .disabled(btService.connectionState != .disconnected)
+                        .opacity((btService.connectionState != .disconnected) ? 0.6 : 1.0)
                     }
                     .frame(maxHeight: .infinity)
                     Text("\(btService.connectionState)")
