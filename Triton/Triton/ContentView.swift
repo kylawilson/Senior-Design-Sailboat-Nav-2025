@@ -14,29 +14,47 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
-                HStack {
-                    Text("Connection State: \(btService.connectionState)")
+                HStack(alignment: .top) {
+                    VStack {
+                        Button(action: {
+                            btService.disconnect()
+                        }) {
+                            Text("Disconnect")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.red)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                .padding(.horizontal)
+                        }
+                        .disabled(btService.connectionState != .connected)
+                        Button(action: {
+                            btService.reconnect()
+                        }) {
+                            Text("Connect")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.green)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                .padding(.horizontal)
+                        }
+                        .disabled(btService.connectionState != .disconnected)
+                    }
+                    .frame(maxHeight: .infinity)
+                    Text("\(btService.connectionState)")
                         .font(.body)
                         .fontWeight(.bold)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .background(Color.gray.opacity(0.2))
                         .cornerRadius(10)
-                        .padding(.top, 20)
-                    Button(action: {
-                        btService.disconnect()
-                    }) {
-                        Text("Disconnect")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                            .padding(.horizontal)
-                    }
                 }
+                .fixedSize(horizontal: false, vertical: true)
                                 
                 ScrollView {
                     VStack(spacing: 16) {
@@ -69,7 +87,9 @@ struct TileView: View {
         HStack {
             Text(label)
                 .font(.headline)
-                .frame(width: 120, alignment: .leading) // Fixed width for the labels
+                .frame(maxWidth: .infinity, alignment: .leading)
+                //.frame(maxWidth: .infinity)
+                //.frame(width: 150, alignment: .leading) // Fixed width for the labels
             Text(value)
                 .font(.body)
                 .foregroundColor(.secondary)  // Use secondary color for the value

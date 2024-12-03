@@ -34,13 +34,12 @@ class BluetoothService: NSObject, ObservableObject {
     
     func scanForPeripherals() {
         connectionState = .scanning
-        //centralManager.scanForPeripherals(withServices: nil)    //scan for peripherals w all services
         centralManager.scanForPeripherals(withServices: [ TransferService.tritonAdvertisingServiceUUID ])    //scan for triton's service
         os_log("Scanning for peripherals")
     }
     
     func stopScanningForPeripherals() {
-        connectionState = .disconnected
+//        connectionState = .disconnected
         centralManager.stopScan()
         os_log("Stopped scanning for peripherals")
     }
@@ -60,13 +59,14 @@ class BluetoothService: NSObject, ObservableObject {
     
     func reconnect() {
         //if there is a connected peripheral, then drop the connection
-        if connectedPeripheral != nil {
-            centralManager.cancelPeripheralConnection(connectedPeripheral!)
-        }
+//        if connectedPeripheral != nil {
+//            centralManager.cancelPeripheralConnection(connectedPeripheral!)
+//        }
         self.scanForPeripherals()
     }
     
     func disconnect() {
+        connectionState = .disconnecting
         if connectedPeripheral != nil {
             centralManager.cancelPeripheralConnection(connectedPeripheral!)
         }
@@ -127,10 +127,15 @@ extension BluetoothService: CBCentralManagerDelegate {
         _ central: CBCentralManager,
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: (any Error)? ) {
-        os_log("Disconnected from %@", peripheral)
-        connectionState = .disconnected
-        connectedPeripheral = nil
-        discoveredPeripherals = []
+            if (connectionState != .disconnecting) {
+                os_log("Disconnected from %@, reconnecting...", peripheral)
+                reconnect()
+            } else {
+                os_log("Disconnected from %@", peripheral)
+                connectionState = .disconnected
+                connectedPeripheral = nil
+                discoveredPeripherals = []
+            }
     }
     
     func centralManager(
@@ -206,10 +211,7 @@ extension BluetoothService: CBPeripheralDelegate {
         }
     }
     
-    func peripheral(
-        _ peripheral: CBPeripheral,
-        didModifyServices invalidatedServices: [CBService] )
-    {
+    func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         print("Peripheral modified services. Disconnect and attempt reconnect")
         centralManager.cancelPeripheralConnection(peripheral)
     }
