@@ -213,7 +213,7 @@ extension BluetoothService: CBPeripheralDelegate {
     
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         print("Peripheral modified services. Disconnect and attempt reconnect")
-        centralManager.cancelPeripheralConnection(peripheral)
+        //centralManager.cancelPeripheralConnection(peripheral)
     }
     
     func updateCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {
