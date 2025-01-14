@@ -17,7 +17,9 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var gpsData = GPSData()
     private var centralManager: CBCentralManager
     private var connectedPeripheral: CBPeripheral?
+    private var transferServices = [ GPSTransferService.tritonGPSServiceUUID, PhotoTransferService.tritonPhotoServiceUUID ]
     private var gpsTransferCharacteristics = [ GPSTransferService.tritonLongitudeCharacteristicUUID, GPSTransferService.tritonCOGCharacteristicUUID, GPSTransferService.tritonLatitudeCharacteristicUUID, GPSTransferService.tritonDateCharacteristicUUID, GPSTransferService.tritonAltitudeCharacteristicUUID, GPSTransferService.tritonLatitudeIndicatorCharacteristicUUID, GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID, GPSTransferService.tritonTimeCharacteristicUUID, GPSTransferService.tritonSpeedCharacteristicUUID]
+    private var photoTransferCharacteristics = [ PhotoTransferService.tritonPhotoCharacteristicUUID ]
     private var subscribedCharacteristics : [ CBCharacteristic ]
     
     
@@ -157,7 +159,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         peripheral.delegate = self
         
         //discover services on connected peripheral
-        peripheral.discoverServices(nil)
+        peripheral.discoverServices(transferServices)
     }
 }
 
@@ -181,6 +183,7 @@ extension BluetoothService: CBPeripheralDelegate {
             guard let serviceCharacteristics = service.characteristics else { return }
             for characteristic in serviceCharacteristics  {
                 //subscribe only to the characteristics we want (in this case, GPS characteristics)
+                //now have to add photo characteristic
                 if gpsTransferCharacteristics.contains(characteristic.uuid) {
                     print(characteristic.uuid)
                     subscribedCharacteristics.append(characteristic)
