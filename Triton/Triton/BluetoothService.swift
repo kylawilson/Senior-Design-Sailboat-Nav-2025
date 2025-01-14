@@ -17,7 +17,7 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var gpsData = GPSData()
     private var centralManager: CBCentralManager
     private var connectedPeripheral: CBPeripheral?
-    private var transferCharacteristics = [ TransferService.tritonLongitudeCharacteristicUUID, TransferService.tritonCOGCharacteristicUUID, TransferService.tritonLatitudeCharacteristicUUID, TransferService.tritonDateCharacteristicUUID, TransferService.tritonAltitudeCharacteristicUUID, TransferService.tritonLatitudeIndicatorCharacteristicUUID, TransferService.tritonLongitudeIndicatorCharacteristicUUID, TransferService.tritonTimeCharacteristicUUID, TransferService.tritonSpeedCharacteristicUUID]
+    private var gpsTransferCharacteristics = [ GPSTransferService.tritonLongitudeCharacteristicUUID, GPSTransferService.tritonCOGCharacteristicUUID, GPSTransferService.tritonLatitudeCharacteristicUUID, GPSTransferService.tritonDateCharacteristicUUID, GPSTransferService.tritonAltitudeCharacteristicUUID, GPSTransferService.tritonLatitudeIndicatorCharacteristicUUID, GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID, GPSTransferService.tritonTimeCharacteristicUUID, GPSTransferService.tritonSpeedCharacteristicUUID]
     private var subscribedCharacteristics : [ CBCharacteristic ]
     
     
@@ -34,7 +34,7 @@ class BluetoothService: NSObject, ObservableObject {
     
     func scanForPeripherals() {
         connectionState = .scanning
-        centralManager.scanForPeripherals(withServices: [ TransferService.tritonAdvertisingServiceUUID ])    //scan for triton's service
+        centralManager.scanForPeripherals(withServices: [ GPSTransferService.tritonAdvertisingServiceUUID ])    //scan for triton's service
         os_log("Scanning for peripherals")
     }
     
@@ -177,7 +177,7 @@ extension BluetoothService: CBPeripheralDelegate {
             guard let serviceCharacteristics = service.characteristics else { return }
             for characteristic in serviceCharacteristics  {
                 //subscribe only to the characteristics we want (in this case, GPS characteristics)
-                if transferCharacteristics.contains(characteristic.uuid) {
+                if gpsTransferCharacteristics.contains(characteristic.uuid) {
                     print(characteristic.uuid)
                     subscribedCharacteristics.append(characteristic)
                     peripheral.setNotifyValue(true, for: characteristic)
@@ -218,31 +218,31 @@ extension BluetoothService: CBPeripheralDelegate {
     
     func updateCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {
         switch (uuid) {
-        case TransferService.tritonDateCharacteristicUUID :
+        case GPSTransferService.tritonDateCharacteristicUUID :
             gpsData.date = String(data: value, encoding: .utf8) ?? "N/A"
             break
-        case TransferService.tritonTimeCharacteristicUUID :
+        case GPSTransferService.tritonTimeCharacteristicUUID :
             gpsData.time = String(data: value, encoding: .utf8) ?? "N/A"
             break
-        case TransferService.tritonAltitudeCharacteristicUUID :
+        case GPSTransferService.tritonAltitudeCharacteristicUUID :
             gpsData.altitude = String(data: value, encoding: .utf8) ?? "N/A"
             break
-        case TransferService.tritonCOGCharacteristicUUID :
+        case GPSTransferService.tritonCOGCharacteristicUUID :
             gpsData.COG = String(data: value, encoding: .utf8) ?? "N/A"
             break
-        case TransferService.tritonSpeedCharacteristicUUID :
+        case GPSTransferService.tritonSpeedCharacteristicUUID :
             gpsData.speed = String(data: value, encoding: .utf8) ?? "N/A"
             break
-        case TransferService.tritonLatitudeCharacteristicUUID :
+        case GPSTransferService.tritonLatitudeCharacteristicUUID :
             gpsData.latitude = String(data: value, encoding: .utf8) ?? "N/A"
             break
-        case TransferService.tritonLatitudeIndicatorCharacteristicUUID :
+        case GPSTransferService.tritonLatitudeIndicatorCharacteristicUUID :
             gpsData.latitudeInd = String(data: value, encoding: .utf8) ?? "N/A"
             break
-        case TransferService.tritonLongitudeCharacteristicUUID :
+        case GPSTransferService.tritonLongitudeCharacteristicUUID :
             gpsData.longitude = String(data: value, encoding: .utf8) ?? "N/A"
             break
-        case TransferService.tritonLongitudeIndicatorCharacteristicUUID :
+        case GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID :
             gpsData.longitudeInd = String(data: value, encoding: .utf8) ?? "N/A"
             break
         default:
