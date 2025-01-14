@@ -108,10 +108,14 @@ extension BluetoothService: CBCentralManagerDelegate {
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        
+        //if not already in list, add peripheral to discoveredPeripherals
         if !discoveredPeripherals.contains(where: { $0.identifier == peripheral.identifier }) {
             discoveredPeripherals.append(peripheral)
             print("Discovered \(peripheral.name ?? peripheral.identifier.uuidString)")
         }
+        
+        //if we're not connected to peripheral and the UUID matches, then stop scanning and connect to peripheral
         if connectedPeripheral == nil && peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF" {
             print("Discovered target peripheral, auto-connecting...")
             stopScanningForPeripherals()
