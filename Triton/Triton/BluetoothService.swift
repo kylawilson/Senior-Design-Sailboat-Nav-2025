@@ -15,12 +15,16 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var discoveredPeripherals: [ CBPeripheral ]
     @Published var isScanning: Bool = false
     @Published var gpsData = GPSData()
+    private var photoData = Data()                                              //raw jpeg data
     private var centralManager: CBCentralManager
     private var connectedPeripheral: CBPeripheral?
     private var transferServices = [ GPSTransferService.tritonGPSServiceUUID, PhotoTransferService.tritonPhotoServiceUUID ]
     private var gpsTransferCharacteristics = [ GPSTransferService.tritonLongitudeCharacteristicUUID, GPSTransferService.tritonCOGCharacteristicUUID, GPSTransferService.tritonLatitudeCharacteristicUUID, GPSTransferService.tritonDateCharacteristicUUID, GPSTransferService.tritonAltitudeCharacteristicUUID, GPSTransferService.tritonLatitudeIndicatorCharacteristicUUID, GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID, GPSTransferService.tritonTimeCharacteristicUUID, GPSTransferService.tritonSpeedCharacteristicUUID]
     private var photoTransferCharacteristics = [ PhotoTransferService.tritonPhotoCharacteristicUUID ]
     private var subscribedCharacteristics : [ CBCharacteristic ]
+    
+    //test
+    
     
     
     override init() {
@@ -182,9 +186,8 @@ extension BluetoothService: CBPeripheralDelegate {
         print("discovered characteristics")
             guard let serviceCharacteristics = service.characteristics else { return }
             for characteristic in serviceCharacteristics  {
-                //subscribe only to the characteristics we want (in this case, GPS characteristics)
-                //now have to add photo characteristic
-                if gpsTransferCharacteristics.contains(characteristic.uuid) {
+                //subscribe only to the characteristics we want (in this case, GPS characteristics and photo characteristics)
+                if gpsTransferCharacteristics.contains(characteristic.uuid) || photoTransferCharacteristics.contains(characteristic.uuid) {
                     print(characteristic.uuid)
                     subscribedCharacteristics.append(characteristic)
                     peripheral.setNotifyValue(true, for: characteristic)
@@ -209,21 +212,27 @@ extension BluetoothService: CBPeripheralDelegate {
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if let value = characteristic.value {
-            // Process the received value
-            //let receivedString = String(data: value, encoding: .utf8)
-            //print("Notification received: \(receivedString ?? "N/A")")
-            let newval = value.map { String(format: "%02x", $0) }.joined()
-            print("Notification received: \(newval)")
-            updateCharacteristicUI(characteristic.uuid, value)
+            //photo data
+            if photoTransferCharacteristics.contains(characteristic.uuid) {
+                photoData.append(value)
+            } else {
+            //GPS data
+                // Process the received value
+                //let receivedString = String(data: value, encoding: .utf8)
+                //print("Notification received: \(receivedString ?? "N/A")")
+                let newval = value.map { String(format: "%02x", $0) }.joined()
+                print("Notification received: \(newval)")
+                updateGPSCharacteristicUI(characteristic.uuid, value)
+            }
         }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
-        print("Peripheral modified services. Disconnect and attempt reconnect")
+        print("Peripheral modified services")
         //centralManager.cancelPeripheralConnection(peripheral)
     }
     
-    func updateCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {
+    func updateGPSCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {
         switch (uuid) {
         case GPSTransferService.tritonDateCharacteristicUUID :
             gpsData.date = String(data: value, encoding: .utf8) ?? "N/A"
