@@ -57,7 +57,9 @@ struct ContentView: View {
                         .cornerRadius(10)
                 }
                 .fixedSize(horizontal: false, vertical: true)
-                                
+                
+                createImage(btService.finalPhotoData)
+                
                 ScrollView {
                     VStack(spacing: 16) {
                         // Create a tile for each piece of data in the struct
@@ -102,6 +104,15 @@ struct TileView: View {
         .shadow(radius: 5) // Optional: Add a shadow effect for each tile
     }
 }
+
+
+//I think keep this in BluetoothService
+func createImage(_ value: Data) -> Image {
+    let liveFeed: UIImage = UIImage(data: value) ?? UIImage()
+    return Image(uiImage: liveFeed)
+}
+
+
 
 
 

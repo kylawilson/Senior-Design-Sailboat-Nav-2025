@@ -8,6 +8,8 @@
 import Foundation
 import CoreBluetooth
 import os
+import UIKit.UIImage
+import SwiftUI
 
 class BluetoothService: NSObject, ObservableObject {
     
@@ -15,7 +17,8 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var discoveredPeripherals: [ CBPeripheral ]
     @Published var isScanning: Bool = false
     @Published var gpsData = GPSData()
-    private var photoData = Data()                                              //raw jpeg data
+    @Published var finalPhotoData = Data()
+    private var tempPhotoData = Data()                                              //raw jpeg data
     private var centralManager: CBCentralManager
     private var connectedPeripheral: CBPeripheral?
     private var transferServices = [ GPSTransferService.tritonGPSServiceUUID, PhotoTransferService.tritonPhotoServiceUUID ]
@@ -214,7 +217,7 @@ extension BluetoothService: CBPeripheralDelegate {
         if let value = characteristic.value {
             //photo data
             if photoTransferCharacteristics.contains(characteristic.uuid) {
-                photoData.append(value)
+                tempPhotoData.append(value)
             } else {
             //GPS data
                 // Process the received value
@@ -230,6 +233,17 @@ extension BluetoothService: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         print("Peripheral modified services")
         //centralManager.cancelPeripheralConnection(peripheral)
+    }
+    
+    
+    func createImage(_ value: Data) -> Image {
+        let songArtwork: UIImage = UIImage(data: value) ?? UIImage()
+        return Image(uiImage: songArtwork)
+    }
+    
+    func updatePhotoCharacteristicUI() {
+        //take photoData and turn it into an image
+        finalPhotoData = tempPhotoData
     }
     
     func updateGPSCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {
