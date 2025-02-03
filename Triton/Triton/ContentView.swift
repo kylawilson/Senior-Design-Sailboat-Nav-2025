@@ -10,10 +10,13 @@ import CoreBluetooth
 struct ContentView: View {
     
     @ObservedObject var btService: BluetoothService = BluetoothService()
+    let circleCount = 6
     
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
+                MovingCirclesView()
+                    .padding()
                 HStack(alignment: .top) {
                     VStack {
                         Button(action: {
