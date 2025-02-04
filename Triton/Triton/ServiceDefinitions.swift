@@ -40,5 +40,13 @@ struct PhotoTransferService {
     static let tritonPhotoCharacteristicUUID = CBUUID(string: "064540d8-df60-4b60-a50f-780b7bd7f081")
 }
 
+//used to receive wind speed and direction from RPi
+struct AnemometerTransferService {
+    //replace with random UUID
+    static let tritonAnemometerServiceUUID = CBUUID(string: "064540d8-df60-4b60-a50f-780b7bd7f081")
+    static let tritonWindSpeedCharacteristicUUID = CBUUID(string: "064540d8-df60-4b60-a50f-780b7bd7f081")
+    static let tritonWindDirectionCharacteristicUUID = CBUUID(string: "064540d8-df60-4b60-a50f-780b7bd7f081")
+}
+
 
 

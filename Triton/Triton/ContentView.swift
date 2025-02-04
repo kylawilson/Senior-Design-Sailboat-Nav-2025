@@ -11,46 +11,18 @@ struct ContentView: View {
     
     @ObservedObject var btService: BluetoothService = BluetoothService()
     let circleCount = 6
+    let imageEncoded: UIImage? = nil
     
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
                 MovingCirclesView()
-                    .padding()
-                HStack(alignment: .top) {
-                    VStack {
-                        Button(action: {
-                            btService.disconnect()
-                        }) {
-                            Text("Disconnect")
-                                .font(.headline)
-                                .fontWeight(.bold)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background((btService.connectionState != .connected) ? Color.gray : Color.red)
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
-                                .padding(.horizontal)
-                        }
-                        .disabled(btService.connectionState != .connected)
-                        .opacity((btService.connectionState != .connected) ? 0.6 : 1.0)
-                        Button(action: {
-                            btService.reconnect()
-                        }) {
-                            Text("Connect")
-                                .font(.headline)
-                                .fontWeight(.bold)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background((btService.connectionState != .disconnected) ? Color.gray : Color.green)
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
-                                .padding(.horizontal)
-                        }
-                        .disabled(btService.connectionState != .disconnected)
-                        .opacity((btService.connectionState != .disconnected) ? 0.6 : 1.0)
+                VStack {
+                    if let uiImage = readData() {
+                        ImageView(image: uiImage)
+                    } else {
+                        Text("Image not found")
                     }
-                    .frame(maxHeight: .infinity)
                     Text("\(btService.connectionState)")
                         .font(.body)
                         .fontWeight(.bold)
@@ -58,8 +30,38 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity)
                         .background(Color.gray.opacity(0.2))
                         .cornerRadius(10)
+                    Button(action: {
+                        btService.disconnect()
+                    }) {
+                        Text("Disconnect")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background((btService.connectionState != .connected) ? Color.gray : Color.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .padding(.horizontal)
+                    }
+                    .disabled(btService.connectionState != .connected)
+                    .opacity((btService.connectionState != .connected) ? 0.6 : 1.0)
+                    Button(action: {
+                        btService.reconnect()
+                    }) {
+                        Text("Connect")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background((btService.connectionState != .disconnected) ? Color.gray : Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .padding(.horizontal)
+                    }
+                    .disabled(btService.connectionState != .disconnected)
+                    .opacity((btService.connectionState != .disconnected) ? 0.6 : 1.0)
                 }
-                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxHeight: .infinity)
                 
                 createImage(btService.finalPhotoData)
                 
@@ -114,7 +116,6 @@ func createImage(_ value: Data) -> Image {
     let liveFeed: UIImage = UIImage(data: value) ?? UIImage()
     return Image(uiImage: liveFeed)
 }
-
 
 
 

@@ -1,0 +1,63 @@
+//
+//  ImageConversion.swift
+//  Triton
+//
+//  Created by Kyla Wilson on 2/4/25.
+//
+
+import Foundation
+import SwiftUI
+
+
+let filePath = Bundle.main.path(forResource: "img_serialized", ofType: "txt")
+
+func readData() -> UIImage? {
+    var imageEncoded: UIImage? = nil
+    do {
+        // Get the saved data
+        let savedData = try Data(contentsOf: URL(fileURLWithPath: filePath!))
+        
+        // Convert the data back into a string
+        if let savedString = String(data: savedData, encoding: .utf8) {
+            // Split the content by the delimiter
+            let parts = savedString.components(separatedBy: "\n|||IMAGE_END|||\n")
+            
+            for (_, part) in parts.enumerated() {
+                let trimmedPart = part.trimmingCharacters(in: .whitespacesAndNewlines) // Remove unnecessary spaces/newlines
+                if !trimmedPart.isEmpty { // Ensure we don't save empty parts
+                    imageEncoded = base64Convert(base64String: trimmedPart)
+                    return imageEncoded
+                }
+            }
+        }
+    } catch {
+        print("Unable to read the file: \(error)")
+    }
+    return imageEncoded
+}
+
+func base64Convert(base64String: String?) -> UIImage {
+    var decodedImage = UIImage()
+    if ((base64String?.isEmpty)! || (base64String?.contains("null"))!) {
+        return decodedImage
+    }else {
+        if  let imageBase64String = base64String,
+            let dataDecoded = Data(base64Encoded: imageBase64String, options: .ignoreUnknownCharacters) {
+            decodedImage = UIImage(data: dataDecoded) ?? #imageLiteral(resourceName: "no_prof_image")
+        }
+        return decodedImage
+    }
+}
+
+struct ImageView: View {
+    var image: UIImage
+    
+    var body: some View {
+        Image(uiImage: image)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 300, height: 300)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .shadow(radius: 5)
+    }
+}
