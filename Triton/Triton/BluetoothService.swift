@@ -19,8 +19,11 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var gpsData = GPSData()
     @Published var finalPhotoData = Data()
     private var tempPhotoData = Data()                                              //raw jpeg data
-    private var centralManager: CBCentralManager
+    
+    //private var centralManager: CBCentralManager = CBCentralManager()
+    private var centralManager: CBCentralManager!
     private var connectedPeripheral: CBPeripheral?
+    
     private var transferServices = [ GPSTransferService.tritonGPSServiceUUID, PhotoTransferService.tritonPhotoServiceUUID ]
     private var gpsTransferCharacteristics = [ GPSTransferService.tritonLongitudeCharacteristicUUID, GPSTransferService.tritonCOGCharacteristicUUID, GPSTransferService.tritonLatitudeCharacteristicUUID, GPSTransferService.tritonDateCharacteristicUUID, GPSTransferService.tritonAltitudeCharacteristicUUID, GPSTransferService.tritonLatitudeIndicatorCharacteristicUUID, GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID, GPSTransferService.tritonTimeCharacteristicUUID, GPSTransferService.tritonSpeedCharacteristicUUID]
     private var photoTransferCharacteristics = [ PhotoTransferService.tritonPhotoCharacteristicUUID ]
@@ -28,18 +31,14 @@ class BluetoothService: NSObject, ObservableObject {
     
     //test
     
-    
-    
     override init() {
-        //initialize to empty
-        centralManager = CBCentralManager()
         discoveredPeripherals = []
         connectedPeripheral = nil
         subscribedCharacteristics = []
         super.init()
-        //after super.init() , initialize to true value
-        centralManager = CBCentralManager.init(delegate: self, queue: nil)
+        centralManager = CBCentralManager(delegate: self, queue: nil, options: [CBCentralManagerOptionShowPowerAlertKey: true])
     }
+
     
     func scanForPeripherals() {
         connectionState = .scanning

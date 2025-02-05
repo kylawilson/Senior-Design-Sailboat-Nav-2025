@@ -8,6 +8,8 @@
 import Foundation
 import SwiftUI
 
+//https://stackoverflow.com/questions/51557553/decoding-base64-image-in-swift
+
 
 let filePath = Bundle.main.path(forResource: "img_serialized", ofType: "txt")
 
