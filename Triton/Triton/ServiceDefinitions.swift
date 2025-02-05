@@ -18,7 +18,7 @@ enum ConnectionStatus {
 }
 
 struct TransferService {
-    static let tritonAdvertisingServiceUUID = CBUUID(string: "A3A3") //advertisement UUID, should move this out of GPSTransferService
+    static let tritonAdvertisingServiceUUID = CBUUID(string: "A3A3") //advertisement UUID
 }
 
 struct GPSTransferService {
@@ -44,7 +44,6 @@ struct PhotoTransferService {
 
 //used to receive wind speed and direction from RPi
 struct AnemometerTransferService {
-    //replace with random UUID
     static let tritonAnemometerServiceUUID = CBUUID(string: "f8b82f9c-ea3d-4362-97ef-3ad4c49ebde0")
     static let tritonWindSpeedCharacteristicUUID = CBUUID(string: "f8b82f9c-ea3d-4362-97ef-3ad4c49ebde1")
     static let tritonWindDirectionCharacteristicUUID = CBUUID(string: "f8b82f9c-ea3d-4362-97ef-3ad4c49ebde2")
