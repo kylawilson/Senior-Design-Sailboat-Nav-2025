@@ -42,7 +42,7 @@ class BluetoothService: NSObject, ObservableObject {
     
     func scanForPeripherals() {
         connectionState = .scanning
-        centralManager.scanForPeripherals(withServices: [ GPSTransferService.tritonAdvertisingServiceUUID ])    //scan for triton's service
+        centralManager.scanForPeripherals(withServices: [ TransferService.tritonAdvertisingServiceUUID ])    //scan for triton's service
         os_log("Scanning for peripherals")
     }
     

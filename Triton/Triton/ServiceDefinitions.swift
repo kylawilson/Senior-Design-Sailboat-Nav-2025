@@ -17,10 +17,12 @@ enum ConnectionStatus {
     case error
 }
 
+struct TransferService {
+    static let tritonAdvertisingServiceUUID = CBUUID(string: "A3A3") //advertisement UUID, should move this out of GPSTransferService
+}
+
 struct GPSTransferService {
     //may need to add more service IDs - one for each device we connect to
-    
-    static let tritonAdvertisingServiceUUID = CBUUID(string: "A3A3") //advertisement UUID, should move this out of GPSTransferService
     static let tritonGPSServiceUUID = CBUUID(string: "ec2ce16f-f774-4c1f-b3dd-a56b64bc9037") //custom service UUID for GPS
     static let tritonLongitudeCharacteristicUUID = CBUUID(string: "842c3d51-9599-4c9c-aa41-15a28cb48bce")
     static let tritonLongitudeIndicatorCharacteristicUUID = CBUUID(string: "156a777b-a6b7-4a8c-b9a5-8e674db49320")
@@ -43,9 +45,9 @@ struct PhotoTransferService {
 //used to receive wind speed and direction from RPi
 struct AnemometerTransferService {
     //replace with random UUID
-    static let tritonAnemometerServiceUUID = CBUUID(string: "064540d8-df60-4b60-a50f-780b7bd7f081")
-    static let tritonWindSpeedCharacteristicUUID = CBUUID(string: "064540d8-df60-4b60-a50f-780b7bd7f081")
-    static let tritonWindDirectionCharacteristicUUID = CBUUID(string: "064540d8-df60-4b60-a50f-780b7bd7f081")
+    static let tritonAnemometerServiceUUID = CBUUID(string: "f8b82f9c-ea3d-4362-97ef-3ad4c49ebde0")
+    static let tritonWindSpeedCharacteristicUUID = CBUUID(string: "f8b82f9c-ea3d-4362-97ef-3ad4c49ebde1")
+    static let tritonWindDirectionCharacteristicUUID = CBUUID(string: "f8b82f9c-ea3d-4362-97ef-3ad4c49ebde2")
 }
 
 
