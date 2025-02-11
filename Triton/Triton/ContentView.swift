@@ -60,8 +60,7 @@ struct ContentView: View {
                         }
                     }
                     .frame(maxWidth: geometry.size.width * 0.9)
-                    
-                    // Data Tiles (Grid to Save Space)
+                    //ble data
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                         TileView(label: "UTC Time", value: btService.gpsData.time)
                         TileView(label: "Longitude", value: btService.gpsData.longitude)
