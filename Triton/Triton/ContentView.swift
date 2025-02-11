@@ -146,7 +146,7 @@ struct ImageViewPage: View {
             }
             Spacer()
         }
-        .navigationTitle("Bow View")
+        .navigationTitle("Live View")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
