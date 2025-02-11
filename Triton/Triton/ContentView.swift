@@ -153,11 +153,11 @@ struct ImageViewPage: View {
 
 struct MovingCirclesPreview: View {
     var body: some View {
-        MovingCirclesPage()
-            .scaleEffect(0.1)  // Shrink the entire page
-            .frame(width: 80, height: 50)  // Limit its visible size
-            .clipShape(RoundedRectangle(cornerRadius: 5))
-            .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.white, lineWidth: 1))
+            MovingCirclesPage()
+                .scaleEffect(0.1)  // Shrink the entire page
+                .frame(width: 80, height: 50)  // Limit its visible size
+                .clipShape(RoundedRectangle(cornerRadius: 5))
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.white, lineWidth: 1))
     }
 }
 
