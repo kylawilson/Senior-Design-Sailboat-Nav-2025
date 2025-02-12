@@ -18,3 +18,5 @@ struct GPSData {
     var COG: String = "COG"
     var speed: String = "Speed"
 }
+
+
