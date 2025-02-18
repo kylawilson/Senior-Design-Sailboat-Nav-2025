@@ -19,4 +19,9 @@ struct GPSData {
     var speed: String = "Speed"
 }
 
+struct AnemometerData {
+    var windSpeed: String = "Wind Speed"
+    var windDirection: String = "Wind Direction"
+}
+
 

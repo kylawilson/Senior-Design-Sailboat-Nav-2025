@@ -17,6 +17,7 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var discoveredPeripherals: [ CBPeripheral ]
     @Published var isScanning: Bool = false
     @Published var gpsData = GPSData()
+    @Published var anemometerData = AnemometerData()
     @Published var finalPhotoData = Data()
     private var tempPhotoData = Data()                                              //raw jpeg data
     
@@ -273,6 +274,12 @@ extension BluetoothService: CBPeripheralDelegate {
             break
         case GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID :
             gpsData.longitudeInd = String(data: value, encoding: .utf8) ?? "N/A"
+            break
+        case AnemometerTransferService.tritonWindDirectionCharacteristicUUID :
+            anemometerData.windDirection = String(data: value, encoding: .utf8) ?? "N/A"
+            break
+        case AnemometerTransferService.tritonWindSpeedCharacteristicUUID :
+            anemometerData.windSpeed = String(data: value, encoding: .utf8) ?? "N/A"
             break
         default:
             print("NO MATCH FOR UUID, CANNOT UPDATE UI")
