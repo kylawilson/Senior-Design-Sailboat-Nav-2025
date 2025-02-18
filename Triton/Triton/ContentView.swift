@@ -63,13 +63,13 @@ struct ContentView: View {
                     //ble data
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                         TileView(label: "UTC Time", value: btService.gpsData.time)
-                        TileView(label: "Longitude", value: btService.gpsData.longitude)
-                        TileView(label: "Longitude Ind", value: btService.gpsData.longitudeInd)
-                        TileView(label: "Latitude", value: btService.gpsData.latitude)
-                        TileView(label: "Latitude Ind", value: btService.gpsData.latitudeInd)
+                        TileView(label: "Longitude", value: btService.gpsData.longitude+btService.gpsData.longitudeInd)
+                        TileView(label: "Latitude", value: btService.gpsData.latitude+btService.gpsData.latitudeInd)
                         TileView(label: "Altitude", value: btService.gpsData.altitude)
                         TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
                         TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
+                        //TileView(label: "Longitude Ind", value: btService.gpsData.longitudeInd)
+                        //TileView(label: "Latitude Ind", value: btService.gpsData.latitudeInd)
                         //TileView(label: "COG", value: btService.gpsData.COG)
                         //TileView(label: "Speed", value: btService.gpsData.speed)
                         //TileView(label: "Date", value: btService.gpsData.date)
