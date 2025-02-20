@@ -110,11 +110,14 @@ struct TileView: View {
 // Moving Circles Page
 struct MovingCirclesPage: View {
     var body: some View {
-        VStack {
+        ZStack {
             MovingCirclesView()
                 .frame(width: 300, height: 300)
-            Spacer()
+            GridView(rows: 10, columns: 10)
+                .opacity(0.5)
         }
+        .edgesIgnoringSafeArea(.all)
+            Spacer()
         .navigationTitle("Rendering")
         .navigationBarTitleDisplayMode(.inline)
     }
