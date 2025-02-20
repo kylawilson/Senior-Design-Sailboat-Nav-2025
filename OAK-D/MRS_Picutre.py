@@ -4,6 +4,7 @@ import depthai as dai
 import math
 import numpy as np
 import os
+import base64
 from datetime import datetime, timedelta
 
 # Create pipeline
@@ -184,8 +185,13 @@ with dai.Device(pipeline) as device:
                     depth_filename = f"depth_{timestamp}.jpg"
                     cv2.imwrite(image_filename, frame_resized)
                     #cv2.imwrite(depth_filename, depthFrameColor)
-                    print(f"Captured: {image_filename} and {depth_filename}")
-
+                    print(f"Captured: {image_filename}")
+                    separator = "\n|||IMAGE_END|||\n"
+                    with open(image_filename, "rb") as img_file:
+                        serialized = base64.b64encode(img_file.read()).decode('utf-8')
+                    with open("img_serialized.txt","a") as txt_file:
+                        txt_file.write(serialized + separator)
+                    #print(serialized)
 
             if cv2.waitKey(1) == ord('q'):
                 break
