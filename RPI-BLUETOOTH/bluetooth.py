@@ -35,6 +35,29 @@ GATT_CHRC_IFACE =    'org.bluez.GattCharacteristic1'
 GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 LE_ADVERTISEMENT_IFACE = 'org.bluez.LEAdvertisement1'
 
+#test
+def get_image():
+    """Fetches the latest encoded image from the D-Bus service."""
+    try:
+        bus = dbus.SessionBus()
+        obj = bus.get_object("com.example.ImageService", "/ImageService")
+        iface = dbus.Interface(obj, "com.example.ImageService")
+        encoded_image = iface.GetEncodedImage()
+
+        if encoded_image != "No image available":
+            with open("received_image.jpg", "wb") as img_file:
+                serialized = base64.b64encode(img_file.read()).decode('utf-8')
+            print("Received image saved as received_image.jpg")
+            print(serialized)
+        else:
+            print("No image available from service.")
+
+    except Exception as e:
+        print("D-Bus Error:", e)
+#end test
+        
+
+
 class InvalidArgsException(dbus.exceptions.DBusException):
     _dbus_error_name = 'org.freedesktop.DBus.Error.InvalidArgs'
 
@@ -49,7 +72,6 @@ class InvalidValueLengthException(dbus.exceptions.DBusException):
 
 class FailedException(dbus.exceptions.DBusException):
     _dbus_error_name = 'org.bluez.Error.Failed'
-
 
 class Advertisement(dbus.service.Object):
     PATH_BASE = '/org/bluez/example/advertisement'
