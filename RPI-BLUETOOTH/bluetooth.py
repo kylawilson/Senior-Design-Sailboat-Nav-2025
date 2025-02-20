@@ -887,6 +887,70 @@ class GPSDateCharacteristic(Characteristic):
 
         self.notifying = False
 
+class PhotoService(Service):
+    """
+    """
+    #need to chavce
+    PS_UUID = 'ec2ce16f-f774-4c1f-b3dd-a56b64bc9037'
+
+    def __init__(self, bus, index):
+        Service.__init__(self, bus, index, self.GPS_UUID, True)
+        self.add_characteristic(PhotoCharacteristic(bus, 0, self))
+
+class PhotoCharacteristic(Characteristic):
+    """
+
+    """
+    #need to change this
+    PHO_UUID = '0892b3f5-60d6-4d52-97f2-e7fb187d7253'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.PHO_UUID,
+                ['read', 'notify'],
+                service)
+        self.notifying = False
+        self.photo = dbus.Byte(0x09)
+        GLib.timeout_add(1000, self.get_data)
+
+    def get_data(self):
+        # _, _, _, _, _, _, _, _, self.date = read_gps_data(GPS_FILE)
+        # if not self.notifying:
+        #     return True
+        # if (self.date):
+        #     print('Date ' + repr(self.date))
+        #     self.notify_date()
+        return True
+
+
+    def notify_photo(self):
+        if not self.notifying:
+            return
+        date_bytes = [dbus.Byte(ord(c)) for c in self.date]
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Value': [dbus.Byte(b) for b in date_bytes] }, [])
+
+    def ReadValue(self, options):
+        print('Date ' + repr(self.date))
+        return [dbus.Byte(self.date)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+        self.notifying = True
+        self.notify_photo()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+
+        self.notifying = False
+
+
 
 
 def register_app_cb():

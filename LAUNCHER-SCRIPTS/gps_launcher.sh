@@ -1,7 +1,11 @@
 # !/bin/sh
 # gps_launcher.sh
 
+echo "running gps"
 cd ~
-cd DIRECTORY
+cd ..
+cd home/triton
+pwd
+cd Senior-Design-Sailboat-Nav-2025/GPS/
 ./GPS
 cd ~
