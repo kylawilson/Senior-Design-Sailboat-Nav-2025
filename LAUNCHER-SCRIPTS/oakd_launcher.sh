@@ -6,6 +6,8 @@ cd ~
 cd ..
 cd home/triton
 pwd
-cd Senior-Design-Sailboat-Nav-2025/OAK-D/
+cd Senior-Design-Sailboat-Nav-2025/
+. ./bin/activate
+cd OAK-D/
 python MRS_Picture.py
 cd ~
