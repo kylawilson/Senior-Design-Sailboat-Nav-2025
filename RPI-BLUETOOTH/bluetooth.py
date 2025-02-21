@@ -21,6 +21,7 @@ except ImportError:
     import gobject as GObject  # python2
 
 from random import randint
+import base64
 
 mainloop = None
 
@@ -45,13 +46,20 @@ def get_image():
         encoded_image = iface.GetEncodedImage()
 
         if encoded_image != "No image available":
+            # If the encoded image is a base64 string, decode it into bytes
+            image_data = base64.b64decode(encoded_image)
+
+            # Save the decoded image to a file
             with open("received_image.jpg", "wb") as img_file:
-                serialized = base64.b64encode(img_file.read()).decode('utf-8')
+                img_file.write(image_data)
             print("Received image saved as received_image.jpg")
+
+            # Optionally, read and base64 encode the image
+            serialized = base64.b64encode(image_data).decode('utf-8')
             print(serialized)
         else:
             print("No image available from service.")
-
+    
     except Exception as e:
         print("D-Bus Error:", e)
 #end test
@@ -185,6 +193,7 @@ class Application(dbus.service.Object):
         self.services = []
         dbus.service.Object.__init__(self, bus, self.path)
         self.add_service(GPSservice(bus, 0))
+        self.add_service(PhotoService(bus, 1))
 
     def get_path(self):
         return dbus.ObjectPath(self.path)
@@ -916,7 +925,7 @@ class PhotoService(Service):
     PS_UUID = 'ec2ce16f-f774-4c1f-b3dd-a56b64bc9037'
 
     def __init__(self, bus, index):
-        Service.__init__(self, bus, index, self.GPS_UUID, True)
+        Service.__init__(self, bus, index, self.PS_UUID, True)
         self.add_characteristic(PhotoCharacteristic(bus, 0, self))
 
 class PhotoCharacteristic(Characteristic):
@@ -943,6 +952,13 @@ class PhotoCharacteristic(Characteristic):
         # if (self.date):
         #     print('Date ' + repr(self.date))
         #     self.notify_date()
+        print("getting image")
+        self.image_data = get_image()
+        if not self.notifying:
+             return True
+        if (self.image_data):
+             #print('Image Data ' + repr(self.image_data))
+             self.notify_photo()
         return True
 
 
@@ -953,6 +969,18 @@ class PhotoCharacteristic(Characteristic):
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
                 { 'Value': [dbus.Byte(b) for b in date_bytes] }, [])
+
+        MAX_CHUNK_SIZE = 20  # Typical BLE notification limit
+        photo_bytes = [dbus.Byte(ord(c)) for c in self.date]  # Convert string to byte list
+
+        # Send data in chunks
+        for i in range(0, len(date_bytes), MAX_CHUNK_SIZE):
+            chunk = photo_bytes[i:i + MAX_CHUNK_SIZE]  # Extract chunk
+            self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                {'Value': [dbus.Byte(b) for b in chunk]},
+                []
+            )
 
     def ReadValue(self, options):
         print('Date ' + repr(self.date))
@@ -1048,6 +1076,9 @@ def main(timeout = 0):
     ad_manager.RegisterAdvertisement(gps_advertisement.get_path(), {},
                                      reply_handler=register_ad_cb,
                                      error_handler=register_ad_error_cb)
+
+    print("getting image")
+    image_data = get_image()
 
     mainloop.run()
 

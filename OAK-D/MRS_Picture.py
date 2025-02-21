@@ -11,13 +11,18 @@ import dbus
 import dbus.service
 import dbus.mainloop.glib
 from gi.repository import GLib
+import threading
 
 
 # Create a D-Bus service class
+
+
 class ImageService(dbus.service.Object):
+    """D-Bus service that provides the latest image in base64 format."""
+
     def __init__(self, bus_name):
         dbus.service.Object.__init__(self, bus_name, '/ImageService')
-        self.latest_image_path = None  # Store the last captured image path
+        self.latest_image_path = None  # Stores the most recent image path
 
     @dbus.service.method("com.example.ImageService",
                          in_signature='', out_signature='s')
@@ -27,19 +32,56 @@ class ImageService(dbus.service.Object):
             with open(self.latest_image_path, "rb") as img_file:
                 encoded = base64.b64encode(img_file.read()).decode('utf-8')
             print(f"Sent encoded image: {self.latest_image_path}")
-            return encoded
+            return encoded  # Returns the base64 string
         else:
             return "No image available"
 
     def update_latest_image(self, image_path):
-        """Update the latest captured image path."""
+        """Updates the path to the latest image."""
         self.latest_image_path = image_path
+
+def run_dbus_service():
+    """Runs the D-Bus main loop in a separate thread."""
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    session_bus = dbus.SessionBus()
+    bus_name = dbus.service.BusName("com.example.ImageService", session_bus)
+    global image_service
+    image_service = ImageService(bus_name)
+    
+    print("D-Bus service running...")
+    mainloop = GLib.MainLoop()
+    mainloop.run()
+
+# class ImageService(dbus.service.Object):
+#     def __init__(self, bus_name):
+#         dbus.service.Object.__init__(self, bus_name, '/ImageService')
+#         self.latest_image_path = None  # Store the last captured image path
+
+#     @dbus.service.method("com.example.ImageService",
+#                          in_signature='', out_signature='s')
+#     def GetEncodedImage(self):
+#         """Returns the base64-encoded image if available."""
+#         if self.latest_image_path and os.path.exists(self.latest_image_path):
+#             with open(self.latest_image_path, "rb") as img_file:
+#                 encoded = base64.b64encode(img_file.read()).decode('utf-8')
+#             print(f"Sent encoded image: {self.latest_image_path}")
+#             return encoded
+#         else:
+#             return "No image available"
+
+#     def update_latest_image(self, image_path):
+#         """Update the latest captured image path."""
+#         self.latest_image_path = image_path
         
 # Initialize D-Bus
-dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-session_bus = dbus.SessionBus()
-bus_name = dbus.service.BusName("com.example.ImageService", session_bus)
-image_service = ImageService(bus_name)
+# dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+# session_bus = dbus.SessionBus()
+# bus_name = dbus.service.BusName("com.example.ImageService", session_bus)
+# image_service = ImageService(bus_name)
+
+dbus_thread = threading.Thread(target=run_dbus_service)
+dbus_thread.daemon = True
+dbus_thread.start()
 
 # Create pipeline
 pipeline = dai.Pipeline()
@@ -129,14 +171,37 @@ with dai.Device(pipeline) as device:
     window = 3  # How many frames to average
 
     #picture timer
+    # last_capture_time = datetime.now()
+    # capture_interval = timedelta(seconds = 1)
+    
+    
+    # mainloop = GLib.MainLoop()
+
+    # while True:
+    #     current_time = datetime.now()
+
+    #     if video.has():
+    #         frame = video.get().getCvFrame()
+    #         frame_resized = cv2.resize(frame, (1280, 720))
+
+    #         if current_time - last_capture_time >= capture_interval:
+    #             last_capture_time = current_time
+    #             timestamp = current_time.strftime("%Y%m%d_%H%M%S")
+    #             image_filename = f"frame_{timestamp}.jpg"
+    #             cv2.imwrite(image_filename, frame_resized)
+    #             image_service.update_latest_image(image_filename)  # Update service with latest image
+    #             print(f"Captured: {image_filename}")
+
+    #     if cv2.waitKey(1) == ord('q'):
+    #         break
+
+    # mainloop.run()
+
     last_capture_time = datetime.now()
-    capture_interval = timedelta(seconds = 1)
-    
-    
-    mainloop = GLib.MainLoop()
 
     while True:
         current_time = datetime.now()
+        capture_interval = timedelta(seconds = 1)
 
         if video.has():
             frame = video.get().getCvFrame()
@@ -147,13 +212,14 @@ with dai.Device(pipeline) as device:
                 timestamp = current_time.strftime("%Y%m%d_%H%M%S")
                 image_filename = f"frame_{timestamp}.jpg"
                 cv2.imwrite(image_filename, frame_resized)
-                image_service.update_latest_image(image_filename)  # Update service with latest image
-                print(f"Captured: {image_filename}")
+                
+                # Update the latest image path for D-Bus
+                image_service.update_latest_image(image_filename)
+                
+                print(f"Captured and updated image: {image_filename}")
 
         if cv2.waitKey(1) == ord('q'):
             break
-
-    mainloop.run()
 
 video_writer.release()
 cv2.destroyAllWindows()
