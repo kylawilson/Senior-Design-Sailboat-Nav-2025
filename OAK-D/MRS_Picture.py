@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import dbus
 import dbus.service
 import dbus.mainloop.glib
-import gobject
+from gi.repository import GLib
 
 
 # Create a D-Bus service class
@@ -133,7 +133,7 @@ with dai.Device(pipeline) as device:
     capture_interval = timedelta(seconds = 1)
     
     
-    mainloop = gobject.MainLoop()
+    mainloop = GLib.MainLoop()
 
     while True:
         current_time = datetime.now()
