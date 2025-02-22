@@ -53,8 +53,7 @@ func base64Convert(base64String: String?) -> UIImage {
         return decodedImage
     }else {
         if  let imageBase64String = base64String {
-            //let dataDecoded = Data(base64Encoded: imageBase64String, options: .ignoreUnknownCharacters) {
-            let dataDecoded = imageBase64String.data(using: .utf8)
+            let dataDecoded = Data(base64Encoded: imageBase64String, options: .ignoreUnknownCharacters)
                 decodedImage = UIImage(data: dataDecoded!) ?? UIImage()
         }
         return decodedImage
