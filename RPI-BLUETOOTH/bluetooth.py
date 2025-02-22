@@ -56,7 +56,8 @@ def get_image():
 
             # Optionally, read and base64 encode the image
             serialized = base64.b64encode(image_data).decode('utf-8')
-            print(serialized)
+            #print(serialized)
+            return serialized
         else:
             print("No image available from service.")
     
@@ -681,6 +682,7 @@ class GPSTimeCharacteristic(Characteristic):
 
 
     def notify_time(self):
+        print("notifying time\n")
         if not self.notifying:
             return
         time_bytes = [dbus.Byte(ord(c)) for c in self.time]
@@ -922,7 +924,7 @@ class PhotoService(Service):
     """
     """
     #need to chavce
-    PS_UUID = 'ec2ce16f-f774-4c1f-b3dd-a56b64bc9037'
+    PS_UUID = '064540d8-df60-4b60-a50f-780b7bd7f080'
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.PS_UUID, True)
@@ -932,8 +934,7 @@ class PhotoCharacteristic(Characteristic):
     """
 
     """
-    #need to change this
-    PHO_UUID = '0892b3f5-60d6-4d52-97f2-e7fb187d7253'
+    PHO_UUID = '064540d8-df60-4b60-a50f-780b7bd7f081'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
@@ -943,7 +944,7 @@ class PhotoCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.photo = dbus.Byte(0x09)
-        GLib.timeout_add(1000, self.get_data)
+        GLib.timeout_add(5000, self.get_data)
 
     def get_data(self):
         # _, _, _, _, _, _, _, _, self.date = read_gps_data(GPS_FILE)
@@ -953,34 +954,42 @@ class PhotoCharacteristic(Characteristic):
         #     print('Date ' + repr(self.date))
         #     self.notify_date()
         print("getting image")
-        self.image_data = get_image()
+        self.photo = get_image()
         if not self.notifying:
              return True
-        if (self.image_data):
+        if (self.photo):
              #print('Image Data ' + repr(self.image_data))
              self.notify_photo()
         return True
 
 
     def notify_photo(self):
+        print("\nnotifying photo\n")
+        end_message = "|||IMAGE_END|||"
         if not self.notifying:
             return
-        date_bytes = [dbus.Byte(ord(c)) for c in self.date]
+        photo_bytes = [dbus.Byte(ord(c)) for c in self.photo]
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(b) for b in date_bytes] }, [])
+                { 'Value': [dbus.Byte(b) for b in photo_bytes] }, [])
 
         MAX_CHUNK_SIZE = 20  # Typical BLE notification limit
-        photo_bytes = [dbus.Byte(ord(c)) for c in self.date]  # Convert string to byte list
+        photo_bytes = [dbus.Byte(ord(c)) for c in self.photo]  # Convert string to byte list
 
         # Send data in chunks
-        for i in range(0, len(date_bytes), MAX_CHUNK_SIZE):
+        for i in range(0, len(photo_bytes), MAX_CHUNK_SIZE):
             chunk = photo_bytes[i:i + MAX_CHUNK_SIZE]  # Extract chunk
             self.PropertiesChanged(
                 GATT_CHRC_IFACE,
                 {'Value': [dbus.Byte(b) for b in chunk]},
                 []
             )
+        self.PropertiesChanged(
+            GATT_CHRC_IFACE,
+            {'Value': [dbus.Byte(ord(c)) for c in end_message]}, 
+            []
+        )
+        print("sent end message\n")
 
     def ReadValue(self, options):
         print('Date ' + repr(self.date))
@@ -990,6 +999,7 @@ class PhotoCharacteristic(Characteristic):
         if self.notifying:
             print('Already notifying, nothing to do')
             return
+        print("Set to notify on photo")
         self.notifying = True
         self.notify_photo()
 
