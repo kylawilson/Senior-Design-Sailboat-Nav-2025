@@ -18,8 +18,8 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var isScanning: Bool = false
     @Published var gpsData = GPSData()
     @Published var anemometerData = AnemometerData()
-    @Published var finalPhotoData = Data()
-    private var tempPhotoData = Data()                                              //raw jpeg data
+    @Published var finalPhotoData = ""
+    private var tempPhotoData = Data()                                       //raw jpeg data
     
     //private var centralManager: CBCentralManager = CBCentralManager()
     private var centralManager: CBCentralManager!
@@ -71,7 +71,12 @@ class BluetoothService: NSObject, ObservableObject {
 //        if connectedPeripheral != nil {
 //            centralManager.cancelPeripheralConnection(connectedPeripheral!)
 //        }
-        self.scanForPeripherals()
+        if connectedPeripheral != nil {
+            connectToPeripheral(peripheral: connectedPeripheral!)
+        } else {
+            self.scanForPeripherals()
+        }
+        
     }
     
     func disconnect() {
@@ -142,6 +147,8 @@ extension BluetoothService: CBCentralManagerDelegate {
         error: (any Error)? ) {
             if (connectionState != .disconnecting) {
                 os_log("Disconnected from %@, reconnecting...", peripheral)
+                connectionState = .disconnected
+                subscribedCharacteristics = []
                 reconnect()
             } else {
                 os_log("Disconnected from %@", peripheral)
@@ -166,7 +173,11 @@ extension BluetoothService: CBCentralManagerDelegate {
         peripheral.delegate = self
         
         //discover services on connected peripheral
+        print("making call to discover services\n")
         peripheral.discoverServices(transferServices)
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+//            peripheral.discoverServices(self.transferServices)
+//        }
     }
 }
 
@@ -174,11 +185,16 @@ extension BluetoothService: CBPeripheralDelegate {
     func peripheral(
         _ peripheral: CBPeripheral,
         didDiscoverServices error: (any Error)? ) {
-            print("discovered %@", peripheral)
-            guard let peripheralServices = peripheral.services else { os_log("Error in didDiscoverServices"); return }
-            for service in peripheralServices {
-                print(service.uuid)
-                peripheral.discoverCharacteristics(nil, for: service)
+            if let error = error {
+                    os_log("Error discovering services: %@", error.localizedDescription)
+                    return
+            } else {
+                print("discovered ", peripheral)
+                guard let peripheralServices = peripheral.services else { os_log("Error in didDiscoverServices"); return }
+                for service in peripheralServices {
+                    print(service.uuid)
+                    peripheral.discoverCharacteristics(nil, for: service)
+                }
             }
     }
     
@@ -186,16 +202,21 @@ extension BluetoothService: CBPeripheralDelegate {
         _ peripheral: CBPeripheral,
         didDiscoverCharacteristicsFor service: CBService,
         error: (any Error)? ) {
-        print("discovered characteristics")
-            guard let serviceCharacteristics = service.characteristics else { return }
-            for characteristic in serviceCharacteristics  {
-                //subscribe only to the characteristics we want (in this case, GPS characteristics and photo characteristics)
-                if gpsTransferCharacteristics.contains(characteristic.uuid) || photoTransferCharacteristics.contains(characteristic.uuid) {
-                    print(characteristic.uuid)
-                    subscribedCharacteristics.append(characteristic)
-                    peripheral.setNotifyValue(true, for: characteristic)
+            if let error = error {
+                    os_log("Error discovering characteristics: %@", error.localizedDescription)
+                    return
+            } else {
+                guard let serviceCharacteristics = service.characteristics else { return }
+                print("discovered characteristics")
+                for characteristic in serviceCharacteristics  {
+                    //subscribe only to the characteristics we want (in this case, GPS characteristics and photo characteristics)
+                    if gpsTransferCharacteristics.contains(characteristic.uuid) || photoTransferCharacteristics.contains(characteristic.uuid) {
+                        print(characteristic.uuid)
+                        subscribedCharacteristics.append(characteristic)
+                        peripheral.setNotifyValue(true, for: characteristic)
+                    }
                 }
-        }
+            }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
@@ -217,7 +238,17 @@ extension BluetoothService: CBPeripheralDelegate {
         if let value = characteristic.value {
             //photo data
             if photoTransferCharacteristics.contains(characteristic.uuid) {
-                tempPhotoData.append(value)
+                let str = String(data: value, encoding: .utf8)
+                if str == "IMAGE_END" {
+                    updatePhotoCharacteristicUI()
+                } else {
+                    let newval = value.map { String(format: "%02x", $0) }.joined()
+                    tempPhotoData.append(value)
+                    print("Photo data received: \(newval), size: \(tempPhotoData)")
+//                    if str != nil {
+//                        tempPhotoData+=str!
+//                    }
+                }
             } else {
             //GPS data
                 // Process the received value
@@ -232,7 +263,7 @@ extension BluetoothService: CBPeripheralDelegate {
     
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         print("Peripheral modified services")
-        //centralManager.cancelPeripheralConnection(peripheral)
+        peripheral.discoverServices(transferServices)
     }
     
     
@@ -243,7 +274,12 @@ extension BluetoothService: CBPeripheralDelegate {
     
     func updatePhotoCharacteristicUI() {
         //take photoData and turn it into an image
-        finalPhotoData = tempPhotoData
+        print("updating photo\n")
+        //let finalPhotoData = String(data: tempPhotoData, encoding: .utf8)
+        //finalPhotoData = tempPhotoData
+        let finalPhotoData = tempPhotoData.base64EncodedString()
+        tempPhotoData = Data()
+        print(finalPhotoData)
     }
     
     func updateGPSCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {

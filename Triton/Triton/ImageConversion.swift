@@ -38,17 +38,32 @@ func readData() -> UIImage? {
     return imageEncoded
 }
 
+func readImage(finalPhotoData: String) -> UIImage? {
+    var imageEncoded: UIImage? = nil
+    if !finalPhotoData.isEmpty { // Ensure we don't save empty parts
+        imageEncoded = base64Convert(base64String: finalPhotoData)
+        return imageEncoded
+    }
+    return imageEncoded
+}
+
 func base64Convert(base64String: String?) -> UIImage {
     var decodedImage = UIImage()
     if ((base64String?.isEmpty)! || (base64String?.contains("null"))!) {
         return decodedImage
     }else {
-        if  let imageBase64String = base64String,
-            let dataDecoded = Data(base64Encoded: imageBase64String, options: .ignoreUnknownCharacters) {
-            decodedImage = UIImage(data: dataDecoded) ?? #imageLiteral(resourceName: "no_prof_image")
+        if  let imageBase64String = base64String {
+            //let dataDecoded = Data(base64Encoded: imageBase64String, options: .ignoreUnknownCharacters) {
+            let dataDecoded = imageBase64String.data(using: .utf8)
+                decodedImage = UIImage(data: dataDecoded!) ?? UIImage()
         }
         return decodedImage
     }
+}
+
+func dataToImage(_ data: Data?) -> UIImage? {
+    guard let data = data else { print("data return nil"); return nil }
+    return UIImage(data: data)
 }
 
 struct ImageView: View {

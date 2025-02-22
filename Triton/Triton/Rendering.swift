@@ -158,6 +158,7 @@ struct MovingCirclesView: View {
                 addCircles()
             }
         }
+        .background(Color.blue.edgesIgnoringSafeArea(.all))
     }
     func initializePositions(screenWidth: CGFloat, screenHeight: CGFloat) {
             circlePositions = [
