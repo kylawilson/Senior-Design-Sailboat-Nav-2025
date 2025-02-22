@@ -1,22 +1,4 @@
-UTCtime: 013836.868
-Latitude: 
-latIndicator: 
-Longitude: 
-longIndicator: 
-Altitude: 
-UTCtime: 013837.868
-Latitude: 
-latIndicator: 
-Longitude: 
-longIndicator: 
-Altitude: 
-UTCtime: 013838.868
-Latitude: 
-latIndicator: 
-Longitude: 
-longIndicator: 
-Altitude: 
-UTCtime: 013839.868
+UTCtime: 014312.868
 Latitude: 
 latIndicator: 
 Longitude: 
