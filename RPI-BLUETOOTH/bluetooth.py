@@ -10,6 +10,8 @@ import time
 import threading
 import struct
 import subprocess
+import PIL
+from PIL import Image
 
 import array
 from gi.repository import GLib
@@ -57,6 +59,7 @@ def get_image():
             # Optionally, read and base64 encode the image
             serialized = base64.b64encode(image_data).decode('utf-8')
             #print(serialized)
+            #serialized = base64.b64encode(image_data)
             return serialized
         else:
             print("No image available from service.")
@@ -944,7 +947,7 @@ class PhotoCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.photo = dbus.Byte(0x09)
-        GLib.timeout_add(5000, self.get_data)
+        GLib.timeout_add(30000, self.get_data)
 
     def get_data(self):
         # _, _, _, _, _, _, _, _, self.date = read_gps_data(GPS_FILE)
@@ -965,31 +968,50 @@ class PhotoCharacteristic(Characteristic):
 
     def notify_photo(self):
         print("\nnotifying photo\n")
-        end_message = "|||IMAGE_END|||"
+        end_message = "IMAGE_END"
         if not self.notifying:
             return
-        photo_bytes = [dbus.Byte(ord(c)) for c in self.photo]
-        self.PropertiesChanged(
-                GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(b) for b in photo_bytes] }, [])
+        # photo_bytes = [dbus.Byte(ord(c)) for c in self.photo]
+        # self.PropertiesChanged(
+        #         GATT_CHRC_IFACE,
+        #         { 'Value': [dbus.Byte(b) for b in photo_bytes] }, [])
 
         MAX_CHUNK_SIZE = 20  # Typical BLE notification limit
         photo_bytes = [dbus.Byte(ord(c)) for c in self.photo]  # Convert string to byte list
 
         # Send data in chunks
-        for i in range(0, len(photo_bytes), MAX_CHUNK_SIZE):
-            chunk = photo_bytes[i:i + MAX_CHUNK_SIZE]  # Extract chunk
+        print("photo size:", len(photo_bytes))
+        # for i in range(0, len(photo_bytes), MAX_CHUNK_SIZE):
+        #     chunk = photo_bytes[i:i + MAX_CHUNK_SIZE]  # Extract chunk
+        #     self.PropertiesChanged(
+        #         GATT_CHRC_IFACE,
+        #         {'Value': [dbus.Byte(b) for b in chunk]},
+        #         []
+        #     )
+        # self.PropertiesChanged(
+        #     GATT_CHRC_IFACE,
+        #     {'Value': [dbus.Byte(ord(c)) for c in end_message]}, 
+        #     []
+        # )
+        # print("sent end message\n")
+            # Send Base64 string in chunks
+        for i in range(0, len(self.photo), MAX_CHUNK_SIZE):
+            chunk = self.photo[i:i + MAX_CHUNK_SIZE]  # Extract chunk
+            
             self.PropertiesChanged(
                 GATT_CHRC_IFACE,
-                {'Value': [dbus.Byte(b) for b in chunk]},
+                {'Value': [dbus.Byte(c.encode('utf-8')[0]) for c in chunk]}, 
                 []
             )
+
+        # Send end message to signal completion
         self.PropertiesChanged(
             GATT_CHRC_IFACE,
-            {'Value': [dbus.Byte(ord(c)) for c in end_message]}, 
+            {'Value': [dbus.Byte(c.encode('utf-8')[0]) for c in end_message]}, 
             []
         )
-        print("sent end message\n")
+    
+    print("Sent end message\n")
 
     def ReadValue(self, options):
         print('Date ' + repr(self.date))
@@ -1049,11 +1071,6 @@ def shutdown(timeout):
 
 def main(timeout = 0):
     global mainloop
-
-    
-    # process = subprocess.Popen(["/home/triton/Senior-Design-Sailboat-Nav-2025/GPS/GPS"], stdout=subprocess.PIPE)
-    # output = process.stdout.read().decode()
-    # print(f"Python received: {output}")
 
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 

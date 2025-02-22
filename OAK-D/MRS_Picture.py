@@ -12,6 +12,7 @@ import dbus.service
 import dbus.mainloop.glib
 from gi.repository import GLib
 import threading
+#test compression
 
 
 # Create a D-Bus service class
@@ -31,6 +32,7 @@ class ImageService(dbus.service.Object):
         if self.latest_image_path and os.path.exists(self.latest_image_path):
             with open(self.latest_image_path, "rb") as img_file:
                 encoded = base64.b64encode(img_file.read()).decode('utf-8')
+                print(encoded)
             print(f"Sent encoded image: {self.latest_image_path}")
             return encoded  # Returns the base64 string
         else:
@@ -52,32 +54,6 @@ def run_dbus_service():
     mainloop = GLib.MainLoop()
     mainloop.run()
 
-# class ImageService(dbus.service.Object):
-#     def __init__(self, bus_name):
-#         dbus.service.Object.__init__(self, bus_name, '/ImageService')
-#         self.latest_image_path = None  # Store the last captured image path
-
-#     @dbus.service.method("com.example.ImageService",
-#                          in_signature='', out_signature='s')
-#     def GetEncodedImage(self):
-#         """Returns the base64-encoded image if available."""
-#         if self.latest_image_path and os.path.exists(self.latest_image_path):
-#             with open(self.latest_image_path, "rb") as img_file:
-#                 encoded = base64.b64encode(img_file.read()).decode('utf-8')
-#             print(f"Sent encoded image: {self.latest_image_path}")
-#             return encoded
-#         else:
-#             return "No image available"
-
-#     def update_latest_image(self, image_path):
-#         """Update the latest captured image path."""
-#         self.latest_image_path = image_path
-        
-# Initialize D-Bus
-# dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-# session_bus = dbus.SessionBus()
-# bus_name = dbus.service.BusName("com.example.ImageService", session_bus)
-# image_service = ImageService(bus_name)
 
 dbus_thread = threading.Thread(target=run_dbus_service)
 dbus_thread.daemon = True
