@@ -943,7 +943,7 @@ class PhotoCharacteristic(Characteristic):
         Characteristic.__init__(
                 self, bus, index,
                 self.PHO_UUID,
-                ['read', 'notify'],
+                ['read', 'notify', 'write'],
                 service)
         self.notifying = False
         self.photo = dbus.Byte(0x09)
@@ -1007,8 +1007,11 @@ class PhotoCharacteristic(Characteristic):
         if not self.notifying:
             print('Not notifying, nothing to do')
             return
-
         self.notifying = False
+
+    def WriteValue(self, value):
+        print('TestCharacteristic Write: ' + repr(value))
+        self.get_data()
 
 
 

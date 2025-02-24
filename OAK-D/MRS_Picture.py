@@ -12,7 +12,6 @@ import dbus.service
 import dbus.mainloop.glib
 from gi.repository import GLib
 import threading
-#test compression
 
 
 # Create a D-Bus service class
@@ -70,7 +69,7 @@ spatialLocationCalculator = pipeline.create(dai.node.SpatialLocationCalculator)
 
 camRgb: dai.node.Camera = pipeline.create(dai.node.Camera)
 camRgb.setBoardSocket(dai.CameraBoardSocket.CAM_A)
-camRgb.setSize((1280, 720))
+camRgb.setSize((640, 480))
 
 xoutDepth = pipeline.create(dai.node.XLinkOut)
 xoutSpatialData = pipeline.create(dai.node.XLinkOut)
@@ -181,7 +180,7 @@ with dai.Device(pipeline) as device:
 
         if video.has():
             frame = video.get().getCvFrame()
-            frame_resized = cv2.resize(frame, (1280, 720))
+            frame_resized = cv2.resize(frame, (640, 480))
 
             if current_time - last_capture_time >= capture_interval:
                 last_capture_time = current_time
