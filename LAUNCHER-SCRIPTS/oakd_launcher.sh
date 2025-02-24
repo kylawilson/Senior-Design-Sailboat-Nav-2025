@@ -9,5 +9,7 @@ pwd
 cd Senior-Design-Sailboat-Nav-2025/
 . ./bin/activate
 cd OAK-D/
-python MRS_Picture.py
-cd ~
+export $(dbus-launch)
+python3 MRS_Picture.py &
+cd ../RPI-BLUETOOTH
+python3 bluetooth.py &
