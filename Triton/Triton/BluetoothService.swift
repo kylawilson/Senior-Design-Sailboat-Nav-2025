@@ -215,9 +215,6 @@ extension BluetoothService: CBCentralManagerDelegate {
 
 extension BluetoothService: CBPeripheralDelegate {
     
-    func discover() {
-        
-    }
     
     func peripheral(
         _ peripheral: CBPeripheral,

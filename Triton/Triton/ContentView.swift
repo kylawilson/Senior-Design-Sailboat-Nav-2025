@@ -18,17 +18,17 @@ struct ContentView: View {
                         .font(.title)
                         .fontWeight(.bold)
                     //test
-                    if !btService.finalPhotoData.isEmpty { // Ensure we don't save empty parts
-                        //if let imageEncoded = dataToImage(btService.finalPhotoData){
-                            let imageEncoded = base64Convert(base64String: btService.finalPhotoData)
-                            Image(uiImage: imageEncoded)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 300, height: 300)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                                .shadow(radius: 5)
-                        //}
-                    }
+//                    if !btService.finalPhotoData.isEmpty { // Ensure we don't save empty parts
+//                        //if let imageEncoded = dataToImage(btService.finalPhotoData){
+//                            let imageEncoded = base64Convert(base64String: btService.finalPhotoData)
+//                            Image(uiImage: imageEncoded)
+//                                .resizable()
+//                                .scaledToFit()
+//                                .frame(width: 300, height: 300)
+//                                .clipShape(RoundedRectangle(cornerRadius: 10))
+//                                .shadow(radius: 5)
+//                        //}
+//                    }
                     //end test
                     
                     
@@ -124,16 +124,17 @@ struct TileView: View {
 // Moving Circles Page
 struct MovingCirclesPage: View {
     var body: some View {
-        ZStack {
-            MovingCirclesView()
-                .frame(width: 300, height: 300)
-            GridView(rows: 10, columns: 10)
-                .opacity(0.5)
-        }
-        .edgesIgnoringSafeArea(.all)
+        GeometryReader { geometry in
+            ZStack {
+                GridView(rows: 10, columns: 10)
+                MovingCirclesView()
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+            }
+            .edgesIgnoringSafeArea(.all)
             Spacer()
-        .navigationTitle("Rendering")
-        .navigationBarTitleDisplayMode(.inline)
+                .navigationTitle("Rendering")
+                .navigationBarTitleDisplayMode(.inline)
+        }
     }
 }
 
