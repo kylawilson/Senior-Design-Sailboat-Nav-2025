@@ -34,6 +34,7 @@ class BluetoothService: NSObject, ObservableObject {
     private var gpsTransferCharacteristics = [ GPSTransferService.tritonLongitudeCharacteristicUUID, GPSTransferService.tritonCOGCharacteristicUUID, GPSTransferService.tritonLatitudeCharacteristicUUID, GPSTransferService.tritonDateCharacteristicUUID, GPSTransferService.tritonAltitudeCharacteristicUUID, GPSTransferService.tritonLatitudeIndicatorCharacteristicUUID, GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID, GPSTransferService.tritonTimeCharacteristicUUID, GPSTransferService.tritonSpeedCharacteristicUUID]
     private var photoTransferCharacteristics = [ PhotoTransferService.tritonPhotoCharacteristicUUID ]
     private var subscribedCharacteristics : [ CBCharacteristic ]
+    private var photoCharacteristic : CBCharacteristic?
     
     //test
     
@@ -107,12 +108,12 @@ extension BluetoothService: CBCentralManagerDelegate {
             return
         case .unauthorized:
             switch central.authorization {
-            case .denied:
-                os_log("You are not authorized to use Bluetooth")
-            case .restricted:
-                os_log("Bluetooth is restricted")
-            default:
-                os_log("Unexpected authorization")
+                case .denied:
+                    os_log("You are not authorized to use Bluetooth")
+                case .restricted:
+                    os_log("Bluetooth is restricted")
+                default:
+                    os_log("Unexpected authorization")
             }
         case .unknown:
             os_log("CBManager state is unknown")
@@ -195,6 +196,9 @@ extension BluetoothService: CBCentralManagerDelegate {
             guard let characteristics = service.characteristics else { return }
             for characteristic in characteristics {
                 if self.gpsTransferCharacteristics.contains(characteristic.uuid) || self.photoTransferCharacteristics.contains(characteristic.uuid) {
+                    if self.photoTransferCharacteristics.contains(characteristic.uuid) {
+                        self.photoCharacteristic = characteristic
+                    }
                     os_log("Subscribing to characteristic %@", characteristic.uuid.uuidString)
                     self.subscribedCharacteristics.append(characteristic)
                     discoveredPeripheral.setNotifyValue(true, for: characteristic)
@@ -206,6 +210,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         onNotificationStateUpdated = { discoveredPeripheral, characteristic in
             if characteristic.isNotifying {
                 os_log("Notification started for %@", characteristic.uuid.uuidString)
+                self.writeData()
             } else {
                 os_log("Notification stopped for %@", characteristic.uuid.uuidString)
             }
@@ -294,6 +299,7 @@ extension BluetoothService: CBPeripheralDelegate {
                 let newval = value.map { String(format: "%02x", $0) }.joined()
                 print("Notification received: \(newval)")
                 updateGPSCharacteristicUI(characteristic.uuid, value)
+                
             }
         }
     }
@@ -317,7 +323,25 @@ extension BluetoothService: CBPeripheralDelegate {
         //let finalPhotoData = tempPhotoData.base64EncodedString()
         finalPhotoData = String(data: tempPhotoData, encoding: .utf8)!
         tempPhotoData = Data()
-        print(finalPhotoData)
+        writeData()
+    }
+    
+    func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
+        //test
+        os_log("Peripheral is ready, send data")
+        let packetData = "ready!".data(using: .utf8)
+        if photoCharacteristic != nil {
+            peripheral.writeValue(packetData!, for: photoCharacteristic!, type: .withResponse )
+        }
+    
+    }
+    
+    func writeData() {
+        os_log("Peripheral is ready, send data")
+        let packetData = "ready!".data(using: .utf8)
+        if photoCharacteristic != nil {
+            connectedPeripheral?.writeValue(packetData!, for: photoCharacteristic!, type: .withoutResponse)
+        }
     }
     
     func updateGPSCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {

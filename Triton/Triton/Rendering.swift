@@ -84,7 +84,12 @@ struct MovingCirclesView: View {
     }
     func initializePositions(screenWidth: CGFloat, screenHeight: CGFloat) {
             circlePositions = [
-                (screenWidth * 0.2, screenHeight * 0.3),
+//                (screenWidth * 0.2, screenHeight * 0.3),
+//                (screenWidth * 0.4, screenHeight * 0.5),
+//                (screenWidth * 0.6, screenHeight * 0.2),
+//                (screenWidth * 0.3, screenHeight * 0.7),
+//                (screenWidth * 0.8, screenHeight * 0.6)
+                (screenWidth * 0.2, screenHeight * 0.1),
                 (screenWidth * 0.4, screenHeight * 0.5),
                 (screenWidth * 0.6, screenHeight * 0.2),
                 (screenWidth * 0.3, screenHeight * 0.7),
