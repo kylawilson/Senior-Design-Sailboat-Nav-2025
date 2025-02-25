@@ -176,7 +176,7 @@ with dai.Device(pipeline) as device:
 
     while True:
         current_time = datetime.now()
-        capture_interval = timedelta(seconds = 1)
+        capture_interval = timedelta(seconds = 25)
 
         if video.has():
             frame = video.get().getCvFrame()

@@ -947,7 +947,7 @@ class PhotoCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.photo = dbus.Byte(0x09)
-        #GLib.timeout_add(10000, self.get_data)
+        GLib.timeout_add(30000, self.get_data)
 
     def get_data(self):
         print("getting image")
