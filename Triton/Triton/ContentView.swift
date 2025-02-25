@@ -17,20 +17,6 @@ struct ContentView: View {
                     Text("Connect to Your Triton!")
                         .font(.title)
                         .fontWeight(.bold)
-                    //test
-//                    if !btService.finalPhotoData.isEmpty { // Ensure we don't save empty parts
-//                        //if let imageEncoded = dataToImage(btService.finalPhotoData){
-//                            let imageEncoded = base64Convert(base64String: btService.finalPhotoData)
-//                            Image(uiImage: imageEncoded)
-//                                .resizable()
-//                                .scaledToFit()
-//                                .frame(width: 300, height: 300)
-//                                .clipShape(RoundedRectangle(cornerRadius: 10))
-//                                .shadow(radius: 5)
-//                        //}
-//                    }
-                    //end test
-                    
                     
                     // Bluetooth Status
                     Text("\(btService.connectionState)")
@@ -142,9 +128,7 @@ struct ImagePreview: View {
     @ObservedObject var btService: BluetoothService
     
     var body: some View {
-        //if let uiImage = readData() {
         if let uiImage = readImage(finalPhotoData: btService.finalPhotoData) {
-        //if let uiImage = dataToImage(btService.finalPhotoData) {
             Image(uiImage: uiImage)
                 .resizable()
                 .scaledToFit()
@@ -163,7 +147,6 @@ struct ImageViewPage: View {
     var body: some View {
         VStack {
             if let uiImage = readImage(finalPhotoData: btService.finalPhotoData) {
-            //if let uiImage = readData() {
                 ImageView(image: uiImage)
             } else {
                 Text("Image not found")
@@ -204,12 +187,6 @@ struct PreviewButton<Content: View>: View {
         .background(Color.blue)
         .cornerRadius(10)
     }
-}
-
-//I think keep this in BluetoothService
-func createImage(_ value: Data) -> Image {
-    let liveFeed: UIImage = UIImage(data: value) ?? UIImage()
-    return Image(uiImage: liveFeed)
 }
 
 #Preview {

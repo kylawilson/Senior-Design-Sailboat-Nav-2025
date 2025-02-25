@@ -286,12 +286,6 @@ extension BluetoothService: CBPeripheralDelegate {
         peripheral.discoverServices(transferServices)
     }
     
-    
-    func createImage(_ value: Data) -> Image {
-        let songArtwork: UIImage = UIImage(data: value) ?? UIImage()
-        return Image(uiImage: songArtwork)
-    }
-    
     func updatePhotoCharacteristicUI() {
         //take photoData and turn it into an image
         print("updating photo\n")
@@ -310,7 +304,6 @@ extension BluetoothService: CBPeripheralDelegate {
         if photoCharacteristic != nil {
             peripheral.writeValue(packetData!, for: photoCharacteristic!, type: .withResponse )
         }
-    
     }
     
     func writeData() {
