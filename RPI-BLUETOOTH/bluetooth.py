@@ -943,11 +943,11 @@ class PhotoCharacteristic(Characteristic):
         Characteristic.__init__(
                 self, bus, index,
                 self.PHO_UUID,
-                ['read', 'notify', 'write'],
+                ['read', 'write', 'notify'],
                 service)
         self.notifying = False
         self.photo = dbus.Byte(0x09)
-        GLib.timeout_add(10000, self.get_data)
+        #GLib.timeout_add(10000, self.get_data)
 
     def get_data(self):
         print("getting image")
@@ -989,11 +989,14 @@ class PhotoCharacteristic(Characteristic):
         )
         print("Sent end message\n")
     
-    
 
     def ReadValue(self, options):
         print('Date ' + repr(self.date))
         return [dbus.Byte(self.date)]
+    
+    def WriteValue(self, value):
+        print('TestCharacteristic Write: ' + repr(value))
+        self.get_data()
 
     def StartNotify(self):
         if self.notifying:
@@ -1008,10 +1011,6 @@ class PhotoCharacteristic(Characteristic):
             print('Not notifying, nothing to do')
             return
         self.notifying = False
-
-    def WriteValue(self, value):
-        print('TestCharacteristic Write: ' + repr(value))
-        self.get_data()
 
 
 
