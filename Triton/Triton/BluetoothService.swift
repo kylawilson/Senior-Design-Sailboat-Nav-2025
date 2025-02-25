@@ -30,9 +30,10 @@ class BluetoothService: NSObject, ObservableObject {
     var onCharacteristicsDiscovered: ((CBPeripheral, CBService) -> Void)?
     var onNotificationStateUpdated: ((CBPeripheral, CBCharacteristic) -> Void)?
     
-     var transferServices = [ GPSTransferService.tritonGPSServiceUUID, PhotoTransferService.tritonPhotoServiceUUID ]
+    var transferServices = [ GPSTransferService.tritonGPSServiceUUID, PhotoTransferService.tritonPhotoServiceUUID, AnemometerTransferService.tritonAnemometerServiceUUID,  RenderingTransferService.tritonRenderingServiceUUID]
     private var gpsTransferCharacteristics = [ GPSTransferService.tritonLongitudeCharacteristicUUID, GPSTransferService.tritonCOGCharacteristicUUID, GPSTransferService.tritonLatitudeCharacteristicUUID, GPSTransferService.tritonDateCharacteristicUUID, GPSTransferService.tritonAltitudeCharacteristicUUID, GPSTransferService.tritonLatitudeIndicatorCharacteristicUUID, GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID, GPSTransferService.tritonTimeCharacteristicUUID, GPSTransferService.tritonSpeedCharacteristicUUID]
     private var photoTransferCharacteristics = [ PhotoTransferService.tritonPhotoCharacteristicUUID ]
+    private var renderingTransferService = [ RenderingTransferService.tritonRenderingAngleCharacteristicUUID, RenderingTransferService.tritonRenderingCoordinatesCharacteristicUUID ]
     private var subscribedCharacteristics : [ CBCharacteristic ]
     private var photoCharacteristic : CBCharacteristic?
     
@@ -196,9 +197,9 @@ extension BluetoothService: CBCentralManagerDelegate {
             guard let characteristics = service.characteristics else { return }
             for characteristic in characteristics {
                 if self.gpsTransferCharacteristics.contains(characteristic.uuid) || self.photoTransferCharacteristics.contains(characteristic.uuid) {
-                    if self.photoTransferCharacteristics.contains(characteristic.uuid) {
-                        self.photoCharacteristic = characteristic
-                    }
+//                    if self.photoTransferCharacteristics.contains(characteristic.uuid) {
+//                        self.photoCharacteristic = characteristic
+//                    }
                     os_log("Subscribing to characteristic %@", characteristic.uuid.uuidString)
                     self.subscribedCharacteristics.append(characteristic)
                     discoveredPeripheral.setNotifyValue(true, for: characteristic)
@@ -228,12 +229,6 @@ extension BluetoothService: CBPeripheralDelegate {
                     os_log("Error discovering services: %@", error.localizedDescription)
                     return
             } else {
-//                print("discovered ", peripheral)
-//                guard let peripheralServices = peripheral.services else { os_log("Error in didDiscoverServices"); return }
-//                for service in peripheralServices {
-//                    print(service.uuid)
-//                    peripheral.discoverCharacteristics(nil, for: service)
-//                }
                 onServicesDiscovered?(peripheral)
             }
     }
@@ -246,16 +241,6 @@ extension BluetoothService: CBPeripheralDelegate {
                     os_log("Error discovering characteristics: %@", error.localizedDescription)
                     return
             } else {
-//                guard let serviceCharacteristics = service.characteristics else { return }
-//                print("discovered characteristics")
-//                for characteristic in serviceCharacteristics  {
-//                    //subscribe only to the characteristics we want (in this case, GPS characteristics and photo characteristics)
-//                    if gpsTransferCharacteristics.contains(characteristic.uuid) || photoTransferCharacteristics.contains(characteristic.uuid) {
-//                        print(characteristic.uuid)
-//                        subscribedCharacteristics.append(characteristic)
-//                        peripheral.setNotifyValue(true, for: characteristic)
-//                    }
-//                }
                 onCharacteristicsDiscovered?(peripheral, service)
             }
     }
@@ -265,15 +250,9 @@ extension BluetoothService: CBPeripheralDelegate {
         if let error = error {
             os_log("Error changing notification state: %s", error.localizedDescription)
             return
+        } else {
+            onNotificationStateUpdated?(peripheral, characteristic)
         }
-//        if characteristic.isNotifying {
-//            // Notification has started
-//            os_log("Notification began on %@", characteristic)
-//        } else {
-//            // Notification has stopped, so disconnect from the peripheral
-//            os_log("Notification stopped on %@. Disconnecting", characteristic)
-//        }
-        onNotificationStateUpdated?(peripheral, characteristic)
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
@@ -287,9 +266,6 @@ extension BluetoothService: CBPeripheralDelegate {
                     let newval = value.map { String(format: "%02x", $0) }.joined()
                     tempPhotoData.append(value)
                     print("Photo data received: \(newval), size: \(tempPhotoData)")
-//                    if str != nil {
-//                        tempPhotoData+=str!
-//                    }
                 }
             } else {
             //GPS data
@@ -387,3 +363,33 @@ extension BluetoothService: CBPeripheralDelegate {
         
     }
 }
+
+
+
+//                print("discovered ", peripheral)
+//                guard let peripheralServices = peripheral.services else { os_log("Error in didDiscoverServices"); return }
+//                for service in peripheralServices {
+//                    print(service.uuid)
+//                    peripheral.discoverCharacteristics(nil, for: service)
+//                }
+
+
+//        if characteristic.isNotifying {
+//            // Notification has started
+//            os_log("Notification began on %@", characteristic)
+//        } else {
+//            // Notification has stopped, so disconnect from the peripheral
+//            os_log("Notification stopped on %@. Disconnecting", characteristic)
+//        }
+
+
+//                guard let serviceCharacteristics = service.characteristics else { return }
+//                print("discovered characteristics")
+//                for characteristic in serviceCharacteristics  {
+//                    //subscribe only to the characteristics we want (in this case, GPS characteristics and photo characteristics)
+//                    if gpsTransferCharacteristics.contains(characteristic.uuid) || photoTransferCharacteristics.contains(characteristic.uuid) {
+//                        print(characteristic.uuid)
+//                        subscribedCharacteristics.append(characteristic)
+//                        peripheral.setNotifyValue(true, for: characteristic)
+//                    }
+//                }

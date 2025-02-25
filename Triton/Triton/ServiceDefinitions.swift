@@ -49,5 +49,11 @@ struct AnemometerTransferService {
     static let tritonWindDirectionCharacteristicUUID = CBUUID(string: "f8b82f9c-ea3d-4362-97ef-3ad4c49ebde2")
 }
 
+//used to receive coordinates
+struct RenderingTransferService {
+    static let tritonRenderingServiceUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae270")
+    static let tritonRenderingCoordinatesCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae271") //X and Y coordinates [(x1,y1),(x2,y2)]
+    static let tritonRenderingAngleCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae272")
+}
 
 
