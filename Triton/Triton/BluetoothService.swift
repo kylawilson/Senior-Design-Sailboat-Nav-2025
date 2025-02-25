@@ -210,7 +210,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         onNotificationStateUpdated = { discoveredPeripheral, characteristic in
             if characteristic.isNotifying {
                 os_log("Notification started for %@", characteristic.uuid.uuidString)
-                self.writeData()
+                //self.writeData()
             } else {
                 os_log("Notification stopped for %@", characteristic.uuid.uuidString)
             }
@@ -299,6 +299,7 @@ extension BluetoothService: CBPeripheralDelegate {
                 let newval = value.map { String(format: "%02x", $0) }.joined()
                 print("Notification received: \(newval)")
                 updateGPSCharacteristicUI(characteristic.uuid, value)
+                //writeData()
                 
             }
         }
@@ -323,7 +324,7 @@ extension BluetoothService: CBPeripheralDelegate {
         //let finalPhotoData = tempPhotoData.base64EncodedString()
         finalPhotoData = String(data: tempPhotoData, encoding: .utf8)!
         tempPhotoData = Data()
-        writeData()
+        //writeData()
     }
     
     func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
@@ -340,7 +341,7 @@ extension BluetoothService: CBPeripheralDelegate {
         os_log("Peripheral is ready, send data")
         let packetData = "ready!".data(using: .utf8)
         if photoCharacteristic != nil {
-            connectedPeripheral?.writeValue(packetData!, for: photoCharacteristic!, type: .withoutResponse)
+            connectedPeripheral?.writeValue(packetData!, for: photoCharacteristic!, type: .withResponse)
         }
     }
     
