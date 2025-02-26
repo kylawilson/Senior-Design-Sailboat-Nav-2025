@@ -23,7 +23,7 @@ func base64Convert(base64String: String?) -> UIImage {
     var decodedImage = UIImage()
     if ((base64String?.isEmpty)! || (base64String?.contains("null"))!) {
         return decodedImage
-    }else {
+    } else {
         if  let imageBase64String = base64String {
             let dataDecoded = Data(base64Encoded: imageBase64String, options: .ignoreUnknownCharacters)
                 decodedImage = UIImage(data: dataDecoded!) ?? UIImage()
