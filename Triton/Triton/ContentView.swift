@@ -51,15 +51,15 @@ struct ContentView: View {
                         .opacity(btService.connectionState != .disconnected ? 0.6 : 1.0)
                     }
                     .frame(maxWidth: geometry.size.width * 0.9)
-                    HStack(spacing: 10) {
+                    VStack(spacing: 10) {
                         NavigationLink(destination: MovingCirclesPage()) {
                             PreviewButton(label: "Rendering", preview: MovingCirclesPreview())
                         }
                         NavigationLink(destination: ImageViewPage(btService: btService)) {
                             PreviewButton(label: "Live View", preview: ImagePreview(btService: btService))
                         }
-                        NavigationLink(destination: ImageViewPage(btService: btService)) {
-                            
+                        NavigationLink(destination: RawDataViewPage(btService: btService)) {
+                            PreviewButton(label: "Raw Data", preview: ImagePreview(btService: btService))
                         }
                     }
                     .frame(maxWidth: geometry.size.width * 0.9)
@@ -69,15 +69,15 @@ struct ContentView: View {
                         TileView(label: "Longitude", value: btService.gpsData.longitude+btService.gpsData.longitudeInd)
                         TileView(label: "Latitude", value: btService.gpsData.latitude+btService.gpsData.latitudeInd)
                         TileView(label: "Altitude", value: btService.gpsData.altitude)
-                        //TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
-                        //TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
-                        //TileView(label: "Longitude Ind", value: btService.gpsData.longitudeInd)
-                        //TileView(label: "Latitude Ind", value: btService.gpsData.latitudeInd)
-                        //TileView(label: "COG", value: btService.gpsData.COG)
-                        //TileView(label: "Speed", value: btService.gpsData.speed)
-                        //TileView(label: "Date", value: btService.gpsData.date)
+                        TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
+                        TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
+                        TileView(label: "COG", value: btService.gpsData.COG)
+                        TileView(label: "Speed", value: btService.gpsData.speed)
+                        
                         
                     }
+                    .frame(maxWidth: geometry.size.width * 0.9)
+                    TileView(label: "Date", value: btService.gpsData.date)
                     .frame(maxWidth: geometry.size.width * 0.9)
                     
                 }
@@ -121,7 +121,6 @@ struct MovingCirclesPage: View {
             }
             .edgesIgnoringSafeArea(.all)
             Spacer()
-                .navigationTitle("Rendering")
                 .navigationBarTitleDisplayMode(.inline)
         }
     }
@@ -137,7 +136,7 @@ struct ImagePreview: View {
                 .scaledToFit()
                 .frame(width: 50, height: 50)
         } else {
-            Color.gray.opacity(0.3)
+            Color.blue.opacity(0.3)
                 .frame(width: 50, height: 50)
         }
     }
@@ -174,7 +173,7 @@ struct MovingCirclesPreview: View {
 
 struct PreviewButton<Content: View>: View {
     let label: String
-    let preview: Content
+    let preview: Content?
     
     var body: some View {
         HStack {
@@ -197,7 +196,7 @@ struct RawDataViewPage: View {
     
     var body: some View {
         VStack {
-            Label(
+            Text("Raw Data")
             Spacer()
         }
         .navigationTitle("Raw Data")
