@@ -13,6 +13,18 @@
 
 std::ofstream gps_file; // Output file stream for GPS data
 
+//test dbus
+//DBusConnection * dbus_conn = nullptr;
+//DBusError dbus_error;
+//
+//// Initialize D-Bus error
+//::dbus_error_init(&dbus_error);
+//
+//// Connect to D-Bus
+//dbus_conn = ::dbus_bus_get(DBUS_BUS_SYSTEM, &dbus_error);
+//std::cout << "Connected to D-Bus as \"" << ::dbus_bus_get_unique_name(dbus_conn) << "\"." << std::endl;
+
+//end dbus test
 
 long getCurrentTimeInMilliseconds() {
     struct timeval tv;
