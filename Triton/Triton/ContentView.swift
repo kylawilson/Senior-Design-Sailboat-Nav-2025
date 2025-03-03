@@ -58,6 +58,9 @@ struct ContentView: View {
                         NavigationLink(destination: ImageViewPage(btService: btService)) {
                             PreviewButton(label: "Live View", preview: ImagePreview(btService: btService))
                         }
+                        NavigationLink(destination: ImageViewPage(btService: btService)) {
+                            
+                        }
                     }
                     .frame(maxWidth: geometry.size.width * 0.9)
                     //ble data
@@ -186,6 +189,19 @@ struct PreviewButton<Content: View>: View {
         .frame(maxWidth: .infinity)
         .background(Color.blue)
         .cornerRadius(10)
+    }
+}
+
+struct RawDataViewPage: View {
+    @ObservedObject var btService: BluetoothService
+    
+    var body: some View {
+        VStack {
+            Label(
+            Spacer()
+        }
+        .navigationTitle("Raw Data")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
