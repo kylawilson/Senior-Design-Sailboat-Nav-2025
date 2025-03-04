@@ -27,7 +27,7 @@ struct GridView: View {
                 }
             }
             .stroke(Color.black, lineWidth: 0.5) // Thin black lines
-            //.background(Color.blue.edgesIgnoringSafeArea(.all))
+            .background(Color.blue.edgesIgnoringSafeArea(.all))
         }
     }
 }
@@ -89,7 +89,7 @@ struct MovingCirclesView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.blue.edgesIgnoringSafeArea(.all))
+            //.background(Color.blue.edgesIgnoringSafeArea(.all))
             .onAppear {
                 let screenWidth = geometry.size.width
                 let screenHeight = geometry.size.height
@@ -153,15 +153,15 @@ struct MovingCirclesView: View {
         }
     }
 }
-    struct ContentView: View {
-        var body: some View {
-            ZStack{
-                MovingCirclesView()
-                GridView(rows: 10, columns: 10)
-                    .opacity(0.5)
-            }
-            .edgesIgnoringSafeArea(.all)
-        }
-    }
+//    struct ContentView: View {
+//        var body: some View {
+//            ZStack{
+//                MovingCirclesView()
+//                GridView(rows: 10, columns: 10)
+//                    .opacity(0.5)
+//            }
+//            .edgesIgnoringSafeArea(.all)
+//        }
+//    }
     
 
