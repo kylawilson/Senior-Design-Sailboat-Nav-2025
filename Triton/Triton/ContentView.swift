@@ -58,8 +58,8 @@ struct ContentView: View {
                         NavigationLink(destination: ImageViewPage(btService: btService)) {
                             PreviewButton(label: "Live View", preview: ImagePreview(btService: btService))
                         }
-                        NavigationLink(destination: RawDataViewPage(btService: btService)) {
-                            PreviewButton(label: "Raw Data", preview: ImagePreview(btService: btService))
+                        NavigationLink(destination: RawDataViewPage()) {
+                            PreviewButton(label: "Raw Data", preview: RawDataPreview())
                         }
                     }
                     .frame(maxWidth: geometry.size.width * 0.9)
@@ -170,6 +170,16 @@ struct MovingCirclesPreview: View {
     }
 }
 
+struct RawDataPreview: View {
+    var body: some View {
+            RawDataViewPage()
+                .scaleEffect(0.1)  // Shrink the entire page
+                .frame(width: 80, height: 50)  // Limit its visible size
+                .clipShape(RoundedRectangle(cornerRadius: 5))
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.white, lineWidth: 1))
+    }
+}
+
 
 struct PreviewButton<Content: View>: View {
     let label: String
@@ -192,7 +202,6 @@ struct PreviewButton<Content: View>: View {
 }
 
 struct RawDataViewPage: View {
-    @ObservedObject var btService: BluetoothService
     
     var body: some View {
         VStack {

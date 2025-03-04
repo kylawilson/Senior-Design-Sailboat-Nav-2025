@@ -37,6 +37,9 @@ class BluetoothService: NSObject, ObservableObject {
     private var subscribedCharacteristics : [ CBCharacteristic ]
     private var photoCharacteristic : CBCharacteristic?
     
+    private var updatingTime = false
+    private var timer: Timer?
+    
     //test
     
     override init() {
@@ -267,6 +270,10 @@ extension BluetoothService: CBPeripheralDelegate {
                     tempPhotoData.append(value)
                     print("Photo data received: \(newval), size: \(tempPhotoData)")
                 }
+                if !updatingTime {
+                    updatingTime = true
+                    startUpdatingTime()
+                }
             } else {
             //GPS data
                 // Process the received value
@@ -314,6 +321,26 @@ extension BluetoothService: CBPeripheralDelegate {
         }
     }
     
+    func startUpdatingTime() {
+            timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+                self.updateTime()
+            }
+        }
+    func stopUpdatingTime() {
+            timer?.invalidate()
+            timer = nil
+            print("Time updating stopped.")
+        }
+        
+    func updateTime() {
+        if let timeFloat = Float(gpsData.time) {
+            gpsData.time = String(timeFloat + 1)
+            print("Updated time:", gpsData.time)
+        } else {
+            print("Error: gpsData.time is not a valid number")
+        }
+    }
+    
     func updateGPSCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {
         switch (uuid) {
         case GPSTransferService.tritonDateCharacteristicUUID :
@@ -321,6 +348,11 @@ extension BluetoothService: CBPeripheralDelegate {
             break
         case GPSTransferService.tritonTimeCharacteristicUUID :
             gpsData.time = String(data: value, encoding: .utf8) ?? "N/A"
+            gpsData.time = gpsData.time.replacingOccurrences(of: "^0+", with: "", options: .regularExpression)
+            if updatingTime {
+                updatingTime = false
+                stopUpdatingTime()
+            } 
             break
         case GPSTransferService.tritonAltitudeCharacteristicUUID :
             gpsData.altitude = String(data: value, encoding: .utf8) ?? "N/A"
