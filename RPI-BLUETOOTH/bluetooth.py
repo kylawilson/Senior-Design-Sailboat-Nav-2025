@@ -66,6 +66,28 @@ def get_image():
     
     except Exception as e:
         print("D-Bus Error:", e)
+        
+        
+def get_depth():
+    """Fetches the latest encoded image from the D-Bus service."""
+    try:
+        bus = dbus.SessionBus()
+        obj = bus.get_object("com.example.DepthService", "/DepthService")
+        iface = dbus.Interface(obj, "com.example.DepthService")
+        returned_depth = iface.GetDepth()
+
+        if returned_depth != "No depth available":
+            # If the encoded image is a base64 string, decode it into bytes
+            depth_data = base64.b64decode(encoded_image)
+
+            # Optionally, read and base64 encode the image
+            serialized = base64.b64encode(depth_data).decode('utf-8')
+            return serialized
+        else:
+            print("No depth available from service.")
+    
+    except Exception as e:
+        print("D-Bus Error:", e)
 #end test
         
 

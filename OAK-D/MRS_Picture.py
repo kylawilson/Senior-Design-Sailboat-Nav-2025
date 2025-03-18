@@ -40,6 +40,29 @@ class ImageService(dbus.service.Object):
     def update_latest_image(self, image_path):
         """Updates the path to the latest image."""
         self.latest_image_path = image_path
+        
+        
+class DepthService(dbus.service.Object):
+    """D-Bus service that provides the depths of objects in view in base64 format."""
+
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/DepthService')
+        self.latest_image_path = None  # prob can get rid of this
+
+    @dbus.service.method("com.example.DepthService",
+                         in_signature='', out_signature='s')    # returns a string
+    def GetDepth(self):
+        """Returns the base64-encoded depth if available."""
+        if depth_array is None:         # need to set to None if we're not getting a reading when we set depth_array
+            encoded = base64.b64encode(depth_array).decode('utf-8')
+            print(f"Sent encoded image: {self.latest_image_path}")
+            return encoded  # Returns the base64 string
+        else:
+            return "No depths available"
+
+    def update_latest_image(self, depth_path):
+        """Updates to the latest depth array."""
+        self.latest_depth_array = depth_array
 
 def run_dbus_service():
     """Runs the D-Bus main loop in a separate thread."""
