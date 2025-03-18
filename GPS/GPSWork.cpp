@@ -138,7 +138,7 @@ void processRMC(const std::string& line) {
 
 
 int main() {
-    //dbus test
+    //dbus test, refer to this: https://www.matthew.ath.cx/misc/dbus
     
     DBusError dbus_error;
     DBusConnection * dbus_conn = nullptr;
