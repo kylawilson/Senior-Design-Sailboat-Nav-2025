@@ -52,8 +52,11 @@ struct ContentView: View {
                     }
                     .frame(maxWidth: geometry.size.width * 0.9)
                     VStack(spacing: 10) {
-                        NavigationLink(destination: MovingCirclesPage()) {
-                            PreviewButton(label: "Rendering", preview: MovingCirclesPreview())
+//                        NavigationLink(destination: MovingCirclesPage()) {
+//                            PreviewButton(label: "Rendering", preview: MovingCirclesPreview())
+//                        }
+                        NavigationLink(destination: DockingView()) {
+                            PreviewButton(label: "Docking View", preview: ImagePreview(btService: btService))
                         }
                         NavigationLink(destination: ImageViewPage(btService: btService)) {
                             PreviewButton(label: "Live View", preview: ImagePreview(btService: btService))
@@ -105,26 +108,26 @@ struct TileView: View {
                 .foregroundColor(.secondary)
         }
         .padding(8)
-        .background(Color.blue.opacity(0.1))
+        .background((label == "Speed" && (Int(value) ?? 0) > 15) ? Color.red.opacity(0.1) : (label == "Speed" && (Int(value) ?? 20) < 15) ? Color.green.opacity(0.1) : Color.blue.opacity(0.1))
         .cornerRadius(6)
     }
 }
 
 // Moving Circles Page
-struct MovingCirclesPage: View {
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                GridView(rows: 10, columns: 10)
-                MovingCirclesView()
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-            }
-            .edgesIgnoringSafeArea(.all)
-            Spacer()
-                .navigationBarTitleDisplayMode(.inline)
-        }
-    }
-}
+//struct MovingCirclesPage: View {
+//    var body: some View {
+//        GeometryReader { geometry in
+//            ZStack {
+//                GridView(rows: 10, columns: 10)
+//                MovingCirclesView()
+//                    .frame(width: geometry.size.width, height: geometry.size.height)
+//            }
+//            .edgesIgnoringSafeArea(.all)
+//            Spacer()
+//                .navigationBarTitleDisplayMode(.inline)
+//        }
+//    }
+//}
 
 struct ImagePreview: View {
     @ObservedObject var btService: BluetoothService
@@ -160,15 +163,15 @@ struct ImageViewPage: View {
     }
 }
 
-struct MovingCirclesPreview: View {
-    var body: some View {
-            MovingCirclesPage()
-                .scaleEffect(0.1)  // Shrink the entire page
-                .frame(width: 80, height: 50)  // Limit its visible size
-                .clipShape(RoundedRectangle(cornerRadius: 5))
-                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.white, lineWidth: 1))
-    }
-}
+//struct MovingCirclesPreview: View {
+//    var body: some View {
+//            MovingCirclesPage()
+//                .scaleEffect(0.1)  // Shrink the entire page
+//                .frame(width: 80, height: 50)  // Limit its visible size
+//                .clipShape(RoundedRectangle(cornerRadius: 5))
+//                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.white, lineWidth: 1))
+//    }
+//}
 
 struct RawDataPreview: View {
     var body: some View {
