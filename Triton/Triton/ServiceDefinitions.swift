@@ -60,8 +60,8 @@ struct RenderingTransferService {
 //used to receive depth from serialpis
 //array of depths?
 struct StereoPiTransferService {
-    static let tritonStereoPiServiceUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae270")
-    static let tritonStereoPiDepthCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae271")
+    static let tritonStereoPiServiceUUID = CBUUID(string: "36523c64-9a13-4742-89d8-91c9db2374c0")
+    static let tritonStereoPiDepthCharacteristicUUID = CBUUID(string: "36523c64-9a13-4742-89d8-91c9db2374c1")
 }
 
 

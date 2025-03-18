@@ -198,7 +198,7 @@ class Advertisement(dbus.service.Object):
         print('%s: Released!' % self.path)
 
 
-class GPSAdvertisement(Advertisement):
+class TritonAdvertisement(Advertisement):
 
     def __init__(self, bus, index):
         Advertisement.__init__(self, bus, index, 'peripheral')
@@ -220,6 +220,8 @@ class Application(dbus.service.Object):
         dbus.service.Object.__init__(self, bus, self.path)
         self.add_service(GPSservice(bus, 0))
         self.add_service(PhotoService(bus, 1))
+        self.add_service(RenderingService(bus, 2))
+        
 
     def get_path(self):
         return dbus.ObjectPath(self.path)
@@ -944,6 +946,118 @@ class GPSDateCharacteristic(Characteristic):
             return
 
         self.notifying = False
+        
+class AnemometerService(Service):
+    """
+    """
+    ANE_UUID = '8b82f9c-ea3d-4362-97ef-3ad4c49ebde0'
+
+    def __init__(self, bus, index):
+        Service.__init__(self, bus, index, self.ANE_UUID, True)
+        self.add_characteristic(LongitudeCharacteristic(bus, 0, self))
+        
+        
+class AnemometerWindSpeed(Characteristic):
+    """
+
+    """
+    WIN_SPD_UUID = 'f8b82f9c-ea3d-4362-97ef-3ad4c49ebde1'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.WIN_SPD_UUID,
+                ['read', 'notify'],
+                service)
+        self.notifying = False
+        self.wind_speed = dbus.Byte(0x09)
+        GLib.timeout_add(1000, self.get_data)
+
+    def get_data(self):
+        self.wind_speed, _ = get_wind()
+        if not self.notifying:
+            return True
+        if (self.wind_speed):
+            print('Wind Speed ' + repr(self.wind_speed))
+            self.notify_windspeed()
+        return True
+
+
+    def notify_windspeed(self):
+        if not self.notifying:
+            return
+        windspeed_bytes = [dbus.Byte(ord(c)) for c in self.wind_speed]
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Value': [dbus.Byte(b) for b in windspeed_bytes] }, [])
+
+    def ReadValue(self, options):
+        print('Wind Speed ' + repr(self.wind_speed))
+        return [dbus.Byte(self.wind_speed)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+        self.notifying = True
+        self.notify_windspeed()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+        self.notifying = False
+        
+class AnemometerWindDirection(Characteristic):
+    """
+
+    """
+    WIN_DIR_UUID = 'f8b82f9c-ea3d-4362-97ef-3ad4c49ebde2'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.WIN_DIR_UUID,
+                ['read', 'notify'],
+                service)
+        self.notifying = False
+        self.wind_dir = dbus.Byte(0x09)
+        GLib.timeout_add(1000, self.get_data)
+
+    def get_data(self):
+        _, self.wind_dir = get_wind()
+        if not self.notifying:
+            return True
+        if (self.wind_dir):
+            print('Wind Direction ' + repr(self.wind_dir))
+            self.notify_winddir()
+        return True
+
+
+    def notify_winddir(self):
+        if not self.notifying:
+            return
+        winddir_bytes = [dbus.Byte(ord(c)) for c in self.wind_dir]
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Value': [dbus.Byte(b) for b in winddir_bytes] }, [])
+
+    def ReadValue(self, options):
+        print('Wind Direction ' + repr(self.wind_dir))
+        return [dbus.Byte(self.wind_dir)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+        self.notifying = True
+        self.notify_winddir()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+        self.notifying = False
 
 class PhotoService(Service):
     """
@@ -1033,6 +1147,65 @@ class PhotoCharacteristic(Characteristic):
             print('Not notifying, nothing to do')
             return
         self.notifying = False
+    
+class RenderingService(Service):
+    """
+    """
+    RENDER_UUID = '4312b47d-2c99-4a27-a04d-7117630ae270'
+
+    def __init__(self, bus, index):
+        Service.__init__(self, bus, index, self.RENDER_UUID, True)
+        self.add_characteristic(DepthCharacteristic(bus, 0, self))
+
+class DepthCharacteristic(Characteristic):
+    """
+
+    """
+    DEPTH_UUID = '4312b47d-2c99-4a27-a04d-7117630ae271'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.DEPTH_UUID,
+                ['read', 'notify'],
+                service)
+        self.depth = dbus.Byte(0x02)
+        self.notifying = False
+        GLib.timeout_add(1000, self.get_data)
+
+    def get_data(self):
+    #        _, _, _, self.long, _, _ = read_gps_data(GPS_FILE)
+        if not self.notifying:
+            return True
+        if (self.depth):
+            print('Depth ' + repr(self.long))
+            self.notify_depth()
+        return True
+
+    def notify_depth(self):
+        if not self.notifying:
+            return
+        depth_bytes = [dbus.Byte(ord(c)) for c in self.depth]
+        self.PropertiesChanged(
+                GATT_CHRC_IFACE,
+                { 'Value': [dbus.Byte(b) for b in depth_bytes] }, [])
+
+    def ReadValue(self, options):
+        print('Depth ' + repr(self.depth))
+        return [dbus.Byte(self.depth)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+        self.notifying = True
+        self.notify_depth()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+        self.notifying = False
 
 
 
@@ -1093,7 +1266,7 @@ def main(timeout = 0):
                                 LE_ADVERTISING_MANAGER_IFACE)
 
     app = Application(bus)
-    gps_advertisement = GPSAdvertisement(bus, 0)
+    gps_advertisement = TritonAdvertisement(bus, 0)
 
     mainloop = GLib.MainLoop()
 

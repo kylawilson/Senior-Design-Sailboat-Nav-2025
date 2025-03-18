@@ -196,7 +196,7 @@ class Application(dbus.service.Object):
         self.path = '/'
         self.services = []
         dbus.service.Object.__init__(self, bus, self.path)
-        self.add_service(DepthService(bus, 0))
+        self.add_service(StereoPiDepthService(bus, 0))
 
     def get_path(self):
         return dbus.ObjectPath(self.path)
@@ -394,10 +394,10 @@ class Descriptor(dbus.service.Object):
         raise NotSupportedException()
 
 
-class DepthService(Service):
+class StereoPiDepthService(Service):
     """
     """
-    DEPTH_SERV_UUID = '36523c64-9a13-4742-89d8-91c9db2374c0'
+    RENDER_UUID = '36523c64-9a13-4742-89d8-91c9db2374c0'
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.DEPTH_SERV_UUID, True)
@@ -422,7 +422,7 @@ class DepthCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-#        _, _, _, self.long, _, _ = read_gps_data(GPS_FILE)
+        self.depth = get_depth()
         if not self.notifying:
             return True
         if (self.depth):
@@ -454,116 +454,6 @@ class DepthCharacteristic(Characteristic):
             print('Not notifying, nothing to do')
             return
         self.notifying = False
-
-class GPSservice(Service):
-    """
-    """
-    GPS_UUID = 'ec2ce16f-f774-4c1f-b3dd-a56b64bc9037'
-
-    def __init__(self, bus, index):
-        Service.__init__(self, bus, index, self.GPS_UUID, True)
-        self.add_characteristic(LongitudeCharacteristic(bus, 0, self))
-        self.add_characteristic(LongitudeIndicatorCharacteristic(bus, 1, self))
-        self.add_characteristic(LatitudeCharacteristic(bus, 2, self))
-        self.add_characteristic(LatitudeIndicatorCharacteristic(bus, 3, self))
-        self.add_characteristic(GPSTimeCharacteristic(bus, 4, self))
-        self.add_characteristic(GPSAltitudeCharacteristic(bus, 5, self))
-        # self.add_characteristic(GPSSpeedCharacteristic(bus, 6, self))
-        # self.add_characteristic(GPSCOGCharacteristic(bus, 7, self))
-        # self.add_characteristic(GPSDateCharacteristic(bus, 8, self))
-        self.energy_expended = 0
-
-class PhotoService(Service):
-    """
-    """
-    #need to chavce
-    PS_UUID = '064540d8-df60-4b60-a50f-780b7bd7f080'
-
-    def __init__(self, bus, index):
-        Service.__init__(self, bus, index, self.PS_UUID, True)
-        self.add_characteristic(PhotoCharacteristic(bus, 0, self))
-
-class PhotoCharacteristic(Characteristic):
-    """
-
-    """
-    PHO_UUID = '064540d8-df60-4b60-a50f-780b7bd7f081'
-
-    def __init__(self, bus, index, service):
-        Characteristic.__init__(
-                self, bus, index,
-                self.PHO_UUID,
-                ['read', 'write', 'notify'],
-                service)
-        self.notifying = False
-        self.photo = dbus.Byte(0x09)
-        GLib.timeout_add(30000, self.get_data)
-
-    def get_data(self):
-        print("getting image")
-        self.photo = get_image()
-        if not self.notifying:
-             return True
-        if (self.photo):
-             #print('Image Data ' + repr(self.image_data))
-             self.notify_photo()
-        return True
-
-
-    def notify_photo(self):
-        print("\nnotifying photo\n")
-        end_message = "IMAGE_END"
-        if not self.notifying:
-            return
-
-        MAX_CHUNK_SIZE = 23  # notification limit
-        photo_bytes = [dbus.Byte(ord(c)) for c in self.photo]  # Convert string to byte list
-
-        # Send data in chunks
-        print("photo size:", len(photo_bytes))
-            # Send Base64 string in chunks
-        for i in range(0, len(self.photo), MAX_CHUNK_SIZE):
-            chunk = self.photo[i:i + MAX_CHUNK_SIZE]  # Extract chunk
-            
-            self.PropertiesChanged(
-                GATT_CHRC_IFACE,
-                {'Value': [dbus.Byte(c.encode('utf-8')[0]) for c in chunk]}, 
-                []
-            )
-
-        # Send end message to signal completion
-        self.PropertiesChanged(
-            GATT_CHRC_IFACE,
-            {'Value': [dbus.Byte(c.encode('utf-8')[0]) for c in end_message]}, 
-            []
-        )
-        print("Sent end message\n")
-    
-
-    def ReadValue(self, options):
-        print('Date ' + repr(self.date))
-        return [dbus.Byte(self.date)]
-    
-    def WriteValue(self, value):
-        print('TestCharacteristic Write: ' + repr(value))
-        self.get_data()
-
-    def StartNotify(self):
-        if self.notifying:
-            print('Already notifying, nothing to do')
-            return
-        print("Set to notify on photo")
-        self.notifying = True
-        self.notify_photo()
-
-    def StopNotify(self):
-        if not self.notifying:
-            print('Not notifying, nothing to do')
-            return
-        self.notifying = False
-
-
-
 
 def register_app_cb():
     print('GATT application registered')
