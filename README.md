@@ -7,3 +7,7 @@ startx
 
 To activate virtual environment:
 source ./bin/activate
+
+To get bluetooth working on stereopi:
+sudo modprobe btusb
+sudo systemctl start bluetooth
