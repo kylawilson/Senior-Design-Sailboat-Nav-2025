@@ -68,9 +68,11 @@ def run_dbus_service():
     """Runs the D-Bus main loop in a separate thread."""
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     session_bus = dbus.SessionBus()
-    bus_name = dbus.service.BusName("com.example.ImageService", session_bus)
-    global image_service
-    image_service = ImageService(bus_name)
+    bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
+    bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
+    global image_service, depth_service
+    image_service = ImageService(bus_name_image)
+    depth_service = ImageService(bus_name_depth)
     
     print("D-Bus service running...")
     mainloop = GLib.MainLoop()
