@@ -60,7 +60,7 @@ class DepthService(dbus.service.Object):
         else:
             return "No depths available"
 
-    def update_latest_image(self, depth_path):
+    def update_latest_array(self, depth_array):
         """Updates to the latest depth array."""
         self.latest_depth_array = depth_array
 
