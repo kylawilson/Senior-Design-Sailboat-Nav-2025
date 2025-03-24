@@ -5,6 +5,18 @@ import dbus
 import gobject
 import sys
 
+import dbus.exceptions
+import dbus.mainloop.glib
+import dbus.service
+import time
+import threading
+import struct
+import subprocess
+import PIL
+from PIL import Image
+
+from gi.repository import GLib
+
 #if needed
 #try:
 #    from gi.repository import GObject  # python3
@@ -198,11 +210,13 @@ def main():
 #    service_path = args.service_path[0]
 
     # Set up the main loop.
-    DBusGMainLoop(set_as_default=True)
+    #DBusGMainLoop(set_as_default=True)
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     global bus
     bus = dbus.SystemBus()
     global mainloop
-    mainloop = gobject.MainLoop()
+    #mainloop = gobject.MainLoop()
+    mainloop = GLib.MainLoop()
 
     om = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, '/'), DBUS_OM_IFACE)
     om.connect_to_signal('InterfacesRemoved', interfaces_removed_cb)
