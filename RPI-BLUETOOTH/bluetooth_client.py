@@ -2,7 +2,7 @@
 
 import argparse
 import dbus
-import gobject
+#import gobject
 import sys
 
 import dbus.exceptions

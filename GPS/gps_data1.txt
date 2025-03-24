@@ -1,6 +1,0 @@
-UTCtime: 001804.868
-Latitude: 
-latIndicator: 
-Longitude: 
-longIndicator: 
-Altitude: 
