@@ -211,10 +211,10 @@ def main():
         if not process_depth_service(service_path):
             sys.exit(1)
     except dbus.DBusException as e:
-        print e.message
+        print(e.message)
         sys.exit(1)
 
-    print 'Depth Service ready'
+    print('Depth Service ready')
 
     start_client()
 
