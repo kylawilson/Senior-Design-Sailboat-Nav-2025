@@ -189,13 +189,13 @@ def interfaces_removed_cb(object_path, interfaces):
 
 def main():
     # Prase the service path from the arguments.
-    parser = argparse.ArgumentParser(
-            description='D-Bus Heart Rate Service client example')
-    parser.add_argument('service_path', metavar='<service-path>',
-                        type=dbus.ObjectPath, nargs=1,
-                        help='GATT service object path')
-    args = parser.parse_args()
-    service_path = args.service_path[0]
+#    parser = argparse.ArgumentParser(
+#            description='D-Bus Heart Rate Service client example')
+#    parser.add_argument('service_path', metavar='<service-path>',
+#                        type=dbus.ObjectPath, nargs=1,
+#                        help='GATT service object path')
+#    args = parser.parse_args()
+#    service_path = args.service_path[0]
 
     # Set up the main loop.
     DBusGMainLoop(set_as_default=True)
