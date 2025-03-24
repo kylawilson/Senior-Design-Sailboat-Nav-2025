@@ -72,7 +72,7 @@ def interfaces_added(path, interfaces):
 
         if compact and skip_dev(dev, properties):
             return
-        devices[path] = dict(devices[path].items() + properties.items())
+        devices[path] = dict(devices[path].items() | properties.items())
     else:
         devices[path] = properties
 
@@ -95,7 +95,7 @@ def properties_changed(interface, changed, invalidated, path):
 
         if compact and skip_dev(dev, changed):
             return
-        devices[path] = dict(devices[path].items() + changed.items())
+        devices[path] = dict(devices[path].items() | changed.items())
     else:
         devices[path] = changed
 
