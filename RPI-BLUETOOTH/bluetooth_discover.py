@@ -5,6 +5,7 @@ import dbus.mainloop.glib
 import gi
 gi.require_version('GLib', '2.0')
 from gi.repository import GLib
+import dbus.service
 
 # Constants
 BLUEZ_SERVICE_NAME = "org.bluez"
@@ -20,6 +21,29 @@ TARGET_CHARACTERISTIC_UUID = "00002a05-0000-1000-8000-00805f9b34fb"
 # Global variables
 bus = None
 mainloop = None
+depth_array = None
+
+class StereoPiDepthService(dbus.service.Object):
+    """D-Bus service that provides the depths of objects in stereo pi's view in base64 format."""
+
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/StereoPiDepthService')
+        self.latest_depth_array = None 
+
+    @dbus.service.method("com.example.DepthService",
+                         in_signature='', out_signature='s')    # returns a string
+    def GetDepth(self):
+        """Returns the base64-encoded depth if available."""
+        if depth_array is None:         # need to set to None if we're not getting a reading when we set depth_array
+            encoded = base64.b64encode(depth_array).decode('utf-8')
+            print(f"Sent encoded image: {self.latest_depth_array}")
+            return encoded  # Returns the base64 string
+        else:
+            return "No depths available"
+
+    def update_latest_array(self, depth_array):
+        """Updates to the latest depth array."""
+        self.latest_depth_array = depth_array
 
 
 def find_device():
@@ -110,6 +134,9 @@ def discover_services(device_path):
 def notification_callback(value):
     """Handles received BLE notifications."""
     print(f"Notification received: {value}")
+    # Change this depending on formatting
+    depth_array = value
+    
 
 
 def subscribe_to_notifications(char_path):
@@ -136,11 +163,14 @@ def subscribe_to_notifications(char_path):
 
 
 def main():
-    global bus, mainloop
+    global bus, mainloop, depth_service
 
     # Set up D-Bus main loop
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    session_bus = dbus.SessionBus()
     bus = dbus.SystemBus()
+    bus_name_depth = dbus.service.BusName("com.example.StereoPiDepthService", session_bus)
+    depth_service = StereoPiDepthService(bus_name_depth)
     mainloop = GLib.MainLoop()
 
     # Find and connect to the target device
