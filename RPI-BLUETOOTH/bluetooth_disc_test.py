@@ -1,7 +1,6 @@
 import sys
 import time
 import dbus
-import argparse
 import dbus.mainloop.glib
 import gi
 gi.require_version('GLib', '2.0')
@@ -9,98 +8,150 @@ from gi.repository import GLib
 
 # Constants
 BLUEZ_SERVICE_NAME = "org.bluez"
-DBUS_OM_IFACE = "org.freedesktop.DBus.ObjectManager"
-DBUS_PROP_IFACE = "org.freedesktop.DBus.Properties"
-GATT_SERVICE_IFACE = "org.bluez.GattService1"
-DEPTH_SVC_UUID = "12345678-1234-5678-1234-56789abcdef0"  # Replace with actual UUID
+ADAPTER_PATH = "/org/bluez/hci0"
+DEVICE_INTERFACE = "org.bluez.Device1"
+GATT_CHARACTERISTIC_IFACE = "org.bluez.GattCharacteristic1"
 
-# Global Variables
+# Filter parameters (change as needed)
+TARGET_DEVICE_NAME = "MyBLEDevice"
+TARGET_SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0"
+TARGET_CHARACTERISTIC_UUID = "abcd1234-5678-1234-5678-abcdef123456"
+
+# Global variables
 bus = None
 mainloop = None
-depth_service = None
+
+
+def find_device():
+    """Scans for BLE devices and returns the correct device path."""
+    adapter = bus.get_object(BLUEZ_SERVICE_NAME, ADAPTER_PATH)
+    adapter_methods = dbus.Interface(adapter, "org.freedesktop.DBus.Properties")
+
+    # Start scanning
+    adapter_methods.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(1))
+    adapter_methods.Set("org.bluez.Adapter1", "Discoverable", dbus.Boolean(1))
+    adapter_methods.Set("org.bluez.Adapter1", "Pairable", dbus.Boolean(1))
+
+    adapter_iface = dbus.Interface(adapter, "org.bluez.Adapter1")
+    adapter_iface.StartDiscovery()
+    
+    print("Scanning for BLE devices...")
+    time.sleep(5)  # Scan for 5 seconds
+    adapter_iface.StopDiscovery()
+
+    # Get discovered devices
+    om = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, "/"), "org.freedesktop.DBus.ObjectManager")
+    objects = om.GetManagedObjects()
+
+    for path, interfaces in objects.items():
+        if DEVICE_INTERFACE in interfaces:
+            properties = interfaces[DEVICE_INTERFACE]
+            name = properties.get("Name", "")
+
+            if TARGET_DEVICE_NAME in name:
+                print(f"Found target device: {name} ({path})")
+                return path
+
+    print("Target device not found.")
+    return None
 
 
 def connect_device(device_path):
-    """Ensures the Bluetooth device is connected before proceeding."""
+    """Connects to the BLE device."""
     device = bus.get_object(BLUEZ_SERVICE_NAME, device_path)
-    device_iface = dbus.Interface(device, "org.bluez.Device1")
-    props_iface = dbus.Interface(device, DBUS_PROP_IFACE)
+    device_iface = dbus.Interface(device, DEVICE_INTERFACE)
 
-    # Check if already connected
-    connected = props_iface.Get("org.bluez.Device1", "Connected")
+    # Connect if not already connected
+    props_iface = dbus.Interface(device, "org.freedesktop.DBus.Properties")
+    connected = props_iface.Get(DEVICE_INTERFACE, "Connected")
 
     if not connected:
-        print(f"Connecting to device {device_path}...")
+        print(f"Connecting to {device_path}...")
         device_iface.Connect()
         time.sleep(2)  # Wait for connection
-        connected = props_iface.Get("org.bluez.Device1", "Connected")
-    
-    if connected:
-        print("Device connected successfully!")
-    else:
-        print("Failed to connect.")
-        sys.exit(1)
+
+        connected = props_iface.Get(DEVICE_INTERFACE, "Connected")
+        if connected:
+            print("Connected successfully!")
+        else:
+            print("Failed to connect.")
+            sys.exit(1)
 
 
-def process_chrc(chrc_path):
-    """Placeholder function to process characteristics."""
-    print(f"Processing characteristic: {chrc_path}")
+def discover_services(device_path):
+    """Discovers and prints available services and characteristics."""
+    om = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, "/"), "org.freedesktop.DBus.ObjectManager")
+    objects = om.GetManagedObjects()
+
+    target_characteristic = None
+
+    for path, interfaces in objects.items():
+        if "org.bluez.GattService1" in interfaces:
+            service_uuid = interfaces["org.bluez.GattService1"]["UUID"]
+            print(f"Service: {service_uuid} ({path})")
+
+            if service_uuid == TARGET_SERVICE_UUID:
+                for char_path, char_interfaces in objects.items():
+                    if "org.bluez.GattCharacteristic1" in char_interfaces:
+                        service_path = char_path.rsplit("/", 1)[0]
+                        if service_path == path:
+                            char_uuid = char_interfaces["org.bluez.GattCharacteristic1"]["UUID"]
+                            print(f"  Characteristic: {char_uuid} ({char_path})")
+
+                            if char_uuid == TARGET_CHARACTERISTIC_UUID:
+                                target_characteristic = char_path
+
+    return target_characteristic
 
 
-def process_depth_service(service_path):
-    """Processes the GATT Depth Service, checking UUID and handling characteristics."""
-    global depth_service
+def notification_callback(value):
+    """Handles received BLE notifications."""
+    print(f"Notification received: {value}")
 
-    service = bus.get_object(BLUEZ_SERVICE_NAME, service_path)
-    service_props_iface = dbus.Interface(service, DBUS_PROP_IFACE)
-    service_props = service_props_iface.GetAll(GATT_SERVICE_IFACE)
 
-    uuid = service_props['UUID']
+def subscribe_to_notifications(char_path):
+    """Subscribes to notifications for a characteristic."""
+    if not char_path:
+        print("Target characteristic not found.")
+        return
 
-    if uuid != DEPTH_SVC_UUID:
-        print(f"Service is not a Depth Service: {uuid}")
-        return False
+    char = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+    char_iface = dbus.Interface(char, GATT_CHARACTERISTIC_IFACE)
 
-    # Process characteristics
-    chrc_paths = service_props.get('Characteristics', [])
-    for chrc_path in chrc_paths:
-        process_chrc(chrc_path)
+    def on_characteristic_changed(value):
+        notification_callback(value)
 
-    depth_service = (service, service_props, service_path)
-    print("Depth Service successfully processed.")
-    return True
+    char_iface.connect_to_signal("PropertiesChanged", on_characteristic_changed)
+    char_iface.StartNotify()
+    print(f"Subscribed to notifications on {char_path}.")
+
+    # Keep the event loop running
+    global mainloop
+    mainloop.run()
 
 
 def main():
     global bus, mainloop
-
-    # Parse arguments
-    parser = argparse.ArgumentParser(description="D-Bus Depth Service client example")
-    parser.add_argument('service_path', metavar='<service-path>', type=str, nargs=1,
-                        help='GATT service object path')
-    args = parser.parse_args()
-    service_path = args.service_path[0]
 
     # Set up D-Bus main loop
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SystemBus()
     mainloop = GLib.MainLoop()
 
-    # Extract device path from service path
-    device_path_parts = service_path.split('/service')[0]
-    device_path = device_path_parts  # Example: "/org/bluez/hci0/dev_xx_xx_xx_xx_xx_xx"
-
-    # Ensure the device is connected
-    connect_device(device_path)
-
-    # Process the depth service
-    if not process_depth_service(service_path):
+    # Find and connect to the target device
+    device_path = find_device()
+    if not device_path:
         sys.exit(1)
 
-    print("Depth Service ready. Listening for updates...")
-    mainloop.run()
+    connect_device(device_path)
+
+    # Discover services and characteristics
+    char_path = discover_services(device_path)
+
+    # Subscribe to notifications
+    subscribe_to_notifications(char_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 
