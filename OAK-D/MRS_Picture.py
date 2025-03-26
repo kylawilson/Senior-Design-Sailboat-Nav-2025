@@ -47,7 +47,7 @@ class DepthService(dbus.service.Object):
 
     def __init__(self, bus_name):
         dbus.service.Object.__init__(self, bus_name, '/DepthService')
-        self.latest_image_path = None  # prob can get rid of this
+        self.latest_depth_array = None  # prob can get rid of this
 
     @dbus.service.method("com.example.DepthService",
                          in_signature='', out_signature='s')    # returns a string
@@ -55,7 +55,29 @@ class DepthService(dbus.service.Object):
         """Returns the base64-encoded depth if available."""
         if depth_array is None:         # need to set to None if we're not getting a reading when we set depth_array
             encoded = base64.b64encode(depth_array).decode('utf-8')
-            print(f"Sent encoded image: {self.latest_image_path}")
+            print(f"Sent encoded image: {self.latest_depth_array}")
+            return encoded  # Returns the base64 string
+        else:
+            return "No depths available"
+
+    def update_latest_array(self, depth_array):
+        """Updates to the latest depth array."""
+        self.latest_depth_array = depth_array
+
+class StereoPiDepthService(dbus.service.Object):
+    """D-Bus service that provides the depths of objects in stereo pi's view in base64 format."""
+
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/StereoPiDepthService')
+        self.latest_depth_array = None 
+
+    @dbus.service.method("com.example.DepthService",
+                         in_signature='', out_signature='s')    # returns a string
+    def GetDepth(self):
+        """Returns the base64-encoded depth if available."""
+        if depth_array is None:         # need to set to None if we're not getting a reading when we set depth_array
+            encoded = base64.b64encode(depth_array).decode('utf-8')
+            print(f"Sent encoded image: {self.latest_depth_array}")
             return encoded  # Returns the base64 string
         else:
             return "No depths available"
@@ -70,6 +92,7 @@ def run_dbus_service():
     session_bus = dbus.SessionBus()
     bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
+    bus_name_depth = dbus.service.BusName("com.example.StereoPiDepthService", session_bus)
     global image_service, depth_service
     image_service = ImageService(bus_name_image)
     depth_service = ImageService(bus_name_depth)
