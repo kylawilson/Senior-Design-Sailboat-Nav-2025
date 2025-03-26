@@ -121,6 +121,8 @@ def subscribe_to_notifications(char_path):
     char = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
     char_iface = dbus.Interface(char, GATT_CHARACTERISTIC_IFACE)
 
+
+    #test notification changing functionality
     def on_characteristic_changed(value):
         notification_callback(value)
 
