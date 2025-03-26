@@ -30,7 +30,7 @@ class StereoPiDepthService(dbus.service.Object):
         dbus.service.Object.__init__(self, bus_name, '/StereoPiDepthService')
         self.latest_depth_array = None 
 
-    @dbus.service.method("com.example.DepthService",
+    @dbus.service.method("com.example.StereoPiDepthService",
                          in_signature='', out_signature='s')    # returns a string
     def GetDepth(self):
         """Returns the base64-encoded depth if available."""
