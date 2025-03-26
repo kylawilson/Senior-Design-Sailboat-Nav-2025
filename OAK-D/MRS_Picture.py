@@ -64,35 +64,12 @@ class DepthService(dbus.service.Object):
         """Updates to the latest depth array."""
         self.latest_depth_array = depth_array
 
-class StereoPiDepthService(dbus.service.Object):
-    """D-Bus service that provides the depths of objects in stereo pi's view in base64 format."""
-
-    def __init__(self, bus_name):
-        dbus.service.Object.__init__(self, bus_name, '/StereoPiDepthService')
-        self.latest_depth_array = None 
-
-    @dbus.service.method("com.example.DepthService",
-                         in_signature='', out_signature='s')    # returns a string
-    def GetDepth(self):
-        """Returns the base64-encoded depth if available."""
-        if depth_array is None:         # need to set to None if we're not getting a reading when we set depth_array
-            encoded = base64.b64encode(depth_array).decode('utf-8')
-            print(f"Sent encoded image: {self.latest_depth_array}")
-            return encoded  # Returns the base64 string
-        else:
-            return "No depths available"
-
-    def update_latest_array(self, depth_array):
-        """Updates to the latest depth array."""
-        self.latest_depth_array = depth_array
-
 def run_dbus_service():
     """Runs the D-Bus main loop in a separate thread."""
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     session_bus = dbus.SessionBus()
     bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
-    bus_name_depth = dbus.service.BusName("com.example.StereoPiDepthService", session_bus)  #remove when StereoPiDepth service leaves this script
     global image_service, depth_service
     image_service = ImageService(bus_name_image)
     depth_service = DepthService(bus_name_depth)
