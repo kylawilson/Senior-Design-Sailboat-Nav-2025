@@ -92,7 +92,7 @@ def run_dbus_service():
     session_bus = dbus.SessionBus()
     bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
-    bus_name_depth = dbus.service.BusName("com.example.StereoPiDepthService", session_bus)
+    bus_name_depth = dbus.service.BusName("com.example.StereoPiDepthService", session_bus)  #remove when StereoPiDepth service leaves this script
     global image_service, depth_service
     image_service = ImageService(bus_name_image)
     depth_service = ImageService(bus_name_depth)
