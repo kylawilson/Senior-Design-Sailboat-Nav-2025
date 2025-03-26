@@ -1,184 +1,160 @@
-#!/usr/bin/env python3
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-from __future__ import absolute_import, print_function, unicode_literals
-
-from optparse import OptionParser, make_option
+import sys
+import time
 import dbus
 import dbus.mainloop.glib
+import gi
+gi.require_version('GLib', '2.0')
 from gi.repository import GLib
-try:
-  from gi.repository import GObject
-except ImportError:
-  import gobject as GObject
-import bluezutils
 
-compact = False
-devices = {}
+# Constants
+BLUEZ_SERVICE_NAME = "org.bluez"
+ADAPTER_PATH = "/org/bluez/hci0"
+DEVICE_INTERFACE = "org.bluez.Device1"
+GATT_CHARACTERISTIC_IFACE = "org.bluez.GattCharacteristic1"
 
-def print_compact(address, properties):
-    name = ""
-    address = "<unknown>"
+# Test parameters, change for triton
+TARGET_DEVICE_NAME = "Kyla Phone Test"
+TARGET_SERVICE_UUID = "00001801-0000-1000-8000-00805f9b34fb"
+TARGET_CHARACTERISTIC_UUID = "00002a05-0000-1000-8000-00805f9b34fb"
 
-    for key, value in properties.items():
-        if type(value) is dbus.String:
-            value = unicode(value).encode('ascii', 'replace')
-        if (key == "Name"):
-            name = value
-        elif (key == "Address"):
-            address = value
+# Global variables
+bus = None
+mainloop = None
 
-    if "Logged" in properties:
-        flag = "*"
-    else:
-        flag = " "
 
-    print("%s%s %s" % (flag, address, name))
+def find_device():
+    """Scans for BLE devices and returns the correct device path."""
+    adapter = bus.get_object(BLUEZ_SERVICE_NAME, ADAPTER_PATH)
+    adapter_methods = dbus.Interface(adapter, "org.freedesktop.DBus.Properties")
 
-    properties["Logged"] = True
+    # Start scanning
+    adapter_methods.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(1))
+    adapter_methods.Set("org.bluez.Adapter1", "Discoverable", dbus.Boolean(1))
+    adapter_methods.Set("org.bluez.Adapter1", "Pairable", dbus.Boolean(1))
 
-def print_normal(address, properties):
-    print("[ " + address + " ]")
+    adapter_iface = dbus.Interface(adapter, "org.bluez.Adapter1")
+    adapter_iface.StartDiscovery()
+    
+    print("Scanning for BLE devices...")
+    time.sleep(5)  # Scan for 5 seconds
+    adapter_iface.StopDiscovery()
 
-    for key in properties.keys():
-        value = properties[key]
-        if type(value) is dbus.String:
-            value = unicode(value).encode('ascii', 'replace')
-        if (key == "Class"):
-            print("    %s = 0x%06x" % (key, value))
-        else:
-            print("    %s = %s" % (key, value))
-
-    print()
-
-    properties["Logged"] = True
-
-def skip_dev(old_dev, new_dev):
-    if not "Logged" in old_dev:
-        return False
-    if "Name" in old_dev:
-        return True
-    if not "Name" in new_dev:
-        return True
-    return False
-
-def interfaces_added(path, interfaces):
-    properties = interfaces["org.bluez.Device1"]
-    if not properties:
-        return
-
-    if path in devices:
-        dev = devices[path]
-
-        if compact and skip_dev(dev, properties):
-            return
-        devices[path] = dict(devices[path].items() | properties.items())
-    else:
-        devices[path] = properties
-
-    if "Address" in devices[path]:
-        address = properties["Address"]
-    else:
-        address = "<unknown>"
-
-    if compact:
-        print_compact(address, devices[path])
-    else:
-        print_normal(address, devices[path])
-
-def properties_changed(interface, changed, invalidated, path):
-    if interface != "org.bluez.Device1":
-        return
-
-    if path in devices:
-        dev = devices[path]
-
-        if compact and skip_dev(dev, changed):
-            return
-        devices[path] = dict(devices[path].items() | changed.items())
-    else:
-        devices[path] = changed
-
-    if "Address" in devices[path]:
-        address = devices[path]["Address"]
-    else:
-        address = "<unknown>"
-
-    if compact:
-        print_compact(address, devices[path])
-    else:
-        print_normal(address, devices[path])
-
-if __name__ == '__main__':
-    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-
-    bus = dbus.SystemBus()
-
-    option_list = [
-            make_option("-i", "--device", action="store",
-                    type="string", dest="dev_id"),
-            make_option("-u", "--uuids", action="store",
-                    type="string", dest="uuids",
-                    help="Filtered service UUIDs [uuid1,uuid2,...]"),
-            make_option("-r", "--rssi", action="store",
-                    type="int", dest="rssi",
-                    help="RSSI threshold value"),
-            make_option("-p", "--pathloss", action="store",
-                    type="int", dest="pathloss",
-                    help="Pathloss threshold value"),
-            make_option("-t", "--transport", action="store",
-                    type="string", dest="transport",
-                    help="Type of scan to run (le/bredr/auto)"),
-            make_option("-c", "--compact",
-                    action="store_true", dest="compact"),
-            ]
-    parser = OptionParser(option_list=option_list)
-
-    (options, args) = parser.parse_args()
-
-    adapter = bluezutils.find_adapter(options.dev_id)
-
-    if options.compact:
-        compact = True;
-
-    bus.add_signal_receiver(interfaces_added,
-            dbus_interface = "org.freedesktop.DBus.ObjectManager",
-            signal_name = "InterfacesAdded")
-
-    bus.add_signal_receiver(properties_changed,
-            dbus_interface = "org.freedesktop.DBus.Properties",
-            signal_name = "PropertiesChanged",
-            arg0 = "org.bluez.Device1",
-            path_keyword = "path")
-
-    om = dbus.Interface(bus.get_object("org.bluez", "/"),
-                "org.freedesktop.DBus.ObjectManager")
+    # Get discovered devices
+    om = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, "/"), "org.freedesktop.DBus.ObjectManager")
     objects = om.GetManagedObjects()
+
     for path, interfaces in objects.items():
-        if "org.bluez.Device1" in interfaces:
-            devices[path] = interfaces["org.bluez.Device1"]
+        if DEVICE_INTERFACE in interfaces:
+            properties = interfaces[DEVICE_INTERFACE]
+            name = properties.get("Name", "")
+            print(f"Found target device: {name} ({path})")
 
-    scan_filter = dict()
+            if TARGET_DEVICE_NAME in name:
+                print(f"Found target device: {name} ({path})")
+                return path
 
-    if options.uuids:
-        uuids = []
-        uuid_list = options.uuids.split(',')
-        for uuid in uuid_list:
-            uuids.append(uuid)
+    print("Target device not found.")
+    return None
 
-        scan_filter.update({ "UUIDs": uuids })
 
-    if options.rssi:
-        scan_filter.update({ "RSSI": dbus.Int16(options.rssi) })
+def connect_device(device_path):
+    """Connects to the BLE device."""
+    device = bus.get_object(BLUEZ_SERVICE_NAME, device_path)
+    device_iface = dbus.Interface(device, DEVICE_INTERFACE)
 
-    if options.pathloss:
-        scan_filter.update({ "Pathloss": dbus.UInt16(options.pathloss) })
+    # Connect if not already connected
+    props_iface = dbus.Interface(device, "org.freedesktop.DBus.Properties")
+    connected = props_iface.Get(DEVICE_INTERFACE, "Connected")
 
-    if options.transport:
-        scan_filter.update({ "Transport": options.transport })
+    if not connected:
+        print(f"Connecting to {device_path}...")
+        device_iface.Connect()
+        time.sleep(2)  # Wait for connection
 
-    adapter.SetDiscoveryFilter(scan_filter)
-    adapter.StartDiscovery()
+        connected = props_iface.Get(DEVICE_INTERFACE, "Connected")
+        if connected:
+            print("Connected successfully!")
+        else:
+            print("Failed to connect.")
+            sys.exit(1)
 
-    mainloop = GLib.MainLoop()
+
+def discover_services(device_path):
+    """Discovers and prints available services and characteristics."""
+    om = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, "/"), "org.freedesktop.DBus.ObjectManager")
+    objects = om.GetManagedObjects()
+
+    target_characteristic = None
+
+    for path, interfaces in objects.items():
+        if "org.bluez.GattService1" in interfaces:
+            service_uuid = interfaces["org.bluez.GattService1"]["UUID"]
+            print(f"Service: {service_uuid} ({path})")
+
+
+            if service_uuid == TARGET_SERVICE_UUID:
+                print(f"Service UUID == TARGET_SERVICE_UUID")
+                for char_path, char_interfaces in objects.items():
+                    if "org.bluez.GattCharacteristic1" in char_interfaces:
+                        service_path = char_path.rsplit("/", 1)[0]
+                        if service_path == path:
+                            char_uuid = char_interfaces["org.bluez.GattCharacteristic1"]["UUID"]
+                            print(f"  Characteristic: {char_uuid} ({char_path})")
+
+                            if char_uuid == TARGET_CHARACTERISTIC_UUID:
+                                target_characteristic = char_path
+
+    return target_characteristic
+
+
+def notification_callback(value):
+    """Handles received BLE notifications."""
+    print(f"Notification received: {value}")
+
+
+def subscribe_to_notifications(char_path):
+    """Subscribes to notifications for a characteristic."""
+    if not char_path:
+        print("Target characteristic not found.")
+        return
+
+    char = bus.get_object(BLUEZ_SERVICE_NAME, char_path)
+    char_iface = dbus.Interface(char, GATT_CHARACTERISTIC_IFACE)
+
+    def on_characteristic_changed(value):
+        notification_callback(value)
+
+    char_iface.connect_to_signal("PropertiesChanged", on_characteristic_changed)
+    char_iface.StartNotify()
+    print(f"Subscribed to notifications on {char_path}.")
+
+    # Keep the event loop running
+    global mainloop
     mainloop.run()
+
+
+def main():
+    global bus, mainloop
+
+    # Set up D-Bus main loop
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    bus = dbus.SystemBus()
+    mainloop = GLib.MainLoop()
+
+    # Find and connect to the target device
+    device_path = find_device()
+    if not device_path:
+        sys.exit(1)
+
+    connect_device(device_path)
+
+    # Discover services and characteristics
+    char_path = discover_services(device_path)
+
+    # Subscribe to notifications
+    subscribe_to_notifications(char_path)
+
+
+if __name__ == "__main__":
+    main()
+
