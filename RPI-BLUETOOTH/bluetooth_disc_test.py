@@ -12,10 +12,10 @@ ADAPTER_PATH = "/org/bluez/hci0"
 DEVICE_INTERFACE = "org.bluez.Device1"
 GATT_CHARACTERISTIC_IFACE = "org.bluez.GattCharacteristic1"
 
-# Filter parameters (change as needed)
-TARGET_DEVICE_NAME = "MyBLEDevice"
-TARGET_SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0"
-TARGET_CHARACTERISTIC_UUID = "abcd1234-5678-1234-5678-abcdef123456"
+# Test parameters, change for triton
+TARGET_DEVICE_NAME = "Kyla Phone Test"
+TARGET_SERVICE_UUID = "00001801-0000-1000-8000-00805f9b34fb"
+TARGET_CHARACTERISTIC_UUID = "00002a05-0000-1000-8000-00805f9b34fb"
 
 # Global variables
 bus = None
@@ -47,6 +47,7 @@ def find_device():
         if DEVICE_INTERFACE in interfaces:
             properties = interfaces[DEVICE_INTERFACE]
             name = properties.get("Name", "")
+            print(f"Found target device: {name} ({path})")
 
             if TARGET_DEVICE_NAME in name:
                 print(f"Found target device: {name} ({path})")
@@ -90,7 +91,9 @@ def discover_services(device_path):
             service_uuid = interfaces["org.bluez.GattService1"]["UUID"]
             print(f"Service: {service_uuid} ({path})")
 
+
             if service_uuid == TARGET_SERVICE_UUID:
+                print(f"Service UUID == TARGET_SERVICE_UUID")
                 for char_path, char_interfaces in objects.items():
                     if "org.bluez.GattCharacteristic1" in char_interfaces:
                         service_path = char_path.rsplit("/", 1)[0]
