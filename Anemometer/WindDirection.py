@@ -60,6 +60,9 @@ while True:
     # Update the last valid direction
     if angle is not None:
         last_direction = angle
-
-    print(f"Voltage: {v:.2f}V | Resistance: {r:.0f}Ω | Direction: {angle}")
+   
+    v_str = f"{v:.2f}V" if v is not None else "N/A"
+    r_str = f"{r:.0f}O" if r is not None else "N/A"
+    print(f"Voltage: {v_str} | Resistance: {r_str} | Direction: {angle}")
+    # print(f"Voltage: {v:.2f}V | Resistance: {r:.0f}Ω | Direction: {angle}")
     time.sleep(1)  # Delay for readability

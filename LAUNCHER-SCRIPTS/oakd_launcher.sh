@@ -13,3 +13,4 @@ export $(dbus-launch)
 python3 MRS_Picture.py &
 cd ../RPI-BLUETOOTH
 python3 bluetooth.py &
+# python3 bluetooth_discover.py &
