@@ -55,7 +55,7 @@ class DepthService(dbus.service.Object):
         """Returns the base64-encoded depth if available."""
         if depth_array is None:         # need to set to None if we're not getting a reading when we set depth_array
             encoded = base64.b64encode(depth_array).decode('utf-8')
-            print(f"Sent encoded image: {self.latest_image_path}")
+            print(f"Sent encoded image: {self.latest_depth_array}")
             return encoded  # Returns the base64 string
         else:
             return "No depths available"
