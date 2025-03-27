@@ -1196,7 +1196,7 @@ class DepthCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-    #        _, _, _, self.long, _, _ = read_gps_data(GPS_FILE)
+        self.depth = get_depth()
         if not self.notifying:
             return True
         if (self.depth):
