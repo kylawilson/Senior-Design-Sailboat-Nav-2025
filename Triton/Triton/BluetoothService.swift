@@ -290,6 +290,9 @@ extension BluetoothService: CBPeripheralDelegate {
     
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         print("Peripheral modified services")
+        for service in invalidatedServices {
+            print("Invalidated Service: ", service)
+        }
         peripheral.discoverServices(transferServices)
     }
     
