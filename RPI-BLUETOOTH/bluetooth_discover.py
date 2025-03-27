@@ -71,7 +71,11 @@ def find_device():
         if DEVICE_INTERFACE in interfaces:
             properties = interfaces[DEVICE_INTERFACE]
             name = properties.get("Name", "")
+            uuids = list(properties.get("UUIDs", []))
+            alias = properties.get("Alias", "")
             print(f"Found target device: {name} ({path})")
+            print(f"Advertised UUIDs: {', '.join(uuids) if uuids else 'None'}")
+            print(f"Alias: {alias}")
 
             if TARGET_DEVICE_NAME in name:
                 print(f"Found target device: {name} ({path})")
