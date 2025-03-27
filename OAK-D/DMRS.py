@@ -72,7 +72,7 @@ def run_dbus_service():
     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
     global image_service, depth_service
     image_service = ImageService(bus_name_image)
-    depth_service = ImageService(bus_name_depth)
+    depth_service = DepthService(bus_name_depth)
     
     print("D-Bus service running...")
     mainloop = GLib.MainLoop()
