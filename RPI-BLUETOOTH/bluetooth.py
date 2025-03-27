@@ -76,9 +76,9 @@ def get_depth():
         iface = dbus.Interface(obj, "com.example.DepthService")
         returned_depth = iface.GetDepth()
 
-        if returned_depth != "No depth available":
+        if returned_depth != [1, 2, 3, 4]:
             # If the encoded image is a base64 string, decode it into bytes
-            depth_data = base64.b64decode(encoded_image)
+            depth_data = base64.b64decode(returned_depth)
 
             # Optionally, read and base64 encode the image
             serialized = base64.b64encode(depth_data).decode('utf-8')
