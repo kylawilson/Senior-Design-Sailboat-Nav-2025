@@ -1,6 +1,5 @@
 import time
 import datetime
-import os
 import signal
 
 # Variables to track the highest temperature and runtime
@@ -25,15 +24,21 @@ def log_final_results():
     total_runtime = end_time - start_time
     formatted_runtime = str(datetime.timedelta(seconds=int(total_runtime)))
 
-    with open(log_file, "a") as f:
-        f.write("\n===== Script Stopped =====\n")
-        f.write(f"Highest Temperature: {highest_temp:.2f}°C at {highest_temp_time}\n")
+    with open(log_file, "w") as f:  # Use "w" to overwrite with final results only
+        f.write("===== Final Results =====\n")
+        if highest_temp_time:
+            f.write(f"Highest Temperature: {highest_temp:.2f}°C at {highest_temp_time}\n")
+        else:
+            f.write("No temperature readings were recorded.\n")
         f.write(f"Total Runtime: {formatted_runtime}\n")
         f.write("==========================\n")
     
     print("\nLogging completed. Exiting script.")
     print(f"Total runtime: {formatted_runtime}")
-    print(f"Highest temperature: {highest_temp:.2f}°C at {highest_temp_time}")
+    if highest_temp_time:
+        print(f"Highest temperature: {highest_temp:.2f}°C at {highest_temp_time}")
+    else:
+        print("No temperature readings were recorded.")
 
 def signal_handler(sig, frame):
     """Handles termination signals gracefully."""
@@ -58,12 +63,7 @@ try:
             if temp > highest_temp:
                 highest_temp = temp
                 highest_temp_time = current_time
-            
-            print(f"[{current_time}] Temp: {temp:.2f}°C")
-            
-            # Append each reading to the log file
-            with open(log_file, "a") as f:
-                f.write(f"[{current_time}] Temp: {temp:.2f}°C\n")
+                print(f"[{current_time}] New highest temp: {temp:.2f}°C")
 
         time.sleep(2)  # Read temperature every 2 seconds
 

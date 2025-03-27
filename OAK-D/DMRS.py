@@ -224,6 +224,7 @@ with dai.Device(pipeline) as device:
                     if tempdistance < depth_array[column_index]:
                         depth_array[column_index] = tempdistance
                         column_min_roi[column_index] = (xmin, ymin, xmax, ymax)
+                    print("Dist: ", ["{:.2f}".format(d/1000) if d!= float('inf') else "inf" for d in depth_array])
 
                 for depthData in spatialData:
                     roi = depthData.config.roi
