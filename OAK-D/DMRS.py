@@ -55,7 +55,7 @@ class DepthService(dbus.service.Object):
         """Returns the base64-encoded depth if available."""
         if depth_array is None:         # need to set to None if we're not getting a reading when we set depth_array
             encoded = base64.b64encode(depth_array).decode('utf-8')
-            print(f"Sent encoded image: {self.latest_depth_array}")
+            print(f"Sent encoded image: {self.latest_image_path}")
             return encoded  # Returns the base64 string
         else:
             return "No depths available"
@@ -72,7 +72,7 @@ def run_dbus_service():
     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
     global image_service, depth_service
     image_service = ImageService(bus_name_image)
-    depth_service = DepthService(bus_name_depth)
+    depth_service = ImageService(bus_name_depth)
     
     print("D-Bus service running...")
     mainloop = GLib.MainLoop()
@@ -173,6 +173,9 @@ with dai.Device(pipeline) as device:
     distance_history = {}  # Store distance of previous frames
     window = 3  # How many frames to average
 
+    last_capture_time = datetime.now()
+    capture_interval = timedelta(seconds=1)
+
 
     with open("roi_distances.txt", "a") as file:  # Open the file in append mode
         while True:
@@ -192,7 +195,6 @@ with dai.Device(pipeline) as device:
                     min_depth = 0
                 else:
                     min_depth = np.percentile(depth_downscaled[depth_downscaled != 0], 1)
-
                 max_depth = np.percentile(depth_downscaled, 99)
                 depthFrameColor = np.interp(depthFrameColor, (min_depth, max_depth), (0, 255)).astype(np.uint8)
                 depthFrameColor = cv2.applyColorMap(depthFrameColor, cv2.COLORMAP_HOT)
@@ -248,62 +250,40 @@ with dai.Device(pipeline) as device:
                     if (xmin, ymin, xmax, ymax) == column_min_roi.get(column_index):
                         color = blue  
 
-                    #cv2.rectangle(frame_resized, (xmin, ymin), (xmax, ymax), color, thickness=2)
-                    #cv2.putText(frame_resized, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
+                    cv2.rectangle(frame_resized, (xmin, ymin), (xmax, ymax), color, thickness=2)
+                    cv2.putText(frame_resized, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
+                    
+                current_time = datetime.now()
+                timestamp_text = current_time.strftime("%Y-%m-%d %H:%M:%S")
+                cv2.putText(frame_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(depthFrameColor_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                #cv2.imshow("video", frame_resized)
+                #cv2.imshow("depth", depthFrameColor_resized)
 
+                last_capture_time = datetime.now()
 
+                while True:
+                    current_time = datetime.now()
+                    capture_interval = timedelta(seconds = 25)
 
-    #picture timer
-    # last_capture_time = datetime.now()
-    # capture_interval = timedelta(seconds = 1)
-    
-    
-    # mainloop = GLib.MainLoop()
+                    if video.has():
+                        frame = video.get().getCvFrame()
+                        frame_resized = cv2.resize(frame, (640, 480))
 
-    # while True:
-    #     current_time = datetime.now()
+                        if current_time - last_capture_time >= capture_interval:
+                            last_capture_time = current_time
+                            timestamp = current_time.strftime("%Y%m%d_%H%M%S")
+                            image_filename = f"frame_{timestamp}.jpg"
+                            cv2.imwrite(image_filename, frame_resized)
+                            
+                            # Update the latest image path for D-Bus
+                            image_service.update_latest_image(image_filename)
+                            depth_service.update_latest_array(depth_array)
+                            
+                            print(f"Captured and updated image: {image_filename}")
 
-    #     if video.has():
-    #         frame = video.get().getCvFrame()
-    #         frame_resized = cv2.resize(frame, (1280, 720))
-
-    #         if current_time - last_capture_time >= capture_interval:
-    #             last_capture_time = current_time
-    #             timestamp = current_time.strftime("%Y%m%d_%H%M%S")
-    #             image_filename = f"frame_{timestamp}.jpg"
-    #             cv2.imwrite(image_filename, frame_resized)
-    #             image_service.update_latest_image(image_filename)  # Update service with latest image
-    #             print(f"Captured: {image_filename}")
-
-    #     if cv2.waitKey(1) == ord('q'):
-    #         break
-
-    # mainloop.run()
-
-    last_capture_time = datetime.now()
-
-    while True:
-        current_time = datetime.now()
-        capture_interval = timedelta(seconds = 25)
-
-        if video.has():
-            frame = video.get().getCvFrame()
-            frame_resized = cv2.resize(frame, (640, 480))
-
-            if current_time - last_capture_time >= capture_interval:
-                last_capture_time = current_time
-                timestamp = current_time.strftime("%Y%m%d_%H%M%S")
-                image_filename = f"frame_{timestamp}.jpg"
-                cv2.imwrite(image_filename, frame_resized)
-                
-                # Update the latest image path for D-Bus
-                image_service.update_latest_image(image_filename)
-                depth_service.update_latest_array(depth_array)
-                
-                print(f"Captured and updated image: {image_filename}")
-
-        if cv2.waitKey(1) == ord('q'):
-            break
+            if cv2.waitKey(1) == ord('q'):
+                break
 
 video_writer.release()
 cv2.destroyAllWindows()
