@@ -579,9 +579,9 @@ def main(timeout = 0):
 
     mainloop.run()
 
-    ad_manager.UnregisterAdvertisement(gps_advertisement)
+    ad_manager.UnregisterAdvertisement(stereoPi_advertisement)
     print('Advertisement unregistered')
-    dbus.service.Object.remove_from_connection(gps_advertisement)
+    dbus.service.Object.remove_from_connection(stereoPi_advertisement)
 
 if __name__ == '__main__':
     
