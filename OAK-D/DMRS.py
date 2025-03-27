@@ -47,22 +47,23 @@ class DepthService(dbus.service.Object):
 
     def __init__(self, bus_name):
         dbus.service.Object.__init__(self, bus_name, '/DepthService')
-        self.latest_depth_path = None  # prob can get rid of this
+        self.depth_array = None  # prob can get rid of this
 
     @dbus.service.method("com.example.DepthService",
-                         in_signature='', out_signature='s')    # returns a string
+                         in_signature='', out_signature='ai')    # returns an array
     def GetDepth(self):
         """Returns the base64-encoded depth if available."""
-        if self.depth_array is None:         # need to set to None if we're not getting a reading when we set depth_array
-            encoded = base64.b64encode(self.depth_array).decode('utf-8')
-            print(f"Sent encoded image: {self.latest_depth_path}")
-            return encoded  # Returns the base64 string
+        print(self.depth_array)
+        if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
+            #encoded = base64.b64encode(self.depth_array).decode('utf-8')
+            print(f"Sent depth: {self.depth_array}")
+            return self.depth_array  # Returns the base64 string
         else:
-            return "No depths available"
+            return [1, 2, 3, 4]
 
-    def update_latest_array(self, depth_array):
+    def update_depth_array(self, depth_array):
         """Updates to the latest depth array."""
-        self.latest_depth_array = depth_array
+        self.depth_array = depth_array
 
 def run_dbus_service():
     """Runs the D-Bus main loop in a separate thread."""
@@ -269,6 +270,7 @@ with dai.Device(pipeline) as device:
                     if video.has():
                         frame = video.get().getCvFrame()
                         frame_resized = cv2.resize(frame, (640, 480))
+                        depth_service.update_depth_array(depth_array)
 
                         if current_time - last_capture_time >= capture_interval:
                             last_capture_time = current_time
@@ -278,7 +280,6 @@ with dai.Device(pipeline) as device:
                             
                             # Update the latest image path for D-Bus
                             image_service.update_latest_image(image_filename)
-                            depth_service.update_latest_array(depth_array)
                             
                             print(f"Captured and updated image: {image_filename}")
 
