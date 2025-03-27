@@ -50,7 +50,7 @@ class DepthService(dbus.service.Object):
         self.depth_array = None  # prob can get rid of this
 
     @dbus.service.method("com.example.DepthService",
-                         in_signature='', out_signature='ai')    # returns an array
+                         in_signature='', out_signature='ad')    # returns an array
     def GetDepth(self):
         """Returns the base64-encoded depth if available."""
         print(self.depth_array)
@@ -59,7 +59,7 @@ class DepthService(dbus.service.Object):
             print(f"Sent depth: {self.depth_array}")
             return self.depth_array  # Returns the base64 string
         else:
-            return [1, 2, 3, 4]
+            return [1.0, 2.0, 3.0, 4.0]
 
     def update_depth_array(self, depth_array):
         """Updates to the latest depth array."""
