@@ -52,7 +52,8 @@ struct AnemometerTransferService {
 //might have to switch this up for new rendering idea
 struct RenderingTransferService {
     static let tritonRenderingServiceUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae270")
-    static let tritonRenderingCoordinatesCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae271") //X and Y coordinates [(x1,y1),(x2,y2)]
+    static let tritonRenderingDepthCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae271") //Depth
+    //static let tritonRenderingCoordinatesCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae271") //X and Y coordinates [(x1,y1),(x2,y2)]
     static let tritonRenderingAngleCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae272")
     static let tritonRenderingNumberObjectsCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae273")
 }
