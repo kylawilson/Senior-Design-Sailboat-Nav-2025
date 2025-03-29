@@ -1104,7 +1104,7 @@ class PhotoCharacteristic(Characteristic):
 
     def get_data(self):
         print("getting image")
-        self.photo = get_image()
+        #self.photo = get_image()
         if not self.notifying:
              return True
         if (self.photo):
@@ -1195,17 +1195,27 @@ class DepthCharacteristic(Characteristic):
         if not self.notifying:
             return True
         if (self.depth):
-            print('Depth ' + repr(self.long))
+            print('Depth ' + repr(self.depth))
             self.notify_depth()
         return True
 
     def notify_depth(self):
+        print("notifying depth\n")
         if not self.notifying:
             return
-        depth_bytes = [dbus.Byte(ord(c)) for c in self.depth]
+        #depth_bytes = [dbus.Byte(c) for c in self.depth]
+        depth_bytes = struct.pack(f'{len(self.depth)}f', *self.depth)  # Pack as float array
+
+        # Convert to list of dbus.Byte
+        depth_dbus_bytes = [dbus.Byte(b) for b in depth_bytes]
+        # self.PropertiesChanged(
+        #         GATT_CHRC_IFACE,
+        #         { 'Value': [dbus.Byte(b) for b in depth_bytes] }, [])
         self.PropertiesChanged(
-                GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(b) for b in depth_bytes] }, [])
+            GATT_CHRC_IFACE,
+            {'Value': depth_dbus_bytes}, 
+            []
+        )
 
     def ReadValue(self, options):
         print('Depth ' + repr(self.depth))
@@ -1215,6 +1225,7 @@ class DepthCharacteristic(Characteristic):
         if self.notifying:
             print('Already notifying, nothing to do')
             return
+        print("Notifying on Depth")
         self.notifying = True
         self.notify_depth()
 
@@ -1223,8 +1234,6 @@ class DepthCharacteristic(Characteristic):
             print('Not notifying, nothing to do')
             return
         self.notifying = False
-
-
 
 
 def register_app_cb():
