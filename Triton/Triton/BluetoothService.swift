@@ -282,6 +282,11 @@ extension BluetoothService: CBPeripheralDelegate {
             } else if renderingTransferCharacteristics.contains(characteristic.uuid) {
                 let newval = value.map { String(format: "%02x", $0) }.joined()
                 print("Depth Array received: \(newval)")
+                //now want to convert bytes to array of floats, test in Lab on Mon/Tues
+                let floatArray = value.withUnsafeBytes {
+                    Array($0.bindMemory(to: Float.self))
+                }
+                print("Array Received: \(floatArray)")
             }
         }
     }
@@ -297,12 +302,8 @@ extension BluetoothService: CBPeripheralDelegate {
     func updatePhotoCharacteristicUI() {
         //take photoData and turn it into an image
         print("updating photo\n")
-        //let finalPhotoData = String(data: tempPhotoData, encoding: .utf8)
-        //finalPhotoData = tempPhotoData
-        //let finalPhotoData = tempPhotoData.base64EncodedString()
         finalPhotoData = String(data: tempPhotoData, encoding: .utf8)!
         tempPhotoData = Data()
-        //writeData()
     }
     
     func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
