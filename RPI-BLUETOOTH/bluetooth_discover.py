@@ -28,22 +28,21 @@ class StereoPiDepthService(dbus.service.Object):
 
     def __init__(self, bus_name):
         dbus.service.Object.__init__(self, bus_name, '/StereoPiDepthService')
-        self.latest_depth_array = None 
+        self.depth_array = None
 
     @dbus.service.method("com.example.StereoPiDepthService",
-                         in_signature='', out_signature='s')    # returns a string
-    def GetDepth(self):
+                         in_signature='', out_signature='ad')    # returns an array of floats
+    def GetStereoPiDepth(self):
         """Returns the base64-encoded depth if available."""
-        if depth_array is None:         # need to set to None if we're not getting a reading when we set depth_array
-            encoded = base64.b64encode(depth_array).decode('utf-8')
-            print(f"Sent encoded image: {self.latest_depth_array}")
-            return encoded  # Returns the base64 string
+            if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
+            print(f"Sent depth: {self.depth_array}")
+            return self.depth_array  # Returns an array of floats
         else:
-            return "No depths available"
+            return [1.0, 2.0, 3.0, 4.0]
 
     def update_latest_array(self, depth_array):
         """Updates to the latest depth array."""
-        self.latest_depth_array = depth_array
+        self.depth_array = depth_array
 
 
 def find_device():

@@ -91,7 +91,7 @@ def get_stereopidepth():
         bus = dbus.SessionBus()
         obj = bus.get_object("com.example.StereoPiDepthService", "/StereoPiDepthService")
         iface = dbus.Interface(obj, "com.example.StereoPiDepthService")
-        returned_depth = iface.GetDepth()
+        returned_depth = iface.GetStereoPiDepth()
 
         if returned_depth != "No depth available":
             # If the encoded image is a base64 string, decode it into bytes
