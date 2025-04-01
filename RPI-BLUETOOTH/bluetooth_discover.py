@@ -46,21 +46,65 @@ class StereoPiDepthService(dbus.service.Object):
         self.latest_depth_array = depth_array
 
 
+# def find_device():
+#     """Scans for BLE devices and returns the correct device path."""
+#     adapter = bus.get_object(BLUEZ_SERVICE_NAME, ADAPTER_PATH)
+#     adapter_methods = dbus.Interface(adapter, "org.freedesktop.DBus.Properties")
+
+#     # Start scanning
+#     adapter_methods.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(1))
+#     adapter_methods.Set("org.bluez.Adapter1", "Discoverable", dbus.Boolean(1))
+#     adapter_methods.Set("org.bluez.Adapter1", "Pairable", dbus.Boolean(1))
+
+#     adapter_iface = dbus.Interface(adapter, "org.bluez.Adapter1")
+#     adapter_iface.StartDiscovery()
+    
+#     print("Scanning for BLE devices...")
+#     time.sleep(5)  # Scan for 5 seconds
+#     adapter_iface.StopDiscovery()
+
+#     # Get discovered devices
+#     om = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, "/"), "org.freedesktop.DBus.ObjectManager")
+#     objects = om.GetManagedObjects()
+
+#     for path, interfaces in objects.items():
+#         if DEVICE_INTERFACE in interfaces:
+#             properties = interfaces[DEVICE_INTERFACE]
+#             name = properties.get("Name", "")
+#             localname = properties.get("Local Name", "")
+#             uuids = list(properties.get("UUIDs", []))
+#             alias = properties.get("Alias", "")
+#             manu_data = properties.get("Manufacturer Data", "")
+#             if uuids != []:
+#                 print(f"Found target device: {name} ({path})")
+#                 print(f"Local Name: {localname}")
+#                 print(f"Advertised UUIDs: {', '.join(uuids) if uuids else 'None'}")
+#                 print(f"Alias: {alias}")
+#                 print(f"Manufacturer Data: {manu_data}")
+
+#             if TARGET_DEVICE_NAME in name:
+#                 print(f"Found target device: {name} ({path})")
+#                 return path
+
+#     print("Target device not found.")
+#     return None
+
 def find_device():
     """Scans for BLE devices and returns the correct device path."""
+    bus = dbus.SystemBus()
     adapter = bus.get_object(BLUEZ_SERVICE_NAME, ADAPTER_PATH)
     adapter_methods = dbus.Interface(adapter, "org.freedesktop.DBus.Properties")
 
-    # Start scanning
+    # Ensure adapter is enabled
     adapter_methods.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(1))
     adapter_methods.Set("org.bluez.Adapter1", "Discoverable", dbus.Boolean(1))
     adapter_methods.Set("org.bluez.Adapter1", "Pairable", dbus.Boolean(1))
 
     adapter_iface = dbus.Interface(adapter, "org.bluez.Adapter1")
     adapter_iface.StartDiscovery()
-    
+
     print("Scanning for BLE devices...")
-    time.sleep(5)  # Scan for 5 seconds
+    time.sleep(100)  # Scan for 5 seconds
     adapter_iface.StopDiscovery()
 
     # Get discovered devices
@@ -70,15 +114,22 @@ def find_device():
     for path, interfaces in objects.items():
         if DEVICE_INTERFACE in interfaces:
             properties = interfaces[DEVICE_INTERFACE]
-            name = properties.get("Name", "")
+            name = properties.get("Name", "")  # Local Name
             uuids = list(properties.get("UUIDs", []))
             alias = properties.get("Alias", "")
-            print(f"Found target device: {name} ({path})")
+            manu_data = properties.get("ManufacturerData", {})
+            
+            # Convert manufacturer data for readability
+            manufacturer_id = list(manu_data.keys())[0] if manu_data else None
+            manufacturer_values = list(manu_data.values())[0] if manu_data else None
+
+            print(f"Found device: {name} ({path})")
             print(f"Advertised UUIDs: {', '.join(uuids) if uuids else 'None'}")
             print(f"Alias: {alias}")
+            print(f"Manufacturer Data: ID={manufacturer_id}, Values={manufacturer_values}")
 
-            if TARGET_DEVICE_NAME in name:
-                print(f"Found target device: {name} ({path})")
+            if TARGET_DEVICE_NAME in name or "A2A2" in uuids:
+                print(f"Target device found: {name} ({path})")
                 return path
 
     print("Target device not found.")

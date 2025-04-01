@@ -30,7 +30,7 @@ def read_wind_direction():
     # Convert voltage to resistance using the voltage divider formula
     R_FIXED = 10000  # 10kΩ pull-up resistor
     if v_measured > 0:  # Prevent divide-by-zero error
-        r_vane = (v_measured / (3.3 - v_measured)) * R_FIXED
+        r_vane = (v_measured / (3.3 - v_measured)) # * R_FIXED
     else:
         r_vane = None
 
