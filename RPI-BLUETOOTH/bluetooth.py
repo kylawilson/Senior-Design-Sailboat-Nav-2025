@@ -983,10 +983,11 @@ class AnemometerService(Service):
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.ANE_UUID, True)
-        self.add_characteristic(LongitudeCharacteristic(bus, 0, self))
+        self.add_characteristic(AnemometerWindSpeedCharacteristic(bus, 0, self))
+        self.add_characteristic(AnemometerWindDirectionCharacteristic(bus, 1, self))
         
         
-class AnemometerWindSpeed(Characteristic):
+class AnemometerWindSpeedCharacteristic(Characteristic):
     """
 
     """
@@ -1003,7 +1004,7 @@ class AnemometerWindSpeed(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        self.wind_speed, _ = get_wind()
+        self.wind_speed = get_wind_speed()
         if not self.notifying:
             return True
         if (self.wind_speed):
@@ -1037,7 +1038,7 @@ class AnemometerWindSpeed(Characteristic):
             return
         self.notifying = False
         
-class AnemometerWindDirection(Characteristic):
+class AnemometerWindDirectionCharacteristic(Characteristic):
     """
 
     """
