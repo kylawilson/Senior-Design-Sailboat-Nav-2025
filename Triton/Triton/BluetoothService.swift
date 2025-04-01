@@ -19,6 +19,7 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var gpsData = GPSData()
     @Published var anemometerData = AnemometerData()
     @Published var finalPhotoData = ""
+    @Published var depthArray: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     private var tempPhotoData = Data()                                       //raw jpeg data
     
     //private var centralManager: CBCentralManager = CBCentralManager()
@@ -283,10 +284,14 @@ extension BluetoothService: CBPeripheralDelegate {
                 let newval = value.map { String(format: "%02x", $0) }.joined()
                 print("Depth Array received: \(newval)")
                 //now want to convert bytes to array of floats, test in Lab on Mon/Tues
-                let floatArray = value.withUnsafeBytes {
-                    Array($0.bindMemory(to: Float.self))
+                let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
+                    let floatPointer = rawBufferPointer.bindMemory(to: Float.self)
+                    return Array(floatPointer)
                 }
-                print("Array Received: \(floatArray)")
+                let cgFloatArray = floatArray.map { CGFloat($0) }
+                let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
+                print("Array Received in Meters: \(dividedCGFloatArray)")
+                depthArray = dividedCGFloatArray
             }
         }
     }
