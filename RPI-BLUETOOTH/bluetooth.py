@@ -84,6 +84,22 @@ def get_depth():
     except Exception as e:
         print("D-Bus Error:", e)
 
+def get_wind_speed():
+    """Fetches the latest encoded image from the D-Bus service."""
+    try:
+        bus = dbus.SessionBus()
+        obj = bus.get_object("com.example.WindSpeedService", "/WindSpeedService")
+        iface = dbus.Interface(obj, "com.example.WindSpeedService")
+        wind_speed = iface.GetWindSpeed()
+
+        if wind_speed != None:
+            return wind_speed
+        else:
+            print("No wind speed available from service.")
+    
+    except Exception as e:
+        print("D-Bus Error:", e)
+
 #having this here may cause an issue with bluetooth_discover
 def get_stereopidepth():
     """Fetches the latest encoded image from the D-Bus service."""
@@ -93,13 +109,9 @@ def get_stereopidepth():
         iface = dbus.Interface(obj, "com.example.StereoPiDepthService")
         returned_depth = iface.GetStereoPiDepth()
 
-        if returned_depth != "No depth available":
+        if returned_depth != [1.0, 2.0, 3.0, 4.0]:
             # If the encoded image is a base64 string, decode it into bytes
-            depth_data = base64.b64decode(encoded_image)
-
-            # Optionally, read and base64 encode the image
-            serialized = base64.b64encode(depth_data).decode('utf-8')
-            return serialized
+            return returned_depth
         else:
             print("No depth available from service.")
     
