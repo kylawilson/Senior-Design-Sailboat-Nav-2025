@@ -25,9 +25,8 @@ try:
         time.sleep(1)  # Measure every 1 second
         elapsed_time = time.time() - start_time
         wind_speed = (pulse_count / elapsed_time) / ANEMOMETER_FACTOR  # Convert to m/s
-
-        print(f"Wind Speed: {wind_speed:.2f} m/s ({wind_speed * 2.237:.2f} mph)")
-
+        knot_speed = wind_speed * 1.944
+        print(f"Wind Speed: {wind_speed:.2f} m/s ({wind_speed * 2.237:.2f} mph) {knot_speed:.2f} knots")
         # Reset for next measurement
         pulse_count = 0
         start_time = time.time()
