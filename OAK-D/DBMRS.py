@@ -56,7 +56,7 @@ class DepthService(dbus.service.Object):
         if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
             #encoded = base64.b64encode(self.depth_array).decode('utf-8')
             print(f"Sent depth: {self.depth_array}")
-            return self.depth_array  # Returns the base64 string
+            return self.depth_array  # Returns an array of floats
         else:
             return [1.0, 2.0, 3.0, 4.0]
 

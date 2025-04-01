@@ -33,7 +33,7 @@ class BluetoothService: NSObject, ObservableObject {
     var transferServices = [ GPSTransferService.tritonGPSServiceUUID, PhotoTransferService.tritonPhotoServiceUUID, AnemometerTransferService.tritonAnemometerServiceUUID,  RenderingTransferService.tritonRenderingServiceUUID]
     private var gpsTransferCharacteristics = [ GPSTransferService.tritonLongitudeCharacteristicUUID, GPSTransferService.tritonCOGCharacteristicUUID, GPSTransferService.tritonLatitudeCharacteristicUUID, GPSTransferService.tritonDateCharacteristicUUID, GPSTransferService.tritonAltitudeCharacteristicUUID, GPSTransferService.tritonLatitudeIndicatorCharacteristicUUID, GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID, GPSTransferService.tritonTimeCharacteristicUUID, GPSTransferService.tritonSpeedCharacteristicUUID]
     private var photoTransferCharacteristics = [ PhotoTransferService.tritonPhotoCharacteristicUUID ]
-    private var renderingTransferService = [ RenderingTransferService.tritonRenderingDepthCharacteristicUUID ]
+    private var renderingTransferCharacteristics = [ RenderingTransferService.tritonRenderingDepthCharacteristicUUID ]
     private var subscribedCharacteristics : [ CBCharacteristic ]
     private var photoCharacteristic : CBCharacteristic?
     
@@ -199,7 +199,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         onCharacteristicsDiscovered = { discoveredPeripheral, service in
             guard let characteristics = service.characteristics else { return }
             for characteristic in characteristics {
-                if self.gpsTransferCharacteristics.contains(characteristic.uuid) || self.photoTransferCharacteristics.contains(characteristic.uuid) || self.renderingTransferService.contains(characteristic.uuid) {
+                if self.gpsTransferCharacteristics.contains(characteristic.uuid) || self.photoTransferCharacteristics.contains(characteristic.uuid) || self.renderingTransferCharacteristics.contains(characteristic.uuid) {
 //                    if self.photoTransferCharacteristics.contains(characteristic.uuid) {
 //                        self.photoCharacteristic = characteristic
 //                    }
@@ -274,16 +274,19 @@ extension BluetoothService: CBPeripheralDelegate {
                     updatingTime = true
                     startUpdatingTime()
                 }
-            } else {
+            } else if gpsTransferCharacteristics.contains(characteristic.uuid) {
             //GPS data
-                // Process the received value
-                //let receivedString = String(data: value, encoding: .utf8)
-                //print("Notification received: \(receivedString ?? "N/A")")
                 let newval = value.map { String(format: "%02x", $0) }.joined()
                 print("Notification received: \(newval)")
                 updateGPSCharacteristicUI(characteristic.uuid, value)
-                //writeData()
-                
+            } else if renderingTransferCharacteristics.contains(characteristic.uuid) {
+                let newval = value.map { String(format: "%02x", $0) }.joined()
+                print("Depth Array received: \(newval)")
+                //now want to convert bytes to array of floats, test in Lab on Mon/Tues
+                let floatArray = value.withUnsafeBytes {
+                    Array($0.bindMemory(to: Float.self))
+                }
+                print("Array Received: \(floatArray)")
             }
         }
     }
@@ -299,12 +302,8 @@ extension BluetoothService: CBPeripheralDelegate {
     func updatePhotoCharacteristicUI() {
         //take photoData and turn it into an image
         print("updating photo\n")
-        //let finalPhotoData = String(data: tempPhotoData, encoding: .utf8)
-        //finalPhotoData = tempPhotoData
-        //let finalPhotoData = tempPhotoData.base64EncodedString()
         finalPhotoData = String(data: tempPhotoData, encoding: .utf8)!
         tempPhotoData = Data()
-        //writeData()
     }
     
     func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
