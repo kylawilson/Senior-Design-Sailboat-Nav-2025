@@ -251,7 +251,6 @@ class Application(dbus.service.Object):
         self.add_service(PhotoService(bus, 1))
         self.add_service(RenderingService(bus, 2))
         
-
     def get_path(self):
         return dbus.ObjectPath(self.path)
 
@@ -480,6 +479,7 @@ def read_gps_data(file_path):
                 # date = lines[i + 8].split(": ")[1].strip()  # Extract date
 
         #return utc_time, lat, latInd, long, longInd, altitude, speed, COG, date
+        print(utc_time)
         return utc_time, lat, latInd, long, longInd, altitude
 
 
