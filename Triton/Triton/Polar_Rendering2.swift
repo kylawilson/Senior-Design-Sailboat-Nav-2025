@@ -357,7 +357,8 @@ struct PolarGridView: View {
     //let rawObjectDistances_OAK_D: [CGFloat] = [15, 15, 15, 15, 15, 15, 15, 15, 15, 15] // Example values in range [0.5, 15]
     //let rawObjectDistances_OAK_D: [CGFloat] = [7.75, 7.75, 7.75, 7.75, 7.75, 7.75, 7.75, 7.75, 7.75, 7.75]
     //let rawObjectDistances_OAK_D: [CGFloat] = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-    let rawObjectDistances_OAK_D: [CGFloat] = [3, 5, 7.5, 10, 10, 13.25, 15, 15, 13.76, 12]
+    //let rawObjectDistances_OAK_D: [CGFloat] = [3, 5, 7.5, 10, 10, 13.25, 15, 15, 13.76, 12]
+    var rawObjectDistances_OAK_D: [CGFloat]
     
     // Scaling function to map values from [0.5, 15] to [25, 200]
     func scaleDistance(_ value: CGFloat) -> CGFloat {

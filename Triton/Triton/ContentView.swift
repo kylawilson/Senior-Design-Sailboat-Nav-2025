@@ -55,7 +55,7 @@ struct ContentView: View {
 //                        NavigationLink(destination: MovingCirclesPage()) {
 //                            PreviewButton(label: "Rendering", preview: MovingCirclesPreview())
 //                        }
-                        NavigationLink(destination: DockingView()) {
+                        NavigationLink(destination: PolarGridView(rawObjectDistances_OAK_D: btService.depthArray)) {
                             PreviewButton(label: "Docking View", preview: ImagePreview(btService: btService))
                         }
                         NavigationLink(destination: ImageViewPage(btService: btService)) {
