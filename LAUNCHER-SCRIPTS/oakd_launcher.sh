@@ -10,7 +10,7 @@ cd Senior-Design-Sailboat-Nav-2025/
 . ./bin/activate
 cd OAK-D/
 export $(dbus-launch)
-python3 MRS_Picture.py &
+python3 DBMRS.py &
 cd ../RPI-BLUETOOTH
 python3 bluetooth.py &
 # python3 bluetooth_discover.py &

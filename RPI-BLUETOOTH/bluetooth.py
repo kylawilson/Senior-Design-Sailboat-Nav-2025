@@ -1012,7 +1012,6 @@ class AnemometerWindSpeedCharacteristic(Characteristic):
             self.notify_windspeed()
         return True
 
-
     def notify_windspeed(self):
         if not self.notifying:
             return
@@ -1117,7 +1116,7 @@ class PhotoCharacteristic(Characteristic):
 
     def get_data(self):
         print("getting image")
-        #self.photo = get_image()
+        self.photo = get_image()
         if not self.notifying:
              return True
         if (self.photo):
