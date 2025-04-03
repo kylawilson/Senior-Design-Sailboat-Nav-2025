@@ -23,10 +23,11 @@
 # 
 
 
-from picamera import PiCamera
+
 import sys
 import time
 import cv2
+from picamera import PiCamera
 import numpy as np
 import json
 from stereovision.calibration import StereoCalibrator
@@ -138,11 +139,11 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
     imgLeft = pair_img [0:img_height,int(img_width/2):img_width] #Y+H and X+W
     rectified_pair = calibration.rectify((imgLeft, imgRight))
     disparity, truemax= stereo_depth_map(rectified_pair)
-     #show the frame
+    # show the frame
     cv2.imshow("left", imgLeft)
     cv2.imshow("right", imgRight)    
 
-    t2 = datetime.now()
+    t2 = datetime.now() 
     print(truemax)
     
 

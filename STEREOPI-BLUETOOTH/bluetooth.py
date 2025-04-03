@@ -178,7 +178,9 @@ class StereoPiAdvertisement(Advertisement):
 
     def __init__(self, bus, index):
         Advertisement.__init__(self, bus, index, 'peripheral')
-        self.add_service_uuid('A3A3')
+        self.add_service_uuid('A2A2')
+        #self.add_service_uuid('A4A4')
+        #self.add_service_uuid('A5A5')
         #self.add_service_uuid('A2A2')          #uncomment when mounted onto other stereopi
         self.add_manufacturer_data(0xffff, [0x00, 0x01, 0x02, 0x03])
         self.add_service_data('9999', [0x00, 0x01, 0x02, 0x03, 0x04])
