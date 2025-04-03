@@ -1,68 +1,71 @@
-import time
 import board
 import busio
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
+import time
 
-# I2C setup for ADS1115
+# I2C setup
 i2c = busio.I2C(board.SCL, board.SDA)
 ads = ADS.ADS1115(i2c)
-ads.gain = 1  # ±4.096V range (Good for 0-3.3V)
+ads.gain = 1  # ±4.096V range (good for 0-3.3V)
 
-# Wind vane resistance lookup table (based on the datasheet and provided resistance values)
-# Updated tolerances for resistance values with smaller tolerances
-resistance_to_angle = [
-    ("N", 682, 693),   # N range: 691 ohms, tolerance ±5 ohms
-    ("NE", 635, 655),  # NE range: 650 ohms, tolerance ±5 ohms
-    ("E", 390, 420),   # E range: 415 ohms, tolerance ±5 ohms
-    ("SE", 535, 580),  # SE range: 536 ohms, tolerance ±5 ohms
-    ("S", 590, 610),   # S range: 599 ohms, tolerance ±5 ohms
-    ("SW", 670, 680),  # SW range: 676 ohms, tolerance ±5 ohms
-    ("W", 700, 707),   # W range: 702 ohms, tolerance ±5 ohms
-    ("NW", 694, 698),  # NW range: 698 ohms, tolerance ±5 ohms
+# Constants for voltage divider calculation
+V_IN = 3.3  # Input voltage (from 3.3V pin of Raspberry Pi)
+R_FIXED = 10000  # Fixed resistor (10kΩ)
+
+# Last known direction
+last_direction = "Unknown"
+
+# Resistance ranges for each direction
+resistance_to_direction = [
+    ("N", 601, 609.4),   # N range: 601-607 ohms
+    ("NE", 560, 578),  # NE range: 560-575 ohms
+    ("E", 355, 390),   # E range: 355-390 ohms
+    ("SE", 475, 490),  # SE range: 475-490 ohms
+    ("S", 510, 540),   # S range: 510-540 ohms
+    ("SW", 580, 600),  # SW range: 580-600 ohms
+    ("W", 614.5, 620),   # W range: 613-620 ohms
+    ("NW", 609.5, 614.4),  # NW range: 608-613 ohms
 ]
 
-def read_wind_direction():
-    """ Reads voltage from ADS1115 and calculates wind direction based on resistance """
-    chan = AnalogIn(ads, ADS.P0)  # Reading from A1
-    v_measured = chan.voltage  # Voltage from ADC
+def voltage_to_resistance(voltage):
+    """ Converts ADC voltage to sensor resistance. """
+    if voltage <= 0 or voltage >= V_IN:  # Avoid divide by zero
+        return None
+    resistance = (R_FIXED * voltage) / (V_IN - voltage)
+    return resistance
 
-    # Convert voltage to resistance using the voltage divider formula
-    R_FIXED = 10000  # 10kΩ pull-up resistor
-    if v_measured > 0:  # Prevent divide-by-zero error
-        r_vane = (v_measured / (3.3 - v_measured)) # * R_FIXED
-    else:
-        r_vane = None
+def resistance_to_wind_direction(resistance):
+    """ Maps resistance to wind direction based on defined ranges. """
+    global last_direction  # Use global to track last known value
 
-    # Initialize default values for angle and direction
-    angle = None
-    direction = None
+    if resistance is None:
+        #  print("Error: Invalid resistance value")
+        return last_direction  # If resistance is invalid, return last known direction
+    
+    for direction, min_res, max_res in resistance_to_direction:
+        if min_res <= resistance <= max_res:
+            if direction != last_direction:
+               print(f"Direction changed: {last_direction} → {direction}")
+            last_direction = direction  # Update last known direction
+            return direction
 
-    # Find the closest direction based on resistance with tight tolerance ranges
-    if r_vane is not None:
-        for i in range(len(resistance_to_angle)):
-            direction, min_resistance, max_resistance = resistance_to_angle[i]
-            if min_resistance <= r_vane <= max_resistance:
-                angle = direction
-                break  # Once we find the first match, stop
+    #print("Warning: Resistance out of range, keeping last known direction")
+    return last_direction  # If no match, return last known direction
 
-    return v_measured, r_vane, angle
-
-# Continuous reading loop
-last_direction = None  # Initialize a variable to store the last valid direction
 while True:
-    v, r, angle = read_wind_direction()
+    # Read ADC input from A1
+    wind_direction = AnalogIn(ads, ADS.P0)
+    voltage = wind_direction.voltage
+    
+    # Convert voltage to resistance
+    resistance = voltage_to_resistance(voltage)
+    
+    # Determine wind direction
+    direction = resistance_to_wind_direction(resistance)
+    
+    # Print debugging info
+   # print(f"Voltage: {voltage:.3f}V | Resistance: {resistance:.1f}Ω | Direction: {direction}")
+    print(f"Voltage: {voltage:.3f}V | Resistance: {resistance:.1f}Ω | Direction: {direction}" if resistance is not None else f"Voltage: {voltage:.3f}V | Resistance: N/A | Direction: {direction}")
 
-    # If no direction found, keep the last direction output
-    if angle is None:
-        angle = last_direction
-
-    # Update the last valid direction
-    if angle is not None:
-        last_direction = angle
-   
-    v_str = f"{v:.2f}V" if v is not None else "N/A"
-    r_str = f"{r:.0f}O" if r is not None else "N/A"
-    print(f"Voltage: {v_str} | Resistance: {r_str} | Direction: {angle}")
-    # print(f"Voltage: {v:.2f}V | Resistance: {r:.0f}Ω | Direction: {angle}")
-    time.sleep(1)  # Delay for readability
+    time.sleep(1)  # Delay for stability
