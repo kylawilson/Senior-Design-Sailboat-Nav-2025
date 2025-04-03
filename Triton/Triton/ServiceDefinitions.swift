@@ -19,6 +19,7 @@ enum ConnectionStatus {
 
 struct TransferService {
     static let tritonAdvertisingServiceUUID = CBUUID(string: "A3A3") //advertisement UUID
+    static let stereoPiAdvertisingServiceUUID = CBUUID(string: "A2A2")
 }
 
 struct GPSTransferService {

@@ -20,6 +20,8 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var anemometerData = AnemometerData()
     @Published var finalPhotoData = ""
     @Published var depthArray: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    @Published var stereoPiArray1: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    @Published var stereoPiArray2: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     private var tempPhotoData = Data()                                       //raw jpeg data
     
     //private var centralManager: CBCentralManager = CBCentralManager()
@@ -32,9 +34,11 @@ class BluetoothService: NSObject, ObservableObject {
     var onNotificationStateUpdated: ((CBPeripheral, CBCharacteristic) -> Void)?
     
     var transferServices = [ GPSTransferService.tritonGPSServiceUUID, PhotoTransferService.tritonPhotoServiceUUID, AnemometerTransferService.tritonAnemometerServiceUUID,  RenderingTransferService.tritonRenderingServiceUUID]
+    var stereoPiTransferServices = [ StereoPiTransferService.tritonStereoPiServiceUUID ]
     private var gpsTransferCharacteristics = [ GPSTransferService.tritonLongitudeCharacteristicUUID, GPSTransferService.tritonCOGCharacteristicUUID, GPSTransferService.tritonLatitudeCharacteristicUUID, GPSTransferService.tritonDateCharacteristicUUID, GPSTransferService.tritonAltitudeCharacteristicUUID, GPSTransferService.tritonLatitudeIndicatorCharacteristicUUID, GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID, GPSTransferService.tritonTimeCharacteristicUUID, GPSTransferService.tritonSpeedCharacteristicUUID]
     private var photoTransferCharacteristics = [ PhotoTransferService.tritonPhotoCharacteristicUUID ]
     private var renderingTransferCharacteristics = [ RenderingTransferService.tritonRenderingDepthCharacteristicUUID ]
+    private var stereoPiTransferCharacteristics = [ StereoPiTransferService.tritonStereoPiDepthCharacteristicUUID ]
     private var subscribedCharacteristics : [ CBCharacteristic ]
     private var photoCharacteristic : CBCharacteristic?
     
@@ -54,7 +58,7 @@ class BluetoothService: NSObject, ObservableObject {
     
     func scanForPeripherals() {
         connectionState = .scanning
-        centralManager.scanForPeripherals(withServices: [ TransferService.tritonAdvertisingServiceUUID ])    //scan for triton's service
+        centralManager.scanForPeripherals(withServices: [ TransferService.tritonAdvertisingServiceUUID, TransferService.stereoPiAdvertisingServiceUUID])    //scan for triton's service
         os_log("Scanning for peripherals")
     }
     
@@ -66,22 +70,18 @@ class BluetoothService: NSObject, ObservableObject {
     
     func connectToPeripheral(peripheral: CBPeripheral) {
         //if connected to another peripheral, drop connection and connect to new peripheral
-        print("connecting")
-        if (connectedPeripheral != nil) {
-            centralManager.cancelPeripheralConnection(connectedPeripheral!)
+        print("connecting to \(peripheral.name)")
+//        if (connectedPeripheral != nil) {
+//            centralManager.cancelPeripheralConnection(connectedPeripheral!)
+//            connectionState = .connecting
+//            centralManager.connect(peripheral, options: nil)
+//        } else {
             connectionState = .connecting
             centralManager.connect(peripheral, options: nil)
-        } else {
-            connectionState = .connecting
-            centralManager.connect(peripheral, options: nil)
-        }
+//        }
     }
     
     func reconnect() {
-        //if there is a connected peripheral, then drop the connection
-//        if connectedPeripheral != nil {
-//            centralManager.cancelPeripheralConnection(connectedPeripheral!)
-//        }
         if connectedPeripheral != nil {
             connectToPeripheral(peripheral: connectedPeripheral!)
         } else {
@@ -133,6 +133,8 @@ extension BluetoothService: CBCentralManagerDelegate {
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        print(peripheral.name)
+        print(peripheral.identifier.uuidString)
         
         //if not already in list, add peripheral to discoveredPeripherals
         if !discoveredPeripherals.contains(where: { $0.identifier == peripheral.identifier }) {
@@ -141,9 +143,10 @@ extension BluetoothService: CBCentralManagerDelegate {
         }
         
         //if we're not connected to peripheral and the UUID matches, then stop scanning and connect to peripheral
-        if connectedPeripheral == nil && peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF" {
+        //connectedPeripheral == nil &&
+        if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF" || peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6") {
             print("Discovered target peripheral, auto-connecting...")
-            stopScanningForPeripherals()
+            //stopScanningForPeripherals()
             connectToPeripheral(peripheral: peripheral)
         }
     }
@@ -178,14 +181,18 @@ extension BluetoothService: CBCentralManagerDelegate {
         os_log("Connected to %@", peripheral)
         
         connectionState = .connected
-        connectedPeripheral = peripheral
+        //connectedPeripheral = peripheral
         
         // Make sure we get the discovery callbacks
         peripheral.delegate = self
         
         //discover services on connected peripheral
         print("making call to discover services\n")
-        peripheral.discoverServices(transferServices)
+        if peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF" {
+            peripheral.discoverServices(transferServices)
+        } else if peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6" {
+            peripheral.discoverServices(stereoPiTransferServices)
+        }
 
         //test
         onServicesDiscovered = { discoveredPeripheral in
@@ -200,7 +207,8 @@ extension BluetoothService: CBCentralManagerDelegate {
         onCharacteristicsDiscovered = { discoveredPeripheral, service in
             guard let characteristics = service.characteristics else { return }
             for characteristic in characteristics {
-                if self.gpsTransferCharacteristics.contains(characteristic.uuid) || self.photoTransferCharacteristics.contains(characteristic.uuid) || self.renderingTransferCharacteristics.contains(characteristic.uuid) {
+                if self.gpsTransferCharacteristics.contains(characteristic.uuid) ||  //self.photoTransferCharacteristics.contains(characteristic.uuid) ||
+                    self.renderingTransferCharacteristics.contains(characteristic.uuid) || self.stereoPiTransferCharacteristics.contains(characteristic.uuid) {
 //                    if self.photoTransferCharacteristics.contains(characteristic.uuid) {
 //                        self.photoCharacteristic = characteristic
 //                    }
@@ -290,7 +298,7 @@ extension BluetoothService: CBPeripheralDelegate {
                 }
                 let cgFloatArray = floatArray.map { CGFloat($0) }
                 let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
-                print("Array Received in Meters: \(dividedCGFloatArray)")
+                //print("Array Received in Meters: \(dividedCGFloatArray)")
                 depthArray = dividedCGFloatArray
             }
         }
@@ -354,6 +362,7 @@ extension BluetoothService: CBPeripheralDelegate {
             gpsData.date = String(data: value, encoding: .utf8) ?? "N/A"
             break
         case GPSTransferService.tritonTimeCharacteristicUUID :
+            print("GPS DATA: \(value)\n" )
             gpsData.time = String(data: value, encoding: .utf8) ?? "N/A"
             gpsData.time = gpsData.time.replacingOccurrences(of: "^0+", with: "", options: .regularExpression)
             if updatingTime {
