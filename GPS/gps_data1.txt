@@ -1,4 +1,4 @@
-UTCtime: 011948.095
+UTCtime: 000151.868
 Latitude: 
 latIndicator: 
 Longitude: 
