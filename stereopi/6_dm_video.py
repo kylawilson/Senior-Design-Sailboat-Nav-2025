@@ -119,12 +119,12 @@ print('Read calibration data and rectifying stereo pair...')
 calibration = StereoCalibration(input_folder='calib_result')
 
 # Initialize interface windows
-cv2.namedWindow("Image")
-cv2.moveWindow("Image", 50,100)
-cv2.namedWindow("left")
-cv2.moveWindow("left", 450,100)
-cv2.namedWindow("right")
-cv2.moveWindow("right", 850,100)
+# cv2.namedWindow("Image")
+# cv2.moveWindow("Image", 50,100)
+# cv2.namedWindow("left")
+# cv2.moveWindow("left", 450,100)
+# cv2.namedWindow("right")
+# cv2.moveWindow("right", 850,100)
 
 
 disparity = np.zeros((img_width, img_height), np.uint8)
@@ -141,11 +141,12 @@ def stereo_depth_map(rectified_pair):
     disparity_fixtype = cv2.convertScaleAbs(disparity_grayscale, alpha=(255.0/65535.0))
     disparity_color = cv2.applyColorMap(disparity_fixtype, cv2.COLORMAP_JET)
     truemin = filter(lambda x: x>deadzone, disparity)
-    cv2.imshow("Image", disparity_color)
-    key = cv2.waitKey(1) & 0xFF   
-    if key == ord("q"):
-        quit();
+    # cv2.imshow("Image", disparity_color)
+    # key = cv2.waitKey(1) & 0xFF   
+    # if key == ord("q"):
+    #     quit();
     return disparity_color,local_max
+
 def load_map_settings( fName ):
     global SWS, PFS, PFC, MDS, NOD, TTH, UR, SR, SPWS, loading_settings
     print('Loading parameters from file...')
@@ -174,11 +175,10 @@ def load_map_settings( fName ):
     print ('Parameters loaded from file '+fName)
 
 
-load_map_settings("3dmap_set.txt")
+load_map_settings ("3dmap_set.txt")
 
 # capture frames from the camera
 for frame in camera.capture_continuous(capture, format="bgra", use_video_port=True, resize=(img_width,img_height)):
-    print("in the for loop")
     t1 = datetime.now()
     pair_img = cv2.cvtColor (frame, cv2.COLOR_BGR2GRAY)
     imgRight = pair_img [0:img_height,0:int(img_width/2)] #Y+H and X+W
@@ -186,12 +186,9 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
     rectified_pair = calibration.rectify((imgLeft, imgRight))
     disparity, truemax= stereo_depth_map(rectified_pair)
     # show the frame
-    cv2.imshow("left", imgLeft)
-    cv2.imshow("right", imgRight)    
+    # cv2.imshow("left", imgLeft)
+    # cv2.imshow("right", imgRight)    
 
     t2 = datetime.now() 
     print(truemax)
     depth_service.update_depth(truemax)
-    
-
-

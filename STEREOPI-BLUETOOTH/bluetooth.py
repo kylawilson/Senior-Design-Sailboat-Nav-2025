@@ -421,12 +421,16 @@ class DepthCharacteristic(Characteristic):
         return True
 
     def notify_depth(self):
+        print("notifying depth\n")
         if not self.notifying:
             return
-        depth_bytes = [dbus.Byte(ord(c)) for c in self.depth]
+        depth_bytes = struct.pack(f'{len(self.depth)}f', *self.depth)  # Pack as float array
+        depth_dbus_bytes = [dbus.Byte(b) for b in depth_bytes]
         self.PropertiesChanged(
-                GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(b) for b in depth_bytes] }, [])
+            GATT_CHRC_IFACE,
+            {'Value': depth_dbus_bytes}, 
+            []
+        )
 
     def ReadValue(self, options):
         print('Depth ' + repr(self.depth))
