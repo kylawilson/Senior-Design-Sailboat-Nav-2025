@@ -176,7 +176,7 @@ with dai.Device(pipeline) as device:
     depth_array = [float('inf')] * size
 
     last_capture_time = datetime.now()
-    capture_interval = timedelta(seconds=1)
+    capture_interval = timedelta(seconds=0.25)
 
 
     with open("roi_distances.txt", "a") as file:  # Open the file in append mode

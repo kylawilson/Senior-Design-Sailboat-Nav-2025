@@ -1200,7 +1200,7 @@ class DepthCharacteristic(Characteristic):
                 service)
         self.depth = dbus.Byte(0x02)
         self.notifying = False
-        GLib.timeout_add(1000, self.get_data)
+        GLib.timeout_add(250, self.get_data)
 
     def get_data(self):
         self.depth = get_depth()
