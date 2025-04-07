@@ -300,6 +300,17 @@ extension BluetoothService: CBPeripheralDelegate {
                 let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
                 //print("Array Received in Meters: \(dividedCGFloatArray)")
                 depthArray = dividedCGFloatArray
+            } else {
+                let newval = value.map { String(format: "%02x", $0) }.joined()
+                //print("Depth Array received: \(newval)")
+                let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
+                    let floatPointer = rawBufferPointer.bindMemory(to: Float.self)
+                    return Array(floatPointer)
+                }
+                let cgFloatArray = floatArray.map { CGFloat($0) }
+                let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
+                print("Array Received in Meters: \(dividedCGFloatArray)")
+                stereoPiArray1 = dividedCGFloatArray
             }
         }
     }
