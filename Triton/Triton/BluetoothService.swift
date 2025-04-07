@@ -14,6 +14,9 @@ import SwiftUI
 class BluetoothService: NSObject, ObservableObject {
     
     @Published var connectionState: ConnectionStatus = .disconnected
+    @Published var tritonConnectionState: ConnectionStatus = .disconnected
+    @Published var stereoPi1ConnectionState: ConnectionStatus = .disconnected
+    @Published var stereoPi2ConnectionState: ConnectionStatus = .disconnected
     @Published var discoveredPeripherals: [ CBPeripheral ]
     @Published var isScanning: Bool = false
     @Published var gpsData = GPSData()
@@ -58,6 +61,9 @@ class BluetoothService: NSObject, ObservableObject {
     
     func scanForPeripherals() {
         connectionState = .scanning
+        tritonConnectionState = .scanning
+        stereoPi1ConnectionState = .scanning
+        stereoPi2ConnectionState = .scanning
         centralManager.scanForPeripherals(withServices: [ TransferService.tritonAdvertisingServiceUUID, TransferService.stereoPiAdvertisingServiceUUID])    //scan for triton's service
         os_log("Scanning for peripherals")
     }
@@ -69,18 +75,19 @@ class BluetoothService: NSObject, ObservableObject {
     }
     
     func connectToPeripheral(peripheral: CBPeripheral) {
-        //if connected to another peripheral, drop connection and connect to new peripheral
-        print("connecting to \(peripheral.name)")
-//        if (connectedPeripheral != nil) {
-//            centralManager.cancelPeripheralConnection(connectedPeripheral!)
-//            connectionState = .connecting
-//            centralManager.connect(peripheral, options: nil)
-//        } else {
+        print("connecting to \(String(describing: peripheral.name))")
+        if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+            tritonConnectionState = .connecting
             connectionState = .connecting
-            centralManager.connect(peripheral, options: nil)
-//        }
+        } else if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+            stereoPi1ConnectionState = .connecting
+        } else {
+            stereoPi2ConnectionState = .connecting
+        }
+        centralManager.connect(peripheral, options: nil)
     }
     
+    //revisit this logic for multiple bluetooth devices
     func reconnect() {
         if connectedPeripheral != nil {
             connectToPeripheral(peripheral: connectedPeripheral!)
@@ -92,6 +99,9 @@ class BluetoothService: NSObject, ObservableObject {
     
     func disconnect() {
         connectionState = .disconnecting
+        tritonConnectionState = .disconnecting
+        stereoPi1ConnectionState = .disconnecting
+        stereoPi2ConnectionState = .disconnecting
         if connectedPeripheral != nil {
             centralManager.cancelPeripheralConnection(connectedPeripheral!)
         }
@@ -166,6 +176,14 @@ extension BluetoothService: CBCentralManagerDelegate {
                 reconnect()
             } else {
                 os_log("Disconnected from %@", peripheral)
+                if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+                    tritonConnectionState = .disconnected
+                    connectionState = .connecting
+                } else if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+                    stereoPi1ConnectionState = .disconnected
+                } else {
+                    stereoPi2ConnectionState = .disconnected
+                }
                 connectionState = .disconnected
                 connectedPeripheral = nil
                 discoveredPeripherals = []
@@ -176,6 +194,15 @@ extension BluetoothService: CBCentralManagerDelegate {
         _ central: CBCentralManager,
         didConnect peripheral: CBPeripheral
     ) {
+        
+        if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+            tritonConnectionState = .connected
+            connectionState = .connected
+        } else if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+            stereoPi1ConnectionState = .connected
+        } else {
+            stereoPi2ConnectionState = .connected
+        }
         
         //connected to the peripheral
         os_log("Connected to %@", peripheral)
@@ -290,7 +317,6 @@ extension BluetoothService: CBPeripheralDelegate {
                 updateGPSCharacteristicUI(characteristic.uuid, value)
             } else if renderingTransferCharacteristics.contains(characteristic.uuid) {
                 let newval = value.map { String(format: "%02x", $0) }.joined()
-                print("Depth Array received: \(newval)")
                 //now want to convert bytes to array of floats, test in Lab on Mon/Tues
                 let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
                     let floatPointer = rawBufferPointer.bindMemory(to: Float.self)
@@ -298,18 +324,17 @@ extension BluetoothService: CBPeripheralDelegate {
                 }
                 let cgFloatArray = floatArray.map { CGFloat($0) }
                 let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
-                //print("Array Received in Meters: \(dividedCGFloatArray)")
+                print("Oak-D Array Received in Meters: \(dividedCGFloatArray)")
                 depthArray = dividedCGFloatArray
-            } else {
+            } else if stereoPiTransferCharacteristics.contains(characteristic.uuid){
                 let newval = value.map { String(format: "%02x", $0) }.joined()
-                //print("Depth Array received: \(newval)")
                 let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
                     let floatPointer = rawBufferPointer.bindMemory(to: Float.self)
                     return Array(floatPointer)
                 }
                 let cgFloatArray = floatArray.map { CGFloat($0) }
                 let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
-                print("Array Received in Meters: \(dividedCGFloatArray)")
+                print("StereoPiArray Received in Meters: \(dividedCGFloatArray)")
                 stereoPiArray1 = dividedCGFloatArray
             }
         }
