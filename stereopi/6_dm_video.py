@@ -75,6 +75,10 @@ def run_dbus_service():
     mainloop = GLib.MainLoop()
     mainloop.run()
 
+dbus_thread = threading.Thread(target=run_dbus_service)
+dbus_thread.daemon = True
+dbus_thread.start()
+
 # Depth map default preset
 SWS = 5
 PFS = 5
@@ -174,6 +178,7 @@ load_map_settings("3dmap_set.txt")
 
 # capture frames from the camera
 for frame in camera.capture_continuous(capture, format="bgra", use_video_port=True, resize=(img_width,img_height)):
+    print("in the for loop")
     t1 = datetime.now()
     pair_img = cv2.cvtColor (frame, cv2.COLOR_BGR2GRAY)
     imgRight = pair_img [0:img_height,0:int(img_width/2)] #Y+H and X+W
