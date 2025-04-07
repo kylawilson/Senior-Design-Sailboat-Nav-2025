@@ -45,24 +45,12 @@ def get_depth():
         bus = dbus.SessionBus()
         obj = bus.get_object("com.example.DepthService", "/DepthService")
         iface = dbus.Interface(obj, "com.example.DepthService")
-        returned_depth = iface.GetDepth()           #need to implement this in stereopi code
+        returned_depth = iface.GetDepth()
 
-        if encoded_image != "No image available":
-            # If the encoded image is a base64 string, decode it into bytes
-            image_data = base64.b64decode(encoded_image)
-
-            # Save the decoded image to a file
-            with open("received_image.jpg", "wb") as img_file:
-                img_file.write(image_data)
-            print("Received image saved as received_image.jpg")
-
-            # Optionally, read and base64 encode the image
-            serialized = base64.b64encode(image_data).decode('utf-8')
-            #print(serialized)
-            #serialized = base64.b64encode(image_data)
-            return serialized
+        if returned_depth != [1.0, 2.0, 3.0, 4.0]:
+            return returned_depth
         else:
-            print("No image available from service.")
+            print("No depth available from service.")
     
     except Exception as e:
         print("D-Bus Error:", e)
@@ -424,11 +412,11 @@ class DepthCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        #self.depth = get_depth()
+        self.depth = get_depth()
         if not self.notifying:
             return True
         if (self.depth):
-            print('Depth ' + repr(self.long))
+            print('Depth ' + repr(self.depth))
             self.notify_depth()
         return True
 
