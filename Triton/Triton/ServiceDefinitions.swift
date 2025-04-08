@@ -44,9 +44,9 @@ struct PhotoTransferService {
 
 //used to receive wind speed and direction from RPi
 struct AnemometerTransferService {
-    static let tritonAnemometerServiceUUID = CBUUID(string: "f8b82f9c-ea3d-4362-97ef-3ad4c49ebde0")
-    static let tritonWindSpeedCharacteristicUUID = CBUUID(string: "f8b82f9c-ea3d-4362-97ef-3ad4c49ebde1")
-    static let tritonWindDirectionCharacteristicUUID = CBUUID(string: "f8b82f9c-ea3d-4362-97ef-3ad4c49ebde2")
+    static let tritonAnemometerServiceUUID = CBUUID(string: "45653417-53c1-4e4c-9745-f2a0b5d0be80")
+    static let tritonWindSpeedCharacteristicUUID = CBUUID(string: "45653417-53c1-4e4c-9745-f2a0b5d0be81")
+    static let tritonWindDirectionCharacteristicUUID = CBUUID(string: "45653417-53c1-4e4c-9745-f2a0b5d0be82")
 }
 
 //used to receive coordinates
@@ -54,9 +54,6 @@ struct AnemometerTransferService {
 struct RenderingTransferService {
     static let tritonRenderingServiceUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae270")
     static let tritonRenderingDepthCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae271") //Depth
-    //static let tritonRenderingCoordinatesCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae271") //X and Y coordinates [(x1,y1),(x2,y2)]
-    static let tritonRenderingAngleCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae272")
-    static let tritonRenderingNumberObjectsCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae273")
 }
 
 //used to receive depth from serialpis

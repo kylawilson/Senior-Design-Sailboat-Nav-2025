@@ -47,6 +47,7 @@ class BluetoothService: NSObject, ObservableObject {
     private var photoTransferCharacteristics = [ PhotoTransferService.tritonPhotoCharacteristicUUID ]
     private var renderingTransferCharacteristics = [ RenderingTransferService.tritonRenderingDepthCharacteristicUUID ]
     private var stereoPiTransferCharacteristics = [ StereoPiTransferService.tritonStereoPiDepthCharacteristicUUID ]
+    private var anemometerTransferCharacteristics = [ AnemometerTransferService.tritonWindSpeedCharacteristicUUID ]
     private var subscribedCharacteristics : [ CBCharacteristic ]
     private var photoCharacteristic : CBCharacteristic?
     
@@ -174,6 +175,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         _ central: CBCentralManager,
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: (any Error)? ) {
+            print(tritonConnectionState)
             if (tritonConnectionState != .disconnecting) {
                 os_log("Disconnected from %@, reconnecting...", peripheral)
                 switch (peripheral.identifier.uuidString) {
@@ -251,20 +253,15 @@ extension BluetoothService: CBCentralManagerDelegate {
         // Set closure to handle characteristic discovery completion
         onCharacteristicsDiscovered = { discoveredPeripheral, service in
             guard let characteristics = service.characteristics else { return }
-            if self.subscribedCharacteristics.isEmpty {
-                for characteristic in characteristics {
-                    if self.gpsTransferCharacteristics.contains(characteristic.uuid) ||
-                        self.renderingTransferCharacteristics.contains(characteristic.uuid) || self.stereoPiTransferCharacteristics.contains(characteristic.uuid) {
-                        os_log("Subscribing to characteristic %@", characteristic.uuid.uuidString)
-                        self.subscribedCharacteristics.append(characteristic)
-                        discoveredPeripheral.setNotifyValue(true, for: characteristic)
-                    }
+            for characteristic in characteristics {
+                if self.gpsTransferCharacteristics.contains(characteristic.uuid) ||
+                    self.renderingTransferCharacteristics.contains(characteristic.uuid) || self.stereoPiTransferCharacteristics.contains(characteristic.uuid) || self.anemometerTransferCharacteristics.contains(characteristic.uuid) {
+                    os_log("Subscribing to characteristic %@", characteristic.uuid.uuidString)
+                    self.subscribedCharacteristics.append(characteristic)
+                    discoveredPeripheral.setNotifyValue(true, for: characteristic)
                 }
-            } else {
-                for characteristic in characteristics {
-                    if self.photoTransferCharacteristics.contains(characteristic.uuid) {
-                        self.liveView ? discoveredPeripheral.setNotifyValue(true, for: characteristic): discoveredPeripheral.setNotifyValue(false, for: characteristic)
-                    }
+                if self.photoTransferCharacteristics.contains(characteristic.uuid) {
+                    self.liveView ? discoveredPeripheral.setNotifyValue(true, for: characteristic): discoveredPeripheral.setNotifyValue(false, for: characteristic)
                 }
             }
         }
@@ -334,7 +331,7 @@ extension BluetoothService: CBPeripheralDelegate {
             } else if gpsTransferCharacteristics.contains(characteristic.uuid) {
             //GPS data
                 let newval = value.map { String(format: "%02x", $0) }.joined()
-                print("Notification received: \(newval)")
+                print("GPS data received: \(newval)")
                 updateGPSCharacteristicUI(characteristic.uuid, value)
             } else if renderingTransferCharacteristics.contains(characteristic.uuid) {
                 let newval = value.map { String(format: "%02x", $0) }.joined()
@@ -357,6 +354,9 @@ extension BluetoothService: CBPeripheralDelegate {
                 let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
                 print("StereoPiArray Received in Meters: \(dividedCGFloatArray)")
                 stereoPiArray1 = dividedCGFloatArray
+            } else if anemometerTransferCharacteristics.contains(characteristic.uuid){
+                let newval = value.map { String(format: "%02x", $0) }.joined()
+                print("Anemometer data received: \(newval)")
             }
         }
     }
