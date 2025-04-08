@@ -12,7 +12,13 @@ cd OAK-D/
 export $(dbus-launch)
 python3 DBMRS.py &
 cd ../RPI-BLUETOOTH
+echo "running bluetooth"
 python3 bluetooth.py &
+cd ../Anemometer
+echo "running wind speed"
+python3 AneTest.py &
+echo "running wind direction"
+python3 WindDirection.py &
 echo "running gps"
 cd ~
 cd ..

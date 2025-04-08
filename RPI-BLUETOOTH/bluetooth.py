@@ -102,6 +102,22 @@ def get_wind_speed():
     except Exception as e:
         print("D-Bus Error:", e)
 
+def get_wind_direction():
+    """Fetches the latest encoded image from the D-Bus service."""
+    try:
+        bus = dbus.SessionBus()
+        obj = bus.get_object("com.example.WindDirectionService", "/WindDirectionService")
+        iface = dbus.Interface(obj, "com.example.WindDirectionService")
+        wind_direction = iface.GetWindDirection()
+
+        if wind_direction != None:
+            return wind_direction
+        else:
+            print("No wind direction available from service.")
+    
+    except Exception as e:
+        print("D-Bus Error:", e)
+
 def get_gps_data():
     """Fetches the latest GPS data from the D-Bus service."""
     try:
@@ -1086,6 +1102,7 @@ class AnemometerWindDirectionCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
+        self.wind_dir = get_wind_direction()
         if not self.notifying:
             return True
         if (self.wind_dir):

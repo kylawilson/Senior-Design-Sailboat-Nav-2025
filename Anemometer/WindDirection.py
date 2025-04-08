@@ -3,6 +3,48 @@ import busio
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 import time
+import dbus
+import dbus.service
+import dbus.mainloop.glib
+from gi.repository import GLib
+
+class WindDirectionService(dbus.service.Object):
+    """D-Bus service that provides the depths of objects in view in base64 format."""
+
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/WindDirectionService')
+        self.wind_direction = None  # prob can get rid of this
+
+    @dbus.service.method("com.example.WindDirectionService",
+                         in_signature='', out_signature='d')    # returns a float
+    def GetWindDirection(self):
+        """Returns the base64-encoded depth if available."""
+        print(self.wind_direction)
+        if self.wind_direction is not None:         # need to set to None if we're not getting a reading when we set depth_array
+            print(f"Sent wind direction: {self.wind_direction}")
+            return self.wind_direction  # Returns an array of floats
+        else:
+            return 0.0
+
+    def update_wind_speed(self, wind_direction):
+        """Updates to the latest depth array."""
+        self.wind_direction = wind_direction
+
+def run_dbus_service():
+    """Runs the D-Bus main loop in a separate thread."""
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    session_bus = dbus.SessionBus()
+    bus_name_wind_direction = dbus.service.BusName("com.example.WindDirectionService", session_bus)
+    global wind_speed_direction
+    wind_direction_service = WindDirectionService(bus_name_wind_direction)
+    
+    print("D-Bus service running...")
+    mainloop = GLib.MainLoop()
+    mainloop.run()
+
+dbus_thread = threading.Thread(target=run_dbus_service)
+dbus_thread.daemon = True
+dbus_thread.start()
 
 # I2C setup
 i2c = busio.I2C(board.SCL, board.SDA)
