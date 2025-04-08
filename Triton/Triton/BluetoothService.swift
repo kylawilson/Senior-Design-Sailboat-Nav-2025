@@ -25,6 +25,7 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var depthArray: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var stereoPiArray1: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var stereoPiArray2: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    @Published var liveView: Bool = false
     private var tempPhotoData = Data()                                       //raw jpeg data
     
     //private var centralManager: CBCentralManager = CBCentralManager()
@@ -245,11 +246,14 @@ extension BluetoothService: CBCentralManagerDelegate {
         onCharacteristicsDiscovered = { discoveredPeripheral, service in
             guard let characteristics = service.characteristics else { return }
             for characteristic in characteristics {
-                if self.gpsTransferCharacteristics.contains(characteristic.uuid) ||  //self.photoTransferCharacteristics.contains(characteristic.uuid) ||
+                if self.gpsTransferCharacteristics.contains(characteristic.uuid) ||
                     self.renderingTransferCharacteristics.contains(characteristic.uuid) || self.stereoPiTransferCharacteristics.contains(characteristic.uuid) {
                     os_log("Subscribing to characteristic %@", characteristic.uuid.uuidString)
                     self.subscribedCharacteristics.append(characteristic)
                     discoveredPeripheral.setNotifyValue(true, for: characteristic)
+                }
+                if self.photoTransferCharacteristics.contains(characteristic.uuid) {
+                    self.liveView ? discoveredPeripheral.setNotifyValue(true, for: characteristic): discoveredPeripheral.setNotifyValue(false, for: characteristic)
                 }
             }
         }
@@ -343,6 +347,18 @@ extension BluetoothService: CBPeripheralDelegate {
                 print("StereoPiArray Received in Meters: \(dividedCGFloatArray)")
                 stereoPiArray1 = dividedCGFloatArray
             }
+        }
+    }
+    
+    func startPhotoService() {
+        if (connectedTriton != nil) {
+            connectedTriton!.discoverServices(transferServices)
+        }
+    }
+    
+    func stopPhotoService() {
+        if (connectedTriton != nil) {
+            connectedTriton!.discoverServices(transferServices)
         }
     }
     

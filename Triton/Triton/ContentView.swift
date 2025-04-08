@@ -23,41 +23,16 @@ struct ContentView: View {
                     ConnectionStatusControl(btService: btService, peripheral: btService.connectedTriton, connection: btService.tritonConnectionState, title: "Triton")
                     ConnectionStatusControl(btService: btService, peripheral: btService.connectedStereoPi1, connection: btService.stereoPi1ConnectionState, title: "StereoPi1")
                     ConnectionStatusControl(btService: btService, peripheral: btService.connectedStereoPi2, connection: btService.stereoPi2ConnectionState, title: "StereoPi2")
-//                    ConnectionStatusView(title: "Triton", connection: btService.tritonConnectionState)
-//                    ConnectionStatusView(title: "StereoPi1", connection: btService.stereoPi1ConnectionState)
-//                    ConnectionStatusView(title: "StereoPi2", connection: btService.stereoPi2ConnectionState)
-                
-                    // Bluetooth Control Buttons
-//                    HStack(spacing: 10) {
-//                        Button(action: { btService.disconnect() }) {
-//                            Text("Disconnect")
-//                                .frame(maxWidth: .infinity)
-//                                .padding()
-//                                .background(btService.connectionState != .connected ? Color.gray : Color.red)
-//                                .foregroundColor(.white)
-//                                .cornerRadius(10)
-//                        }
-//                        .disabled(btService.connectionState != .connected)
-//                        .opacity(btService.connectionState != .connected ? 0.6 : 1.0)
-//                        
-//                        Button(action: { btService.reconnect() }) {
-//                            Text("Connect")
-//                                .frame(maxWidth: .infinity)
-//                                .padding()
-//                                .background(btService.connectionState != .disconnected ? Color.gray : Color.green)
-//                                .foregroundColor(.white)
-//                                .cornerRadius(10)
-//                        }
-//                        .disabled(btService.connectionState != .disconnected)
-//                        .opacity(btService.connectionState != .disconnected ? 0.6 : 1.0)
-//                    }
-//                    .frame(maxWidth: geometry.size.width * 0.9)
+
                     VStack(spacing: 10) {
                         NavigationLink(destination: PolarGridView(rawOAKDDistances: btService.depthArray, rawLeftSPDistances: btService.stereoPiArray1, rawRightSPDistances: btService.stereoPiArray2)) {
                             TextButton(label: "Docking View")
                         }
-                        NavigationLink(destination: ImageViewPage(btService: btService)) {
-                            PreviewButton(label: "Live View", preview: ImagePreview(btService: btService))
+                        HStack {
+                            ButtonSwitch(isOn: $btService.liveView, btService: btService)
+                            NavigationLink(destination: ImageViewPage(btService: btService)) {
+                                PreviewButton(label: "Live View", preview: ImagePreview(btService: btService))
+                            }
                         }
                         NavigationLink(destination: RawDataViewPage(btService: btService)) {
                             TextButton(label: "Raw Data")
@@ -256,6 +231,19 @@ struct ConnectionStatusControl: View {
         VStack {
             ConnectionStatusView(title: title, connection: connection)
             ConnectionControlButtons(btService: btService, peripheral: peripheral, connection: connection)
+        }
+    }
+}
+
+struct ButtonSwitch: View {
+    @Binding var isOn: Bool
+    var btService: BluetoothService
+    
+    var body: some View {
+        Toggle(isOn: $isOn) {
+        }
+        .onChange(of: isOn) {
+            isOn ? btService.startPhotoService() : btService.stopPhotoService()
         }
     }
 }
