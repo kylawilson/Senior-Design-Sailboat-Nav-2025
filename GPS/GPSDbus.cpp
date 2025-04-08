@@ -1,62 +1,21 @@
 #include <iostream>
-#include <wiringPi.h>
 #include <wiringSerial.h>
 #include <unistd.h>
-#include <fstream>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <sys/time.h>
 #include <dbus/dbus.h>
 
-#define GPS_SERIAL_PORT "/dev/serial0" // UART port for Raspberry Pi
+#define GPS_SERIAL_PORT "/dev/serial0"
 
-std::ofstream gps_file; // Output file stream for GPS data
-
-// Global storage for latest GPS data
 std::vector<std::string> latestGGAData;
 std::vector<std::string> latestRMCData;
-
-// DBus connection
-DBusConnection* dbus_conn = nullptr;
 
 long getCurrentTimeInMilliseconds() {
     struct timeval tv;
     gettimeofday(&tv, nullptr);
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
-}
-
-void sendGpsDataOverDBus(DBusConnection* conn, const std::vector<std::string>& gpsData) {
-    DBusMessage* msg;
-    DBusMessageIter args, arrayIter;
-
-    msg = dbus_message_new_signal("/com/example/GPSService",  // object path
-                                  "com.example.GPSService",   // interface
-                                  "NewGPSData");              // signal name
-
-    if (!msg) {
-        std::cerr << "Message Null\n";
-        return;
-    }
-
-    dbus_message_iter_init_append(msg, &args);
-    if (!dbus_message_iter_open_container(&args, DBUS_TYPE_ARRAY, "s", &arrayIter)) {
-        std::cerr << "Out of memory (container)\n";
-        return;
-    }
-
-    for (const std::string& item : gpsData) {
-        const char* cstr = item.c_str();
-        if (!dbus_message_iter_append_basic(&arrayIter, DBUS_TYPE_STRING, &cstr)) {
-            std::cerr << "Out of memory (append)\n";
-            return;
-        }
-    }
-
-    dbus_message_iter_close_container(&args, &arrayIter);
-    dbus_connection_send(conn, msg, nullptr);
-    dbus_connection_flush(conn);
-    dbus_message_unref(msg);
 }
 
 void processGGA(const std::string& line) {
@@ -73,17 +32,10 @@ void processGGA(const std::string& line) {
             "UTCtime: " + fields[1],
             "Latitude: " + fields[2],
             "latIndicator: " + fields[3],
-            "Longitude: " + (fields[5] == "W" ? "-" : "") + fields[4],
+            std::string("Longitude: ") + (fields[5] == "W" ? "-" : "") + fields[4],
             "longIndicator: " + fields[5],
             "Altitude: " + fields[9]
         };
-
-        // Also write to file
-        for (const auto& field : latestGGAData) {
-            gps_file << field << std::endl;
-        }
-    } else {
-        std::cerr << "Invalid GGA line: " << line << std::endl;
     }
 }
 
@@ -103,84 +55,61 @@ void processRMC(const std::string& line) {
             "COG: " + fields[8],
             "Date: " + formatted_date
         };
-
-        for (const auto& field : latestRMCData) {
-            gps_file << field << std::endl;
-        }
-    } else {
-        std::cerr << "Invalid RMC line: " << line << std::endl;
     }
+}
+
+DBusHandlerResult handle_get_gps_data(DBusConnection* conn, DBusMessage* msg, void* user_data) {
+    if (dbus_message_is_method_call(msg, "com.example.GPSService", "GetGPSData")) {
+        // Handle the method call, for example, send back GPS data as a response
+        DBusMessage* reply = dbus_message_new_method_return(msg);
+        if (!reply) {
+            std::cerr << "Out of memory!\n";
+            return DBUS_HANDLER_RESULT_NEED_MEMORY;
+        }
+
+        // Example: Send back a string as GPS data
+        const char* gps_data = "Latitude: 52.12345, Longitude: 13.12345";
+        dbus_message_append_args(reply, DBUS_TYPE_STRING, &gps_data, DBUS_TYPE_INVALID);
+
+        dbus_connection_send(conn, reply, nullptr);
+        dbus_connection_flush(conn);
+        dbus_message_unref(reply);
+        
+        return DBUS_HANDLER_RESULT_HANDLED;
+    }
+    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
 int main() {
-    // Init WiringPi
-    if (wiringPiSetup() == -1) {
-        std::cerr << "WiringPi setup failed." << std::endl;
+    DBusConnection* conn;
+    DBusError err;
+
+    // Initialize D-Bus connection
+    dbus_error_init(&err);
+    conn = dbus_bus_get(DBUS_BUS_SESSION, &err);
+    if (dbus_error_is_set(&err)) {
+        std::cerr << "Failed to connect to D-Bus: " << err.message << std::endl;
+        dbus_error_free(&err);
         return 1;
     }
 
-    // Open serial port
-    int serial_fd = serialOpen(GPS_SERIAL_PORT, 9600);
-    if (serial_fd < 0) {
-        std::cerr << "Unable to open GPS serial port." << std::endl;
+    // Request service name
+    int ret = dbus_bus_request_name(conn, "com.example.GPSService", DBUS_NAME_FLAG_REPLACE_EXISTING, &err);
+    if (dbus_error_is_set(&err)) {
+        std::cerr << "Failed to request name: " << err.message << std::endl;
+        dbus_error_free(&err);
         return 1;
     }
 
-    // Open file
-    gps_file.open("gps_data1.txt", std::ios::app);
-    if (!gps_file.is_open()) {
-        std::cerr << "Failed to open gps_data1.txt." << std::endl;
-        return 1;
-    }
+    // Add the filter function to handle the D-Bus method call
+    dbus_connection_add_filter(conn, handle_get_gps_data, nullptr, nullptr);
 
-    // Init D-Bus
-    DBusError dbus_error;
-    dbus_error_init(&dbus_error);
-    dbus_conn = dbus_bus_get(DBUS_BUS_SESSION, &dbus_error);
-    if (dbus_error_is_set(&dbus_error)) {
-        std::cerr << "D-Bus Error: " << dbus_error.message << std::endl;
-        dbus_error_free(&dbus_error);
-        return 1;
-    }
-
-    std::string gps_data;
-
+    // Main loop to handle D-Bus messages
     while (true) {
-        gps_file.close();
-        gps_file.open("gps_data1.txt", std::ios::trunc); // Clear file
-
-        gps_data.clear();
-        long start_time = getCurrentTimeInMilliseconds();
-        while (getCurrentTimeInMilliseconds() - start_time < 100) {
-            if (serialDataAvail(serial_fd)) {
-                char c = serialGetchar(serial_fd);
-                gps_data += c;
-
-                if (c == '\n') {
-                    if (gps_data.find("GGA") != std::string::npos) {
-                        processGGA(gps_data);
-                    } else if (gps_data.find("RMC") != std::string::npos) {
-                        processRMC(gps_data);
-                    }
-
-                    // Emit D-Bus signal if both GGA and RMC are available
-                    if (!latestGGAData.empty() && !latestRMCData.empty()) {
-                        std::vector<std::string> combined = latestGGAData;
-                        combined.insert(combined.end(), latestRMCData.begin(), latestRMCData.end());
-                        sendGpsDataOverDBus(dbus_conn, combined);
-                    }
-
-                    gps_data.clear();
-                }
-            }
-        }
-
-        usleep(1000000); // 1000ms
+        dbus_connection_read_write(conn, 0);
+        dbus_connection_dispatch(conn);
     }
 
-    gps_file.close();
-    serialClose(serial_fd);
-
+    dbus_connection_unref(conn);
     return 0;
 }
-

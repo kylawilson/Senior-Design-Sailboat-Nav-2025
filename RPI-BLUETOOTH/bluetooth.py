@@ -110,6 +110,7 @@ def get_gps_data():
 
         if gps_data is not None:
             gps_data = list(gps_data)  # Convert from dbus.Array to Python list
+            print(gps_data)
             return gps_data
             
         else:
@@ -539,7 +540,8 @@ class LongitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, self.long, _, _ = read_gps_data(GPS_FILE)
+        #_, _, _, self.long, _, _ = read_gps_data(GPS_FILE)
+        self.long = get_gps_data()
         if not self.notifying:
             return True
         if (self.long):
@@ -591,7 +593,8 @@ class LongitudeIndicatorCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, self.longindi, _ = read_gps_data(GPS_FILE)
+        #_, _, _, _, self.longindi, _ = read_gps_data(GPS_FILE)
+        self.longindi = get_gps_data()
         if not self.notifying:
             return True
         if (self.longindi):
@@ -643,7 +646,8 @@ class LatitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, self.lati, _, _, _, _ = read_gps_data(GPS_FILE)
+        #_, self.lati, _, _, _, _ = read_gps_data(GPS_FILE)
+        self.lati = get_gps_data()
         if not self.notifying:
             return True
         if (self.lati):
@@ -696,7 +700,8 @@ class LatitudeIndicatorCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, self.latiindi, _, _, _ = read_gps_data(GPS_FILE)
+        #_, _, self.latiindi, _, _, _ = read_gps_data(GPS_FILE)
+        self.latiindi = get_gps_data()
         if not self.notifying:
             return True
         if (self.latiindi):
@@ -748,7 +753,7 @@ class GPSTimeCharacteristic(Characteristic):
 
     def get_data(self):
         #self.time, _, _, _, _, _ = read_gps_data(GPS_FILE)
-
+        self.time = get_gps_data()
         if not self.notifying:
             return True
         if (self.time):
@@ -802,7 +807,8 @@ class GPSAltitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, _, self.alti = read_gps_data(GPS_FILE)
+        #_, _, _, _, _, self.alti = read_gps_data(GPS_FILE)
+        self.alti = get_gps_data()
         if not self.notifying:
             return True
         if (self.alti):
@@ -855,7 +861,8 @@ class GPSSpeedCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, _, _, self.speed, _, _ = read_gps_data(GPS_FILE)
+        #_, _, _, _, _, _, self.speed, _, _ = read_gps_data(GPS_FILE)
+        self.speed = get_gps_data()
         if not self.notifying:
             return True
         if (self.speed):
@@ -908,7 +915,8 @@ class GPSCOGCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, _, _, _, self.cog, _ = read_gps_data(GPS_FILE)
+        #_, _, _, _, _, _, _, self.cog, _ = read_gps_data(GPS_FILE)
+        self.cog = get_gps_data()
         if not self.notifying:
             return True
         if (self.cog):
@@ -961,7 +969,8 @@ class GPSDateCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, _, _, _, _, self.date = read_gps_data(GPS_FILE)
+        #_, _, _, _, _, _, _, _, self.date = read_gps_data(GPS_FILE)
+        self.date = get_gps_data()
         if not self.notifying:
             return True
         if (self.date):
