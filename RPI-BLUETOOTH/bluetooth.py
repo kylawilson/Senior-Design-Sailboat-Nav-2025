@@ -100,6 +100,25 @@ def get_wind_speed():
     except Exception as e:
         print("D-Bus Error:", e)
 
+def get_gps_data():
+    """Fetches the latest GPS data from the D-Bus service."""
+    try:
+        bus = dbus.SessionBus()
+        obj = bus.get_object("com.example.GPSService", "/GPSService")
+        iface = dbus.Interface(obj, "com.example.GPSService")
+        gps_data = iface.GetGPSData()
+
+        if gps_data is not None:
+            gps_data = list(gps_data)  # Convert from dbus.Array to Python list
+            return gps_data
+            
+        else:
+            print("No GPS data available from service.")
+    
+    except Exception as e:
+        print("D-Bus Error:", e)
+        return None
+
 #having this here may cause an issue with bluetooth_discover
 def get_stereopidepth():
     """Fetches the latest encoded image from the D-Bus service."""
@@ -449,38 +468,38 @@ class Descriptor(dbus.service.Object):
 #global variables
 GPS_FILE = "/home/triton/Senior-Design-Sailboat-Nav-2025/GPS/gps_data1.txt"
 
-def read_gps_data(file_path):
-    """
-    Reads GPS data from a text file and yields it line by line.
-    """
+# def read_gps_data(file_path):
+#     """
+#     Reads GPS data from a text file and yields it line by line.
+#     """
 
-    utc_time = None
-    lat = None
-    latInd = None
-    long = None
-    longInd = None
-    altitude = None
+#     utc_time = None
+#     lat = None
+#     latInd = None
+#     long = None
+#     longInd = None
+#     altitude = None
 
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-        if len(lines) % 6 != 0:
-            print("Warning: File does not contain complete blocks of 9 lines.")
-            print(len(lines))
-        else:
-            for i in range(0, len(lines), 6):  # Read two lines (UTCtime and Date)
-                utc_time = lines[i].split(": ")[1].strip()  # Extract UTC time
-                lat = lines[i + 1].split(": ")[1].strip()  # Extract latitude
-                latInd = lines[i + 2].split(": ")[1].strip()  # Extract latitude indicator
-                long = lines[i + 3].split(": ")[1].strip()  # Extract longitude
-                longInd = lines[i + 4].split(": ")[1].strip()  # Extract longitude indicator
-                altitude = lines[i + 5].split(": ")[1].strip()  # Extract altitude
-                # speed = lines[i + 6].split(": ")[1].strip()  # Extract speed
-                # COG = lines[i + 7].split(": ")[1].strip()  # Extract COG
-                # date = lines[i + 8].split(": ")[1].strip()  # Extract date
+#     with open(file_path, 'r') as file:
+#         lines = file.readlines()
+#         if len(lines) % 6 != 0:
+#             print("Warning: File does not contain complete blocks of 9 lines.")
+#             print(len(lines))
+#         else:
+#             for i in range(0, len(lines), 6):  # Read two lines (UTCtime and Date)
+#                 utc_time = lines[i].split(": ")[1].strip()  # Extract UTC time
+#                 lat = lines[i + 1].split(": ")[1].strip()  # Extract latitude
+#                 latInd = lines[i + 2].split(": ")[1].strip()  # Extract latitude indicator
+#                 long = lines[i + 3].split(": ")[1].strip()  # Extract longitude
+#                 longInd = lines[i + 4].split(": ")[1].strip()  # Extract longitude indicator
+#                 altitude = lines[i + 5].split(": ")[1].strip()  # Extract altitude
+#                 # speed = lines[i + 6].split(": ")[1].strip()  # Extract speed
+#                 # COG = lines[i + 7].split(": ")[1].strip()  # Extract COG
+#                 # date = lines[i + 8].split(": ")[1].strip()  # Extract date
 
-        #return utc_time, lat, latInd, long, longInd, altitude, speed, COG, date
-        print(utc_time)
-        return utc_time, lat, latInd, long, longInd, altitude
+#         #return utc_time, lat, latInd, long, longInd, altitude, speed, COG, date
+#         print(utc_time)
+#         return utc_time, lat, latInd, long, longInd, altitude
 
 
 class GPSservice(Service):
@@ -496,9 +515,9 @@ class GPSservice(Service):
         self.add_characteristic(LatitudeIndicatorCharacteristic(bus, 3, self))
         self.add_characteristic(GPSTimeCharacteristic(bus, 4, self))
         self.add_characteristic(GPSAltitudeCharacteristic(bus, 5, self))
-        # self.add_characteristic(GPSSpeedCharacteristic(bus, 6, self))
-        # self.add_characteristic(GPSCOGCharacteristic(bus, 7, self))
-        # self.add_characteristic(GPSDateCharacteristic(bus, 8, self))
+        self.add_characteristic(GPSSpeedCharacteristic(bus, 6, self))   #temporarily uncomment
+        self.add_characteristic(GPSCOGCharacteristic(bus, 7, self))     #temporarily uncomment
+        self.add_characteristic(GPSDateCharacteristic(bus, 8, self))    #temporarily uncomment
         self.energy_expended = 0
 
 
@@ -728,7 +747,8 @@ class GPSTimeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        self.time, _, _, _, _, _ = read_gps_data(GPS_FILE)
+        #self.time, _, _, _, _, _ = read_gps_data(GPS_FILE)
+
         if not self.notifying:
             return True
         if (self.time):
