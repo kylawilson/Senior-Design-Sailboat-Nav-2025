@@ -111,26 +111,33 @@ int main() {
 
     dbus_connection_add_filter(conn, handle_get_gps_data, nullptr, nullptr);
 
-    int fd = serialOpen(GPS_SERIAL_PORT, 9600);
-    if (fd < 0) {
-        std::cerr << "Unable to open serial device." << std::endl;
+    int serial_fd = serialOpen(GPS_SERIAL_PORT, 9600);
+    if (serial_fd < 0) {
+        std::cerr << "Unable to open GPS serial port." << std::endl;
         return 1;
     }
 
+    std::string line;
+
     // Main loop
     while (true) {
-        while (serialDataAvail(fd)) {
-            char c = serialGetchar(fd);
-            static std::string line;
+        if (serialDataAvail(serial_fd)) {
+            char c = serialGetchar(serial_fd);
+            //std::cout << c << std::endl;
+            
+            line += c;
+            std::cout << line << std::endl;
+
+            // Check for end of a line (NMEA sentence)
             if (c == '\n') {
-                if (line.find("$GPGGA") == 0) {
+                std::cout << line << std::endl;
+                if (line.find("GGA") != std::string::npos) {
                     processGGA(line);
-                } else if (line.find("$GPRMC") == 0) {
+                } 
+                if (line.find("RMC") != std::string::npos) {
                     processRMC(line);
                 }
-                line.clear();
-            } else if (c != '\r') {
-                line += c;
+                line.clear();  // Clear after processing the data
             }
         }
 
@@ -140,7 +147,7 @@ int main() {
         usleep(10000); // 10ms sleep to prevent 100% CPU
     }
 
-    serialClose(fd);
+    serialClose(serial_fd);
     dbus_connection_unref(conn);
     return 0;
 }

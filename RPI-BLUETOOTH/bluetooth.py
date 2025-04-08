@@ -272,7 +272,7 @@ class Application(dbus.service.Object):
         self.add_service(GPSservice(bus, 0))
         self.add_service(PhotoService(bus, 1))
         self.add_service(RenderingService(bus, 2))
-        self.add_service(AnemometerService(bus, 3))
+        #self.add_service(AnemometerService(bus, 3))
         
     def get_path(self):
         return dbus.ObjectPath(self.path)
@@ -1231,7 +1231,7 @@ class DepthCharacteristic(Characteristic):
                 service)
         self.depth = dbus.Byte(0x02)
         self.notifying = False
-        GLib.timeout_add(250, self.get_data)
+        GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
         self.depth = get_depth()
