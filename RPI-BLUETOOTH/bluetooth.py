@@ -272,6 +272,7 @@ class Application(dbus.service.Object):
         self.add_service(GPSservice(bus, 0))
         self.add_service(PhotoService(bus, 1))
         self.add_service(RenderingService(bus, 2))
+        self.add_service(AnemometerService(bus, 3))
         
     def get_path(self):
         return dbus.ObjectPath(self.path)
@@ -1022,7 +1023,7 @@ class AnemometerWindSpeedCharacteristic(Characteristic):
     """
 
     """
-    WIN_SPD_UUID = 'f8b82f9c-ea3d-4362-97ef-3ad4c49ebde1'
+    WIN_SPD_UUID = '8b82f9c-ea3d-4362-97ef-3ad4c49ebde1'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
@@ -1072,7 +1073,7 @@ class AnemometerWindDirectionCharacteristic(Characteristic):
     """
 
     """
-    WIN_DIR_UUID = 'f8b82f9c-ea3d-4362-97ef-3ad4c49ebde2'
+    WIN_DIR_UUID = '8b82f9c-ea3d-4362-97ef-3ad4c49ebde2'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
@@ -1122,7 +1123,6 @@ class AnemometerWindDirectionCharacteristic(Characteristic):
 class PhotoService(Service):
     """
     """
-    #need to chavce
     PS_UUID = '064540d8-df60-4b60-a50f-780b7bd7f080'
 
     def __init__(self, bus, index):
