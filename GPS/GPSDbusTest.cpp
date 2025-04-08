@@ -34,6 +34,7 @@ void processGGA(const std::string& line) {
             "latIndicator: " + fields[3],
             std::string("Longitude: ") + (fields[5] == "W" ? "-" : "") + fields[4],
             "longIndicator: " + fields[5],
+            "Fix?: " + fields[6],
             "Altitude: " + fields[9]
         };
     }

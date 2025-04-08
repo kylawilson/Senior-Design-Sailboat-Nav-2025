@@ -14,13 +14,12 @@ class WindSpeedService(dbus.service.Object):
         self.wind_speed = None  # prob can get rid of this
 
     @dbus.service.method("com.example.WindSpeedService",
-                         in_signature='', out_signature='d')    # returns an array
-    def GetDepth(self):
+                         in_signature='', out_signature='d')    # returns a float
+    def GetWindSpeed(self):
         """Returns the base64-encoded depth if available."""
         print(self.wind_speed)
         if self.wind_speed is not None:         # need to set to None if we're not getting a reading when we set depth_array
-            #encoded = base64.b64encode(self.depth_array).decode('utf-8')
-            print(f"Sent depth: {self.wind_speed}")
+            print(f"Sent wind speed: {self.wind_speed}")
             return self.wind_speed  # Returns an array of floats
         else:
             return 0.0
@@ -71,6 +70,7 @@ try:
         wind_speed = (pulse_count / elapsed_time) / ANEMOMETER_FACTOR  # Convert to m/s
         knot_speed = wind_speed * 1.944
         print(f"Wind Speed: {wind_speed:.2f} m/s ({wind_speed * 2.237:.2f} mph) {knot_speed:.2f} knots")
+        wind_speed_service.update_wind_speed(knot_speed)
         # Reset for next measurement
         pulse_count = 0
         start_time = time.time()

@@ -1011,7 +1011,7 @@ class GPSDateCharacteristic(Characteristic):
 class AnemometerService(Service):
     """
     """
-    ANE_UUID = '8b82f9c-ea3d-4362-97ef-3ad4c49ebde0'
+    ANE_UUID = '45653417-53c1-4e4c-9745-f2a0b5d0be80'
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.ANE_UUID, True)
@@ -1023,7 +1023,7 @@ class AnemometerWindSpeedCharacteristic(Characteristic):
     """
 
     """
-    WIN_SPD_UUID = '8b82f9c-ea3d-4362-97ef-3ad4c49ebde1'
+    WIN_SPD_UUID = '45653417-53c1-4e4c-9745-f2a0b5d0be81'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
@@ -1073,7 +1073,7 @@ class AnemometerWindDirectionCharacteristic(Characteristic):
     """
 
     """
-    WIN_DIR_UUID = '8b82f9c-ea3d-4362-97ef-3ad4c49ebde2'
+    WIN_DIR_UUID = '45653417-53c1-4e4c-9745-f2a0b5d0be82'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
@@ -1086,7 +1086,6 @@ class AnemometerWindDirectionCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, self.wind_dir = get_wind()
         if not self.notifying:
             return True
         if (self.wind_dir):
