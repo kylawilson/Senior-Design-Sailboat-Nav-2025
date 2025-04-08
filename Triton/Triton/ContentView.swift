@@ -19,30 +19,10 @@ struct ContentView: View {
                         .fontWeight(.bold)
                     
                     // Bluetooth Status
-                    Text("\(btService.tritonConnectionState)")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: geometry.size.width * 0.9)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(10)
-                    Text("\(btService.stereoPi1ConnectionState)")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: geometry.size.width * 0.9)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(10)
-                    Text("\(btService.stereoPi2ConnectionState)")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: geometry.size.width * 0.9)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(10)
-                    Text("\(btService.connectionState)")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: geometry.size.width * 0.9)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(10)
+                    ConnectionStatusView(title: "Triton", connection: btService.tritonConnectionState)
+                    ConnectionStatusView(title: "StereoPi1", connection: btService.stereoPi1ConnectionState)
+                    ConnectionStatusView(title: "StereoPi2", connection: btService.stereoPi2ConnectionState)
+                    
                     
                     // Bluetooth Control Buttons
                     HStack(spacing: 10) {
@@ -131,22 +111,6 @@ struct TileView: View {
     }
 }
 
-// Moving Circles Page
-//struct MovingCirclesPage: View {
-//    var body: some View {
-//        GeometryReader { geometry in
-//            ZStack {
-//                GridView(rows: 10, columns: 10)
-//                MovingCirclesView()
-//                    .frame(width: geometry.size.width, height: geometry.size.height)
-//            }
-//            .edgesIgnoringSafeArea(.all)
-//            Spacer()
-//                .navigationBarTitleDisplayMode(.inline)
-//        }
-//    }
-//}
-
 struct ImagePreview: View {
     @ObservedObject var btService: BluetoothService
     
@@ -181,15 +145,6 @@ struct ImageViewPage: View {
     }
 }
 
-//struct MovingCirclesPreview: View {
-//    var body: some View {
-//            MovingCirclesPage()
-//                .scaleEffect(0.1)  // Shrink the entire page
-//                .frame(width: 80, height: 50)  // Limit its visible size
-//                .clipShape(RoundedRectangle(cornerRadius: 5))
-//                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.white, lineWidth: 1))
-//    }
-//}
 
 struct RawDataPreview: View {
     var body: some View {
@@ -231,6 +186,28 @@ struct RawDataViewPage: View {
         }
         .navigationTitle("Raw Data")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct ConnectionStatusView: View {
+    var title: String
+    var connection: ConnectionStatus
+    
+    var body: some View {
+        HStack {
+            Text("\(title)")
+                .font(.headline)
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.gray.opacity(0.2))
+                .cornerRadius(10)
+            Text("\(connection)")
+                .font(.headline)
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.gray.opacity(0.2))
+                .cornerRadius(10)
+        }
     }
 }
 
