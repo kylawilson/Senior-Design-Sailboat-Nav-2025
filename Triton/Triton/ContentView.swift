@@ -17,13 +17,13 @@ struct ContentView: View {
                     Text("Connect to Your Triton!")
                         .font(.title)
                         .fontWeight(.bold)
+                        .padding()
                     
                     // Bluetooth Status
                     ConnectionStatusView(title: "Triton", connection: btService.tritonConnectionState)
                     ConnectionStatusView(title: "StereoPi1", connection: btService.stereoPi1ConnectionState)
                     ConnectionStatusView(title: "StereoPi2", connection: btService.stereoPi2ConnectionState)
-                    
-                    
+                
                     // Bluetooth Control Buttons
                     HStack(spacing: 10) {
                         Button(action: { btService.disconnect() }) {
@@ -50,43 +50,21 @@ struct ContentView: View {
                     }
                     .frame(maxWidth: geometry.size.width * 0.9)
                     VStack(spacing: 10) {
-//                        NavigationLink(destination: MovingCirclesPage()) {
-//                            PreviewButton(label: "Rendering", preview: MovingCirclesPreview())
-//                        }
                         NavigationLink(destination: PolarGridView(rawOAKDDistances: btService.depthArray, rawLeftSPDistances: btService.stereoPiArray1, rawRightSPDistances: btService.stereoPiArray2)) {
-                            PreviewButton(label: "Docking View", preview: ImagePreview(btService: btService))
+                            TextButton(label: "Docking View")
                         }
                         NavigationLink(destination: ImageViewPage(btService: btService)) {
                             PreviewButton(label: "Live View", preview: ImagePreview(btService: btService))
                         }
-                        NavigationLink(destination: RawDataViewPage()) {
-                            PreviewButton(label: "Raw Data", preview: RawDataPreview())
+                        NavigationLink(destination: RawDataViewPage(btService: btService)) {
+                            TextButton(label: "Raw Data")
                         }
                     }
                     .frame(maxWidth: geometry.size.width * 0.9)
-                    //ble data
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                        TileView(label: "UTC Time", value: btService.gpsData.time)
-                        TileView(label: "Longitude", value: btService.gpsData.longitude+btService.gpsData.longitudeInd)
-                        TileView(label: "Latitude", value: btService.gpsData.latitude+btService.gpsData.latitudeInd)
-                        TileView(label: "Altitude", value: btService.gpsData.altitude)
-                        TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
-                        TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
-                        TileView(label: "COG", value: btService.gpsData.COG)
-                        TileView(label: "Speed", value: btService.gpsData.speed)
-                        
-                        
-                    }
-                    .frame(maxWidth: geometry.size.width * 0.9)
-                    TileView(label: "Date", value: btService.gpsData.date)
-                    .frame(maxWidth: geometry.size.width * 0.9)
-                    
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height)
             }
         }
-        .navigationTitle("Triton Control")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -147,8 +125,10 @@ struct ImageViewPage: View {
 
 
 struct RawDataPreview: View {
+    var btService: BluetoothService
+    
     var body: some View {
-            RawDataViewPage()
+            RawDataViewPage(btService: btService)
                 .scaleEffect(0.1)  // Shrink the entire page
                 .frame(width: 80, height: 50)  // Limit its visible size
                 .clipShape(RoundedRectangle(cornerRadius: 5))
@@ -177,15 +157,35 @@ struct PreviewButton<Content: View>: View {
     }
 }
 
-struct RawDataViewPage: View {
+struct TextButton: View {
+    let label: String
     
     var body: some View {
-        VStack {
-            Text("Raw Data")
-            Spacer()
+        Text(label)
+            .font(.headline)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color.blue)
+            .cornerRadius(10)
+    }
+}
+
+struct RawDataViewPage: View {
+    var btService: BluetoothService
+    
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+            TileView(label: "UTC Time", value: btService.gpsData.time)
+            TileView(label: "Longitude", value: btService.gpsData.longitude+btService.gpsData.longitudeInd)
+            TileView(label: "Latitude", value: btService.gpsData.latitude+btService.gpsData.latitudeInd)
+            TileView(label: "Altitude", value: btService.gpsData.altitude)
+            TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
+            TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
+            TileView(label: "COG", value: btService.gpsData.COG)
+            TileView(label: "Speed", value: btService.gpsData.speed)
+            TileView(label: "Date", value: btService.gpsData.date)
         }
-        .navigationTitle("Raw Data")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
