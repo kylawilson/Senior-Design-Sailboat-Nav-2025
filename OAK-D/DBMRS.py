@@ -56,13 +56,15 @@ class DepthService(dbus.service.Object):
         if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
             #encoded = base64.b64encode(self.depth_array).decode('utf-8')
             print(f"Sent depth: {self.depth_array}")
-            return self.depth_array  # Returns an array of floats
+            return self.depth_array  # Returns the base64 string
         else:
             return [1.0, 2.0, 3.0, 4.0]
 
     def update_depth_array(self, depth_array):
         """Updates to the latest depth array."""
         self.depth_array = depth_array
+
+#id, distance, angle
 
 def run_dbus_service():
     """Runs the D-Bus main loop in a separate thread."""
@@ -113,7 +115,7 @@ monoRight.setCamera("right")
 stereo.setDepthAlign(dai.CameraBoardSocket.RGB)
 stereo.setLeftRightCheck(True)  # Improves depth quality
 stereo.setSubpixel(True)  # Improves accuracy
-stereo.setOutputSize(1280, 720)  # Match RGB size
+stereo.setOutputSize(640, 480)  # Match RGB size
 
 size = 10  # size by size grid
 scale = 1 / size
@@ -154,7 +156,6 @@ print("Starting MRS_Picutre.py as a D-Bus service...")
 
 # Connect to device and start pipeline
 with dai.Device(pipeline) as device:
-    device.setIrLaserDotProjectorBrightness(1000)
     video = device.getOutputQueue(name="video", maxSize=1, blocking=False)
     depthQueue = device.getOutputQueue(name="depth", maxSize=4, blocking=False)
     spatialCalcQueue = device.getOutputQueue(name="spatialData", maxSize=4, blocking=False)
@@ -169,10 +170,6 @@ with dai.Device(pipeline) as device:
     blue = (255, 0, 0)
 
 
-    safedist = {}
-    distance_history = {}  # Store distance of previous frames
-    window = 3  # How many frames to average
-
     depth_array = [float('inf')] * size
 
     last_capture_time = datetime.now()
@@ -183,15 +180,13 @@ with dai.Device(pipeline) as device:
         while True:
             inDepth = depthQueue.get()  # Blocking call, will wait until new data has arrived
             depthFrame = inDepth.getFrame()  # Depth frame values are in millimeters
-            depthFrame = cv2.medianBlur(depthFrame, 5)
+            #depthFrame = cv2.medianBlur(depthFrame, 5)
             depth_downscaled = depthFrame[::4]
             current_time = datetime.now()
             
-
-
             if video.has():
                 frame = video.get().getCvFrame()
-                frame_resized = cv2.resize(frame, (1280, 720))
+                frame_resized = cv2.resize(frame, (640, 480))
 
                 # Prepare a copy of the depth frame for the heatmap
                 depthFrameColor = np.copy(depthFrame)
@@ -219,16 +214,23 @@ with dai.Device(pipeline) as device:
                     ymax = int(roi.bottomRight().y)
 
                     coords = depthData.spatialCoordinates
-                    tempdistance = math.sqrt(coords.x ** 2 + coords.y ** 2 + coords.z ** 2)
+                    distance = math.sqrt(coords.x ** 2 + coords.y ** 2 + coords.z ** 2)
 
+                    if distance <= 2500 and distance > 1500:
+                        color = yellow
+                    elif distance <= 1500:
+                        color = red
+                    else:
+                        color = default_color
+                    
                     column_index = int(xmin / (frame_resized.shape[1] / size))
 
-                    if tempdistance < temparr[column_index]:
-                        temparr[column_index] = tempdistance
+                    if distance < temparr[column_index]:
+                        temparr[column_index] = distance
                         column_min_roi[column_index] = (xmin, ymin, xmax, ymax)
 
                     cv2.rectangle(frame_resized, (xmin, ymin), (xmax, ymax), color, thickness=2)
-                    cv2.putText(frame_resized, "{:.1f}m".format(tempdistance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
+                    cv2.putText(frame_resized, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
                     
                 for i in range(size):
                     if temparr[i] != float('inf'):
@@ -247,7 +249,7 @@ with dai.Device(pipeline) as device:
                     frame_resized = cv2.resize(frame, (640, 480))
                     last_capture_time = current_time
                     timestamp = current_time.strftime("%Y%m%d_%H%M%S")
-                    image_filename = f"frame_{timestamp}.jpg"
+                    image_filename = f"outputframe.jpg"
                     cv2.imwrite(image_filename, frame_resized)
 
                     # Update the latest image path for D-Bus

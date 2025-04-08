@@ -17,96 +17,32 @@ struct ContentView: View {
                     Text("Connect to Your Triton!")
                         .font(.title)
                         .fontWeight(.bold)
+                        .padding()
                     
                     // Bluetooth Status
-                    Text("\(btService.tritonConnectionState)")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: geometry.size.width * 0.9)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(10)
-                    Text("\(btService.stereoPi1ConnectionState)")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: geometry.size.width * 0.9)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(10)
-                    Text("\(btService.stereoPi2ConnectionState)")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: geometry.size.width * 0.9)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(10)
-                    Text("\(btService.connectionState)")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: geometry.size.width * 0.9)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(10)
-                    
-                    // Bluetooth Control Buttons
-                    HStack(spacing: 10) {
-                        Button(action: { btService.disconnect() }) {
-                            Text("Disconnect")
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(btService.connectionState != .connected ? Color.gray : Color.red)
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
-                        }
-                        .disabled(btService.connectionState != .connected)
-                        .opacity(btService.connectionState != .connected ? 0.6 : 1.0)
-                        
-                        Button(action: { btService.reconnect() }) {
-                            Text("Connect")
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(btService.connectionState != .disconnected ? Color.gray : Color.green)
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
-                        }
-                        .disabled(btService.connectionState != .disconnected)
-                        .opacity(btService.connectionState != .disconnected ? 0.6 : 1.0)
-                    }
-                    .frame(maxWidth: geometry.size.width * 0.9)
+                    ConnectionStatusControl(btService: btService, peripheral: btService.connectedTriton, connection: btService.tritonConnectionState, title: "Triton")
+                    ConnectionStatusControl(btService: btService, peripheral: btService.connectedStereoPi1, connection: btService.stereoPi1ConnectionState, title: "StereoPi1")
+                    ConnectionStatusControl(btService: btService, peripheral: btService.connectedStereoPi2, connection: btService.stereoPi2ConnectionState, title: "StereoPi2")
+
                     VStack(spacing: 10) {
-//                        NavigationLink(destination: MovingCirclesPage()) {
-//                            PreviewButton(label: "Rendering", preview: MovingCirclesPreview())
-//                        }
                         NavigationLink(destination: PolarGridView(rawOAKDDistances: btService.depthArray, rawLeftSPDistances: btService.stereoPiArray1, rawRightSPDistances: btService.stereoPiArray2)) {
-                            PreviewButton(label: "Docking View", preview: ImagePreview(btService: btService))
+                            TextButton(label: "Docking View")
                         }
-                        NavigationLink(destination: ImageViewPage(btService: btService)) {
-                            PreviewButton(label: "Live View", preview: ImagePreview(btService: btService))
+                        HStack {
+                            ButtonSwitch(isOn: $btService.liveView, btService: btService)
+                            NavigationLink(destination: ImageViewPage(btService: btService)) {
+                                PreviewButton(label: "Live View", preview: ImagePreview(btService: btService))
+                            }
                         }
-                        NavigationLink(destination: RawDataViewPage()) {
-                            PreviewButton(label: "Raw Data", preview: RawDataPreview())
+                        NavigationLink(destination: RawDataViewPage(btService: btService)) {
+                            TextButton(label: "Raw Data")
                         }
                     }
                     .frame(maxWidth: geometry.size.width * 0.9)
-                    //ble data
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                        TileView(label: "UTC Time", value: btService.gpsData.time)
-                        TileView(label: "Longitude", value: btService.gpsData.longitude+btService.gpsData.longitudeInd)
-                        TileView(label: "Latitude", value: btService.gpsData.latitude+btService.gpsData.latitudeInd)
-                        TileView(label: "Altitude", value: btService.gpsData.altitude)
-                        TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
-                        TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
-                        TileView(label: "COG", value: btService.gpsData.COG)
-                        TileView(label: "Speed", value: btService.gpsData.speed)
-                        
-                        
-                    }
-                    .frame(maxWidth: geometry.size.width * 0.9)
-                    TileView(label: "Date", value: btService.gpsData.date)
-                    .frame(maxWidth: geometry.size.width * 0.9)
-                    
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height)
             }
         }
-        .navigationTitle("Triton Control")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -130,22 +66,6 @@ struct TileView: View {
         .cornerRadius(6)
     }
 }
-
-// Moving Circles Page
-//struct MovingCirclesPage: View {
-//    var body: some View {
-//        GeometryReader { geometry in
-//            ZStack {
-//                GridView(rows: 10, columns: 10)
-//                MovingCirclesView()
-//                    .frame(width: geometry.size.width, height: geometry.size.height)
-//            }
-//            .edgesIgnoringSafeArea(.all)
-//            Spacer()
-//                .navigationBarTitleDisplayMode(.inline)
-//        }
-//    }
-//}
 
 struct ImagePreview: View {
     @ObservedObject var btService: BluetoothService
@@ -181,19 +101,12 @@ struct ImageViewPage: View {
     }
 }
 
-//struct MovingCirclesPreview: View {
-//    var body: some View {
-//            MovingCirclesPage()
-//                .scaleEffect(0.1)  // Shrink the entire page
-//                .frame(width: 80, height: 50)  // Limit its visible size
-//                .clipShape(RoundedRectangle(cornerRadius: 5))
-//                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.white, lineWidth: 1))
-//    }
-//}
 
 struct RawDataPreview: View {
+    var btService: BluetoothService
+    
     var body: some View {
-            RawDataViewPage()
+            RawDataViewPage(btService: btService)
                 .scaleEffect(0.1)  // Shrink the entire page
                 .frame(width: 80, height: 50)  // Limit its visible size
                 .clipShape(RoundedRectangle(cornerRadius: 5))
@@ -222,15 +135,116 @@ struct PreviewButton<Content: View>: View {
     }
 }
 
+struct TextButton: View {
+    let label: String
+    
+    var body: some View {
+        Text(label)
+            .font(.headline)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color.blue)
+            .cornerRadius(10)
+    }
+}
+
 struct RawDataViewPage: View {
+    var btService: BluetoothService
+    
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+            TileView(label: "UTC Time", value: btService.gpsData.time)
+            TileView(label: "Longitude", value: btService.gpsData.longitude+btService.gpsData.longitudeInd)
+            TileView(label: "Latitude", value: btService.gpsData.latitude+btService.gpsData.latitudeInd)
+            TileView(label: "Altitude", value: btService.gpsData.altitude)
+            TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
+            TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
+            TileView(label: "COG", value: btService.gpsData.COG)
+            TileView(label: "Speed", value: btService.gpsData.speed)
+            TileView(label: "Date", value: btService.gpsData.date)
+        }
+    }
+}
+
+struct ConnectionStatusView: View {
+    var title: String
+    var connection: ConnectionStatus
+    
+    var body: some View {
+        HStack {
+            Text("\(title)")
+                .font(.headline)
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .center)
+                .background(Color.gray.opacity(0.2))
+                .cornerRadius(10)
+        }
+    }
+}
+
+struct ConnectionControlButtons: View {
+    var btService: BluetoothService
+    var peripheral: CBPeripheral?
+    var connection: ConnectionStatus
+    
+    var body: some View {
+        HStack {
+            Text("\(connection)")
+                .font(.headline)
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .center)
+                .background(Color.gray.opacity(0.2))
+                .cornerRadius(10)
+            Button(action: { btService.disconnect() }) {
+                Text("Disconnect")
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
+                    .background(connection != .connected ? Color.gray : Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .disabled(connection != .connected)
+            .opacity(connection != .connected ? 0.6 : 1.0)
+            
+            Button(action: { btService.reconnect(peripheral!) }) {
+                Text("Connect")
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
+                    .background(connection != .disconnected ? Color.gray : Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .disabled(connection != .disconnected)
+            .opacity(connection != .disconnected ? 0.6 : 1.0)
+        }
+    }
+}
+
+struct ConnectionStatusControl: View {
+    var btService: BluetoothService
+    var peripheral: CBPeripheral?
+    var connection: ConnectionStatus
+    var title: String
     
     var body: some View {
         VStack {
-            Text("Raw Data")
-            Spacer()
+            ConnectionStatusView(title: title, connection: connection)
+            ConnectionControlButtons(btService: btService, peripheral: peripheral, connection: connection)
         }
-        .navigationTitle("Raw Data")
-        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct ButtonSwitch: View {
+    @Binding var isOn: Bool
+    var btService: BluetoothService
+    
+    var body: some View {
+        Toggle(isOn: $isOn) {
+        }
+        .onChange(of: isOn) {
+            isOn ? btService.startPhotoService() : btService.stopPhotoService()
+        }
     }
 }
 

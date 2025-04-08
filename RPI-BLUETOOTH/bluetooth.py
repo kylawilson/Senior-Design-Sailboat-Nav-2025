@@ -77,6 +77,8 @@ def get_depth():
         returned_depth = iface.GetDepth()
 
         if returned_depth != [1.0, 2.0, 3.0, 4.0]:
+            print("PRINTING RETURNED DEPTH")
+            print(returned_depth)
             return returned_depth
         else:
             print("No depth available from service.")
@@ -99,6 +101,26 @@ def get_wind_speed():
     
     except Exception as e:
         print("D-Bus Error:", e)
+
+def get_gps_data():
+    """Fetches the latest GPS data from the D-Bus service."""
+    try:
+        bus = dbus.SessionBus()
+        obj = bus.get_object("com.example.GPSService", "/GPSService")
+        iface = dbus.Interface(obj, "com.example.GPSService")
+        gps_data = iface.GetGPSData()
+
+        if gps_data is not None:
+            gps_data = list(gps_data)  # Convert from dbus.Array to Python list
+            print(gps_data)
+            return gps_data
+            
+        else:
+            print("No GPS data available from service.")
+    
+    except Exception as e:
+        print("D-Bus Error:", e)
+        return None
 
 #having this here may cause an issue with bluetooth_discover
 def get_stereopidepth():
@@ -250,6 +272,7 @@ class Application(dbus.service.Object):
         self.add_service(GPSservice(bus, 0))
         self.add_service(PhotoService(bus, 1))
         self.add_service(RenderingService(bus, 2))
+        #self.add_service(AnemometerService(bus, 3))
         
     def get_path(self):
         return dbus.ObjectPath(self.path)
@@ -449,38 +472,38 @@ class Descriptor(dbus.service.Object):
 #global variables
 GPS_FILE = "/home/triton/Senior-Design-Sailboat-Nav-2025/GPS/gps_data1.txt"
 
-def read_gps_data(file_path):
-    """
-    Reads GPS data from a text file and yields it line by line.
-    """
+# def read_gps_data(file_path):
+#     """
+#     Reads GPS data from a text file and yields it line by line.
+#     """
 
-    utc_time = None
-    lat = None
-    latInd = None
-    long = None
-    longInd = None
-    altitude = None
+#     utc_time = None
+#     lat = None
+#     latInd = None
+#     long = None
+#     longInd = None
+#     altitude = None
 
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-        if len(lines) % 6 != 0:
-            print("Warning: File does not contain complete blocks of 9 lines.")
-            print(len(lines))
-        else:
-            for i in range(0, len(lines), 6):  # Read two lines (UTCtime and Date)
-                utc_time = lines[i].split(": ")[1].strip()  # Extract UTC time
-                lat = lines[i + 1].split(": ")[1].strip()  # Extract latitude
-                latInd = lines[i + 2].split(": ")[1].strip()  # Extract latitude indicator
-                long = lines[i + 3].split(": ")[1].strip()  # Extract longitude
-                longInd = lines[i + 4].split(": ")[1].strip()  # Extract longitude indicator
-                altitude = lines[i + 5].split(": ")[1].strip()  # Extract altitude
-                # speed = lines[i + 6].split(": ")[1].strip()  # Extract speed
-                # COG = lines[i + 7].split(": ")[1].strip()  # Extract COG
-                # date = lines[i + 8].split(": ")[1].strip()  # Extract date
+#     with open(file_path, 'r') as file:
+#         lines = file.readlines()
+#         if len(lines) % 6 != 0:
+#             print("Warning: File does not contain complete blocks of 9 lines.")
+#             print(len(lines))
+#         else:
+#             for i in range(0, len(lines), 6):  # Read two lines (UTCtime and Date)
+#                 utc_time = lines[i].split(": ")[1].strip()  # Extract UTC time
+#                 lat = lines[i + 1].split(": ")[1].strip()  # Extract latitude
+#                 latInd = lines[i + 2].split(": ")[1].strip()  # Extract latitude indicator
+#                 long = lines[i + 3].split(": ")[1].strip()  # Extract longitude
+#                 longInd = lines[i + 4].split(": ")[1].strip()  # Extract longitude indicator
+#                 altitude = lines[i + 5].split(": ")[1].strip()  # Extract altitude
+#                 # speed = lines[i + 6].split(": ")[1].strip()  # Extract speed
+#                 # COG = lines[i + 7].split(": ")[1].strip()  # Extract COG
+#                 # date = lines[i + 8].split(": ")[1].strip()  # Extract date
 
-        #return utc_time, lat, latInd, long, longInd, altitude, speed, COG, date
-        print(utc_time)
-        return utc_time, lat, latInd, long, longInd, altitude
+#         #return utc_time, lat, latInd, long, longInd, altitude, speed, COG, date
+#         print(utc_time)
+#         return utc_time, lat, latInd, long, longInd, altitude
 
 
 class GPSservice(Service):
@@ -496,9 +519,9 @@ class GPSservice(Service):
         self.add_characteristic(LatitudeIndicatorCharacteristic(bus, 3, self))
         self.add_characteristic(GPSTimeCharacteristic(bus, 4, self))
         self.add_characteristic(GPSAltitudeCharacteristic(bus, 5, self))
-        # self.add_characteristic(GPSSpeedCharacteristic(bus, 6, self))
-        # self.add_characteristic(GPSCOGCharacteristic(bus, 7, self))
-        # self.add_characteristic(GPSDateCharacteristic(bus, 8, self))
+        self.add_characteristic(GPSSpeedCharacteristic(bus, 6, self))   #temporarily uncomment
+        self.add_characteristic(GPSCOGCharacteristic(bus, 7, self))     #temporarily uncomment
+        self.add_characteristic(GPSDateCharacteristic(bus, 8, self))    #temporarily uncomment
         self.energy_expended = 0
 
 
@@ -520,7 +543,8 @@ class LongitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, self.long, _, _ = read_gps_data(GPS_FILE)
+        #_, _, _, self.long, _, _ = read_gps_data(GPS_FILE)
+        self.long = get_gps_data()
         if not self.notifying:
             return True
         if (self.long):
@@ -572,7 +596,8 @@ class LongitudeIndicatorCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, self.longindi, _ = read_gps_data(GPS_FILE)
+        #_, _, _, _, self.longindi, _ = read_gps_data(GPS_FILE)
+        self.longindi = get_gps_data()
         if not self.notifying:
             return True
         if (self.longindi):
@@ -624,7 +649,8 @@ class LatitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, self.lati, _, _, _, _ = read_gps_data(GPS_FILE)
+        #_, self.lati, _, _, _, _ = read_gps_data(GPS_FILE)
+        self.lati = get_gps_data()
         if not self.notifying:
             return True
         if (self.lati):
@@ -677,7 +703,8 @@ class LatitudeIndicatorCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, self.latiindi, _, _, _ = read_gps_data(GPS_FILE)
+        #_, _, self.latiindi, _, _, _ = read_gps_data(GPS_FILE)
+        self.latiindi = get_gps_data()
         if not self.notifying:
             return True
         if (self.latiindi):
@@ -728,7 +755,8 @@ class GPSTimeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        self.time, _, _, _, _, _ = read_gps_data(GPS_FILE)
+        #self.time, _, _, _, _, _ = read_gps_data(GPS_FILE)
+        self.time = get_gps_data()
         if not self.notifying:
             return True
         if (self.time):
@@ -782,7 +810,8 @@ class GPSAltitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, _, self.alti = read_gps_data(GPS_FILE)
+        #_, _, _, _, _, self.alti = read_gps_data(GPS_FILE)
+        self.alti = get_gps_data()
         if not self.notifying:
             return True
         if (self.alti):
@@ -835,7 +864,8 @@ class GPSSpeedCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, _, _, self.speed, _, _ = read_gps_data(GPS_FILE)
+        #_, _, _, _, _, _, self.speed, _, _ = read_gps_data(GPS_FILE)
+        self.speed = get_gps_data()
         if not self.notifying:
             return True
         if (self.speed):
@@ -888,7 +918,8 @@ class GPSCOGCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, _, _, _, self.cog, _ = read_gps_data(GPS_FILE)
+        #_, _, _, _, _, _, _, self.cog, _ = read_gps_data(GPS_FILE)
+        self.cog = get_gps_data()
         if not self.notifying:
             return True
         if (self.cog):
@@ -941,7 +972,8 @@ class GPSDateCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        _, _, _, _, _, _, _, _, self.date = read_gps_data(GPS_FILE)
+        #_, _, _, _, _, _, _, _, self.date = read_gps_data(GPS_FILE)
+        self.date = get_gps_data()
         if not self.notifying:
             return True
         if (self.date):
@@ -991,7 +1023,7 @@ class AnemometerWindSpeedCharacteristic(Characteristic):
     """
 
     """
-    WIN_SPD_UUID = 'f8b82f9c-ea3d-4362-97ef-3ad4c49ebde1'
+    WIN_SPD_UUID = '8b82f9c-ea3d-4362-97ef-3ad4c49ebde1'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
@@ -1041,7 +1073,7 @@ class AnemometerWindDirectionCharacteristic(Characteristic):
     """
 
     """
-    WIN_DIR_UUID = 'f8b82f9c-ea3d-4362-97ef-3ad4c49ebde2'
+    WIN_DIR_UUID = '8b82f9c-ea3d-4362-97ef-3ad4c49ebde2'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
@@ -1091,7 +1123,6 @@ class AnemometerWindDirectionCharacteristic(Characteristic):
 class PhotoService(Service):
     """
     """
-    #need to chavce
     PS_UUID = '064540d8-df60-4b60-a50f-780b7bd7f080'
 
     def __init__(self, bus, index):
@@ -1200,7 +1231,7 @@ class DepthCharacteristic(Characteristic):
                 service)
         self.depth = dbus.Byte(0x02)
         self.notifying = False
-        GLib.timeout_add(250, self.get_data)
+        GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
         self.depth = get_depth()
@@ -1215,14 +1246,10 @@ class DepthCharacteristic(Characteristic):
         print("notifying depth\n")
         if not self.notifying:
             return
-        #depth_bytes = [dbus.Byte(c) for c in self.depth]
         depth_bytes = struct.pack(f'{len(self.depth)}f', *self.depth)  # Pack as float array
 
         # Convert to list of dbus.Byte
         depth_dbus_bytes = [dbus.Byte(b) for b in depth_bytes]
-        # self.PropertiesChanged(
-        #         GATT_CHRC_IFACE,
-        #         { 'Value': [dbus.Byte(b) for b in depth_bytes] }, [])
         self.PropertiesChanged(
             GATT_CHRC_IFACE,
             {'Value': depth_dbus_bytes}, 

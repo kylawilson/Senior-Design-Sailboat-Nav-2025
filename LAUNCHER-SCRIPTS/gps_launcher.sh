@@ -7,5 +7,5 @@ cd ..
 cd home/triton
 pwd
 cd Senior-Design-Sailboat-Nav-2025/GPS/
-./GPS
+./gps_dbus_test
 cd ~

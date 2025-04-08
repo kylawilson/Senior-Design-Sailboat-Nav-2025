@@ -25,11 +25,16 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var depthArray: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var stereoPiArray1: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var stereoPiArray2: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    @Published var liveView: Bool = false
     private var tempPhotoData = Data()                                       //raw jpeg data
     
     //private var centralManager: CBCentralManager = CBCentralManager()
     private var centralManager: CBCentralManager!
     private var connectedPeripheral: CBPeripheral?
+    var connectedTriton: CBPeripheral?
+    var connectedStereoPi1: CBPeripheral?
+    var connectedStereoPi2: CBPeripheral?
+    
     
     //test
     var onServicesDiscovered: ((CBPeripheral) -> Void)?
@@ -53,6 +58,9 @@ class BluetoothService: NSObject, ObservableObject {
     override init() {
         discoveredPeripherals = []
         connectedPeripheral = nil
+        connectedTriton = nil
+        connectedStereoPi1 = nil
+        connectedStereoPi2 = nil
         subscribedCharacteristics = []
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil, options: [CBCentralManagerOptionShowPowerAlertKey: true])
@@ -60,7 +68,6 @@ class BluetoothService: NSObject, ObservableObject {
 
     
     func scanForPeripherals() {
-        connectionState = .scanning
         tritonConnectionState = .scanning
         stereoPi1ConnectionState = .scanning
         stereoPi2ConnectionState = .scanning
@@ -69,7 +76,6 @@ class BluetoothService: NSObject, ObservableObject {
     }
     
     func stopScanningForPeripherals() {
-//        connectionState = .disconnected
         centralManager.stopScan()
         os_log("Stopped scanning for peripherals")
     }
@@ -78,7 +84,6 @@ class BluetoothService: NSObject, ObservableObject {
         print("connecting to \(String(describing: peripheral.name))")
         if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
             tritonConnectionState = .connecting
-            connectionState = .connecting
         } else if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
             stereoPi1ConnectionState = .connecting
         } else {
@@ -88,22 +93,22 @@ class BluetoothService: NSObject, ObservableObject {
     }
     
     //revisit this logic for multiple bluetooth devices
-    func reconnect() {
-        if connectedPeripheral != nil {
-            connectToPeripheral(peripheral: connectedPeripheral!)
-        } else {
-            self.scanForPeripherals()
-        }
-        
+    func reconnect( _ peripheral: CBPeripheral) {
+        connectToPeripheral(peripheral: peripheral)
     }
     
     func disconnect() {
-        connectionState = .disconnecting
         tritonConnectionState = .disconnecting
         stereoPi1ConnectionState = .disconnecting
         stereoPi2ConnectionState = .disconnecting
-        if connectedPeripheral != nil {
-            centralManager.cancelPeripheralConnection(connectedPeripheral!)
+        if connectedTriton != nil {
+            centralManager.cancelPeripheralConnection(connectedTriton!)
+        }
+        if connectedStereoPi1 != nil {
+            centralManager.cancelPeripheralConnection(connectedStereoPi1!)
+        }
+        if connectedStereoPi2 != nil {
+            centralManager.cancelPeripheralConnection(connectedStereoPi2!)
         }
     }
 }
@@ -169,24 +174,34 @@ extension BluetoothService: CBCentralManagerDelegate {
         _ central: CBCentralManager,
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: (any Error)? ) {
-            if (connectionState != .disconnecting) {
+            if (tritonConnectionState != .disconnecting) {
                 os_log("Disconnected from %@, reconnecting...", peripheral)
-                connectionState = .disconnected
+                switch (peripheral.identifier.uuidString) {
+                    case "209865E4-7152-710C-C3BB-45A25B2EBCDF":
+                        tritonConnectionState = .disconnected
+                    case "D0EDD06D-F7D7-5D24-0C24-A245604D81C6":
+                        stereoPi1ConnectionState = .disconnected
+                    default:
+                        stereoPi2ConnectionState = .disconnected
+                }
                 subscribedCharacteristics = []
-                reconnect()
+                print("reconnecting peripheral")
+                reconnect(peripheral)
             } else {
                 os_log("Disconnected from %@", peripheral)
                 if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
                     tritonConnectionState = .disconnected
-                    connectionState = .connecting
-                } else if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+//                    connectedTriton = nil
+                } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6") {
                     stereoPi1ConnectionState = .disconnected
+//                    connectedStereoPi1 = nil
                 } else {
                     stereoPi2ConnectionState = .disconnected
+//                    connectedStereoPi2 = nil
                 }
-                connectionState = .disconnected
-                connectedPeripheral = nil
                 discoveredPeripherals = []
+                subscribedCharacteristics = []
+                liveView = false
             }
     }
     
@@ -197,18 +212,21 @@ extension BluetoothService: CBCentralManagerDelegate {
         
         if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
             tritonConnectionState = .connected
-            connectionState = .connected
+            connectedTriton = peripheral
         } else if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
             stereoPi1ConnectionState = .connected
+            connectedStereoPi1 = peripheral
         } else {
             stereoPi2ConnectionState = .connected
+            connectedStereoPi2 = peripheral
+        }
+        
+        if connectedTriton != nil && connectedStereoPi1 != nil && connectedStereoPi2 != nil {
+            stopScanningForPeripherals()
         }
         
         //connected to the peripheral
         os_log("Connected to %@", peripheral)
-        
-        connectionState = .connected
-        //connectedPeripheral = peripheral
         
         // Make sure we get the discovery callbacks
         peripheral.delegate = self
@@ -233,15 +251,20 @@ extension BluetoothService: CBCentralManagerDelegate {
         // Set closure to handle characteristic discovery completion
         onCharacteristicsDiscovered = { discoveredPeripheral, service in
             guard let characteristics = service.characteristics else { return }
-            for characteristic in characteristics {
-                if self.gpsTransferCharacteristics.contains(characteristic.uuid) ||  //self.photoTransferCharacteristics.contains(characteristic.uuid) ||
-                    self.renderingTransferCharacteristics.contains(characteristic.uuid) || self.stereoPiTransferCharacteristics.contains(characteristic.uuid) {
-//                    if self.photoTransferCharacteristics.contains(characteristic.uuid) {
-//                        self.photoCharacteristic = characteristic
-//                    }
-                    os_log("Subscribing to characteristic %@", characteristic.uuid.uuidString)
-                    self.subscribedCharacteristics.append(characteristic)
-                    discoveredPeripheral.setNotifyValue(true, for: characteristic)
+            if self.subscribedCharacteristics.isEmpty {
+                for characteristic in characteristics {
+                    if self.gpsTransferCharacteristics.contains(characteristic.uuid) ||
+                        self.renderingTransferCharacteristics.contains(characteristic.uuid) || self.stereoPiTransferCharacteristics.contains(characteristic.uuid) {
+                        os_log("Subscribing to characteristic %@", characteristic.uuid.uuidString)
+                        self.subscribedCharacteristics.append(characteristic)
+                        discoveredPeripheral.setNotifyValue(true, for: characteristic)
+                    }
+                }
+            } else {
+                for characteristic in characteristics {
+                    if self.photoTransferCharacteristics.contains(characteristic.uuid) {
+                        self.liveView ? discoveredPeripheral.setNotifyValue(true, for: characteristic): discoveredPeripheral.setNotifyValue(false, for: characteristic)
+                    }
                 }
             }
         }
@@ -259,7 +282,6 @@ extension BluetoothService: CBCentralManagerDelegate {
 }
 
 extension BluetoothService: CBPeripheralDelegate {
-    
     
     func peripheral(
         _ peripheral: CBPeripheral,
@@ -285,7 +307,6 @@ extension BluetoothService: CBPeripheralDelegate {
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-        // Deal with errors (if any)
         if let error = error {
             os_log("Error changing notification state: %s", error.localizedDescription)
             return
@@ -340,6 +361,18 @@ extension BluetoothService: CBPeripheralDelegate {
         }
     }
     
+    func startPhotoService() {
+        if (tritonConnectionState == .connected) {
+            connectedTriton!.discoverServices(transferServices)
+        }
+    }
+    
+    func stopPhotoService() {
+        if (tritonConnectionState == .connected) {
+            connectedTriton!.discoverServices(transferServices)
+        }
+    }
+    
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         print("Peripheral modified services")
         for service in invalidatedServices {
@@ -377,6 +410,7 @@ extension BluetoothService: CBPeripheralDelegate {
                 self.updateTime()
             }
         }
+    
     func stopUpdatingTime() {
             timer?.invalidate()
             timer = nil
