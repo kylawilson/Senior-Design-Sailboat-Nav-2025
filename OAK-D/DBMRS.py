@@ -6,82 +6,82 @@ import os
 import base64
 from datetime import datetime, timedelta
 #testing DBUS
-import dbus
-import dbus.service
-import dbus.mainloop.glib
-from gi.repository import GLib
-import threading
+# import dbus
+# import dbus.service
+# import dbus.mainloop.glib
+# from gi.repository import GLib
+# import threading
 
 
 # # Create a D-Bus service class
 
 
-class ImageService(dbus.service.Object):
-    """D-Bus service that provides the latest image in base64 format."""
+# class ImageService(dbus.service.Object):
+#     """D-Bus service that provides the latest image in base64 format."""
 
-    def __init__(self, bus_name):
-        dbus.service.Object.__init__(self, bus_name, '/ImageService')
-        self.latest_image_path = None  # Stores the most recent image path
+#     def __init__(self, bus_name):
+#         dbus.service.Object.__init__(self, bus_name, '/ImageService')
+#         self.latest_image_path = None  # Stores the most recent image path
 
-    @dbus.service.method("com.example.ImageService",
-                         in_signature='', out_signature='s')
-    def GetEncodedImage(self):
-        """Returns the base64-encoded image if available."""
-        if self.latest_image_path and os.path.exists(self.latest_image_path):
-            with open(self.latest_image_path, "rb") as img_file:
-                encoded = base64.b64encode(img_file.read()).decode('utf-8')
-                print(encoded)
-            print(f"Sent encoded image: {self.latest_image_path}")
-            return encoded  # Returns the base64 string
-        else:
-            return "No image available"
+#     @dbus.service.method("com.example.ImageService",
+#                          in_signature='', out_signature='s')
+#     def GetEncodedImage(self):
+#         """Returns the base64-encoded image if available."""
+#         if self.latest_image_path and os.path.exists(self.latest_image_path):
+#             with open(self.latest_image_path, "rb") as img_file:
+#                 encoded = base64.b64encode(img_file.read()).decode('utf-8')
+#                 print(encoded)
+#             print(f"Sent encoded image: {self.latest_image_path}")
+#             return encoded  # Returns the base64 string
+#         else:
+#             return "No image available"
 
-    def update_latest_image(self, image_path):
-        """Updates the path to the latest image."""
-        self.latest_image_path = image_path
+#     def update_latest_image(self, image_path):
+#         """Updates the path to the latest image."""
+#         self.latest_image_path = image_path
         
         
-class DepthService(dbus.service.Object):
-    """D-Bus service that provides the depths of objects in view in base64 format."""
+# class DepthService(dbus.service.Object):
+#     """D-Bus service that provides the depths of objects in view in base64 format."""
 
-    def __init__(self, bus_name):
-        dbus.service.Object.__init__(self, bus_name, '/DepthService')
-        self.depth_array = None  # prob can get rid of this
+#     def __init__(self, bus_name):
+#         dbus.service.Object.__init__(self, bus_name, '/DepthService')
+#         self.depth_array = None  # prob can get rid of this
 
-    @dbus.service.method("com.example.DepthService",
-                         in_signature='', out_signature='ad')    # returns an array
-    def GetDepth(self):
-        """Returns the base64-encoded depth if available."""
-        print(self.depth_array)
-        if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
-            #encoded = base64.b64encode(self.depth_array).decode('utf-8')
-            print(f"Sent depth: {self.depth_array}")
-            return self.depth_array  # Returns an array of floats
-        else:
-            return [1.0, 2.0, 3.0, 4.0]
+#     @dbus.service.method("com.example.DepthService",
+#                          in_signature='', out_signature='ad')    # returns an array
+#     def GetDepth(self):
+#         """Returns the base64-encoded depth if available."""
+#         print(self.depth_array)
+#         if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
+#             #encoded = base64.b64encode(self.depth_array).decode('utf-8')
+#             print(f"Sent depth: {self.depth_array}")
+#             return self.depth_array  # Returns the base64 string
+#         else:
+#             return [1.0, 2.0, 3.0, 4.0]
 
-    def update_depth_array(self, depth_array):
-        """Updates to the latest depth array."""
-        self.depth_array = depth_array
+#     def update_depth_array(self, depth_array):
+#         """Updates to the latest depth array."""
+#         self.depth_array = depth_array
 
-def run_dbus_service():
-    """Runs the D-Bus main loop in a separate thread."""
-    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    session_bus = dbus.SessionBus()
-    bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
-    bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
-    global image_service, depth_service
-    image_service = ImageService(bus_name_image)
-    depth_service = DepthService(bus_name_depth)
+# def run_dbus_service():
+#     """Runs the D-Bus main loop in a separate thread."""
+#     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+#     session_bus = dbus.SessionBus()
+#     bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
+#     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
+#     global image_service, depth_service
+#     image_service = ImageService(bus_name_image)
+#     depth_service = DepthService(bus_name_depth)
     
-    print("D-Bus service running...")
-    mainloop = GLib.MainLoop()
-    mainloop.run()
+#     print("D-Bus service running...")
+#     mainloop = GLib.MainLoop()
+#     mainloop.run()
 
 
-dbus_thread = threading.Thread(target=run_dbus_service)
-dbus_thread.daemon = True
-dbus_thread.start()
+# dbus_thread = threading.Thread(target=run_dbus_service)
+# dbus_thread.daemon = True
+# dbus_thread.start()
 
 # Create pipeline
 pipeline = dai.Pipeline()
@@ -113,7 +113,7 @@ monoRight.setCamera("right")
 stereo.setDepthAlign(dai.CameraBoardSocket.RGB)
 stereo.setLeftRightCheck(True)  # Improves depth quality
 stereo.setSubpixel(True)  # Improves accuracy
-stereo.setOutputSize(1280, 720)  # Match RGB size
+stereo.setOutputSize(640, 480)  # Match RGB size
 
 size = 10  # size by size grid
 scale = 1 / size
@@ -154,7 +154,6 @@ print("Starting MRS_Picutre.py as a D-Bus service...")
 
 # Connect to device and start pipeline
 with dai.Device(pipeline) as device:
-    device.setIrLaserDotProjectorBrightness(1000)
     video = device.getOutputQueue(name="video", maxSize=1, blocking=False)
     depthQueue = device.getOutputQueue(name="depth", maxSize=4, blocking=False)
     spatialCalcQueue = device.getOutputQueue(name="spatialData", maxSize=4, blocking=False)
@@ -169,10 +168,6 @@ with dai.Device(pipeline) as device:
     blue = (255, 0, 0)
 
 
-    safedist = {}
-    distance_history = {}  # Store distance of previous frames
-    window = 3  # How many frames to average
-
     depth_array = [float('inf')] * size
 
     last_capture_time = datetime.now()
@@ -183,15 +178,13 @@ with dai.Device(pipeline) as device:
         while True:
             inDepth = depthQueue.get()  # Blocking call, will wait until new data has arrived
             depthFrame = inDepth.getFrame()  # Depth frame values are in millimeters
-            depthFrame = cv2.medianBlur(depthFrame, 5)
+            #depthFrame = cv2.medianBlur(depthFrame, 5)
             depth_downscaled = depthFrame[::4]
             current_time = datetime.now()
             
-
-
             if video.has():
                 frame = video.get().getCvFrame()
-                frame_resized = cv2.resize(frame, (1280, 720))
+                frame_resized = cv2.resize(frame, (640, 480))
 
                 # Prepare a copy of the depth frame for the heatmap
                 depthFrameColor = np.copy(depthFrame)
@@ -219,27 +212,34 @@ with dai.Device(pipeline) as device:
                     ymax = int(roi.bottomRight().y)
 
                     coords = depthData.spatialCoordinates
-                    tempdistance = math.sqrt(coords.x ** 2 + coords.y ** 2 + coords.z ** 2)
+                    distance = math.sqrt(coords.x ** 2 + coords.y ** 2 + coords.z ** 2)
 
+                    if distance <= 2500 and distance > 1500:
+                        color = yellow
+                    elif distance <= 1500:
+                        color = red
+                    else:
+                        color = default_color
+                    
                     column_index = int(xmin / (frame_resized.shape[1] / size))
 
-                    if tempdistance < temparr[column_index]:
-                        temparr[column_index] = tempdistance
+                    if distance < temparr[column_index]:
+                        temparr[column_index] = distance
                         column_min_roi[column_index] = (xmin, ymin, xmax, ymax)
 
                     cv2.rectangle(frame_resized, (xmin, ymin), (xmax, ymax), color, thickness=2)
-                    cv2.putText(frame_resized, "{:.1f}m".format(tempdistance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
+                    cv2.putText(frame_resized, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
                     
                 for i in range(size):
                     if temparr[i] != float('inf'):
                         depth_array[i] = temparr[i]
                 print("Dist: ", ["{:.2f}".format(d/1000) if d!= float('inf') else "inf" for d in depth_array])
-                depth_service.update_depth_array(depth_array)
+                #depth_service.update_depth_array(depth_array)
 
                 timestamp_text = current_time.strftime("%Y-%m-%d %H:%M:%S")
                 cv2.putText(frame_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.putText(depthFrameColor_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-                #cv2.imshow("video", frame_resized)
+                cv2.imshow("video", frame_resized)
                 #cv2.imshow("depth", depthFrameColor_resized)
 
                 if current_time - last_capture_time >= capture_interval:
@@ -247,11 +247,11 @@ with dai.Device(pipeline) as device:
                     frame_resized = cv2.resize(frame, (640, 480))
                     last_capture_time = current_time
                     timestamp = current_time.strftime("%Y%m%d_%H%M%S")
-                    image_filename = f"frame_{timestamp}.jpg"
+                    image_filename = f"outputframe.jpg"
                     cv2.imwrite(image_filename, frame_resized)
 
                     # Update the latest image path for D-Bus
-                    image_service.update_latest_image(image_filename)
+                    #image_service.update_latest_image(image_filename)
                     print(f"Captured and updated image: {image_filename}")
 
 
