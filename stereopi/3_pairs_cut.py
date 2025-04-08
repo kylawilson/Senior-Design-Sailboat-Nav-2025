@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Eugene Pomazov, <stereopi.com>, virt2real team
+# Copyright (C) 2019 Eugene a.k.a. Realizator, stereopi.com, virt2real team
 #
 # This file is part of StereoPi tutorial scripts.
 #
@@ -16,24 +16,35 @@
 # along with StereoPi tutorial.  
 # If not, see <http://www.gnu.org/licenses/>.
 #
-# Most of this code is updated version of 3dberry.org project by virt2real
-# 
-# Thanks to Adrian and http://pyimagesearch.com, as there are lot of
+#          <><><> SPECIAL THANKS: <><><>
+#
+# Thanks to Adrian and http://pyimagesearch.com, as a lot of
 # code in this tutorial was taken from his lessons.
-# 
+#  
+# Thanks to RPi-tankbot project: https://github.com/Kheiden/RPi-tankbot
+#
+# Thanks to rakali project: https://github.com/sthysel/rakali
 
 
 import cv2
 import os
 
 # Global variables preset
-total_photos = 30
-photo_width = 640
-photo_height = 240
-img_height = 240
-img_width = 320
-photo_counter = 0
+total_photos = 50
 
+# Photos to be cutted resolution
+photo_width = 1280
+photo_height = 480
+
+# Left and right images resolution
+img_width = 640
+img_height = 480
+
+# Visualization options
+ShowImages = False
+
+# Counter setup
+photo_counter = 0
 
 # Main pair cut cycle
 if (os.path.isdir("./pairs")==False):
@@ -47,8 +58,9 @@ while photo_counter != total_photos:
         continue
     pair_img = cv2.imread(filename,-1)
     
-    cv2.imshow("ImagePair", pair_img)
-    cv2.waitKey(0)
+    if (ShowImages):
+        cv2.imshow("ImagePair", pair_img)
+        cv2.waitKey(0)
     imgLeft = pair_img [0:img_height,0:img_width] #Y+H and X+W
     imgRight = pair_img [0:img_height,img_width:photo_width]
     leftName = './pairs/left_'+str(photo_counter).zfill(2)+'.png'

@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Eugene Pomazov, <stereopi.com>, virt2real team
+# Copyright (C) 2019 Eugene a.k.a. Realizator, stereopi.com, virt2real team
 #
 # This file is part of StereoPi tutorial scripts.
 #
@@ -16,11 +16,14 @@
 # along with StereoPi tutorial.  
 # If not, see <http://www.gnu.org/licenses/>.
 #
-# Most of this code is updated version of 3dberry.org project by virt2real
-# 
-# Thanks to Adrian and http://pyimagesearch.com, as there are lot of
+#          <><><> SPECIAL THANKS: <><><>
+#
+# Thanks to Adrian and http://pyimagesearch.com, as a lot of
 # code in this tutorial was taken from his lessons.
-# 
+#  
+# Thanks to RPi-tankbot project: https://github.com/Kheiden/RPi-tankbot
+#
+# Thanks to rakali project: https://github.com/sthysel/rakali
 
 
 import picamera
@@ -31,6 +34,8 @@ import numpy as np
 import os
 from datetime import datetime
 
+# User quit method message 
+print("You can press 'Q' to quit this script.")
 
 # File for captured image
 filename = './scenes/photo.png'
@@ -45,7 +50,7 @@ scale_ratio = 0.5
 # Camera resolution height must be dividable by 16, and width by 32
 cam_width = int((cam_width+31)/32)*32
 cam_height = int((cam_height+15)/16)*16
-print ("Used camera resolution: "+str(cam_width)+" x "+str(cam_height))
+print ("Camera resolution: "+str(cam_width)+" x "+str(cam_height))
 
 # Buffer for captured image settings
 img_width = int (cam_width * scale_ratio)
@@ -57,29 +62,26 @@ print ("Scaled image resolution: "+str(img_width)+" x "+str(img_height))
 camera = PiCamera(stereo_mode='side-by-side',stereo_decimate=False)
 camera.resolution=(cam_width, cam_height)
 camera.framerate = 20
-camera.hflip = True
+#camera.hflip = True
 
-
-t2 = datetime.now()
+t0 = datetime.now()
 counter = 0
 avgtime = 0
 # Capture frames from the camera
 for frame in camera.capture_continuous(capture, format="bgra", use_video_port=True, resize=(img_width,img_height)):
     counter+=1
-    t1 = datetime.now()
-    timediff = t1-t2
-    avgtime = avgtime + (timediff.total_seconds())
     cv2.imshow("pair", frame)
     key = cv2.waitKey(1) & 0xFF
-    t2 = datetime.now()
     # if the `q` key was pressed, break from the loop and save last image
     if key == ord("q") :
-        avgtime = avgtime/counter
+        t1 = datetime.now()
+        timediff = t1-t0
         print ("Average time between frames: " + str(avgtime))
-        print ("Average FPS: " + str(1/avgtime))
+        print ("Frames: " + str(counter) + " Time: " + str(timediff.total_seconds())+ " Average FPS: " + str(counter/timediff.total_seconds()))
         if (os.path.isdir("./scenes")==False):
             os.makedirs("./scenes")
         cv2.imwrite(filename, frame)
+        exit(0)
         break
    
     

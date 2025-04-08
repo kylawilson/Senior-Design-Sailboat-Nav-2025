@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Eugene Pomazov, <stereopi.com>, virt2real team
+# Copyright (C) 2019 Eugene a.k.a. Realizator, stereopi.com, virt2real team
 #
 # This file is part of StereoPi tutorial scripts.
 #
@@ -16,11 +16,14 @@
 # along with StereoPi tutorial.  
 # If not, see <http://www.gnu.org/licenses/>.
 #
-# Most of this code is updated version of 3dberry.org project by virt2real
-# 
-# Thanks to Adrian and http://pyimagesearch.com, as there are lot of
+#          <><><> SPECIAL THANKS: <><><>
+#
+# Thanks to Adrian and http://pyimagesearch.com, as a lot of
 # code in this tutorial was taken from his lessons.
-# 
+#  
+# Thanks to RPi-tankbot project: https://github.com/Kheiden/RPi-tankbot
+#
+# Thanks to rakali project: https://github.com/sthysel/rakali
 
 
 import cv2
@@ -31,47 +34,75 @@ from matplotlib import pyplot as plt
 from matplotlib.widgets import Slider, Button
 import numpy as np
 import json
-from stereovision.calibration import StereoCalibrator
-from stereovision.calibration import StereoCalibration
+import time
 
 # Global variables preset
-imageToDisp = './scenes/photo.png'
+imageToDisp = './scenes/dm-tune.jpg'
 photo_width = 640
 photo_height = 240
-image_height = 240
 image_width = 320
+image_height = 240
+
 image_size = (image_width,image_height)
 
 if os.path.isfile(imageToDisp) == False:
     print ('Can not read image from file \"'+imageToDisp+'\"')
-    exit(0)
-
+    # No image! Let's take it...
+    print ("Taking photo...")
+    camera = PiCamera(stereo_mode='side-by-side',stereo_decimate=False)
+    camera.resolution=(photo_width, photo_height)
+    #camera.hflip = True
+    time.sleep(1)
+    camera.capture(imageToDisp)
+    print ("Done!")
+    
 pair_img = cv2.imread(imageToDisp,0)
 # Read image and split it in a stereo pair
 print('Read and split image...')
 imgLeft = pair_img [0:photo_height,0:image_width] #Y+H and X+W
 imgRight = pair_img [0:photo_height,image_width:photo_width] #Y+H and X+W
 
-
 # Implementing calibration data
 print('Read calibration data and rectifying stereo pair...')
-calibration = StereoCalibration(input_folder='calib_result')
-rectified_pair = calibration.rectify((imgLeft, imgRight))
-#cv2.imshow('Left CALIBRATED', rectified_pair[0])
-#cv2.imshow('Right CALIBRATED', rectified_pair[1])
-#cv2.waitKey(0)
+
+try:
+    npzfile = np.load('./calibration_data/{}p/stereo_camera_calibration.npz'.format(image_height))
+except:
+    print("Camera calibration data not found in cache, file " & './calibration_data/{}p/stereo_camera_calibration.npz'.format(480))
+    exit(0)
+    
+imageSize = tuple(npzfile['imageSize'])
+leftMapX = npzfile['leftMapX']
+leftMapY = npzfile['leftMapY']
+rightMapX = npzfile['rightMapX']
+rightMapY = npzfile['rightMapY']
+
+width_left, height_left = imgLeft.shape[:2]
+width_right, height_right = imgRight.shape[:2]
+
+if 0 in [width_left, height_left, width_right, height_right]:
+    print("Error: Can't remap image.")
+
+imgL = cv2.remap(imgLeft, leftMapX, leftMapY, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+imgR = cv2.remap(imgRight, rightMapX, rightMapY, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+
+cv2.imshow('Left CALIBRATED', imgL)
+cv2.imshow('Right CALIBRATED', imgR)
+cv2.waitKey(0)
+
+rectified_pair = (imgL, imgR)
 
 
 # Depth map function
-SWS = 5
-PFS = 5
+SWS = 7
+PFS = 7
 PFC = 29
-MDS = -25
-NOD = 128
-TTH = 100
-UR = 10
-SR = 15
-SPWS = 100
+MDS = -3
+NOD = 48
+TTH = 13
+UR = 3
+SR = 14
+SPWS = 2
 
 def stereo_depth_map(rectified_pair):
     print ('SWS='+str(SWS)+' PFS='+str(PFS)+' PFC='+str(PFC)+' MDS='+\
@@ -108,7 +139,6 @@ def stereo_depth_map(rectified_pair):
     #disparity_visual = np.array(disparity_visual)
     return disparity_visual
 
-disparity = stereo_depth_map(rectified_pair)
 
 # Set up and draw interface
 # Draw left image and depth map
@@ -168,6 +198,8 @@ def load_map_settings( event ):
 
 buttonl.on_clicked(load_map_settings)
 
+# Building Depth Map for the first time
+disparity = stereo_depth_map(rectified_pair)
 
 plt.subplot(1,2,2)
 dmObject = plt.imshow(disparity, aspect='equal', cmap='jet')
