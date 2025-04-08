@@ -77,6 +77,8 @@ def get_depth():
         returned_depth = iface.GetDepth()
 
         if returned_depth != [1.0, 2.0, 3.0, 4.0]:
+            print("PRINTING RETURNED DEPTH")
+            print(returned_depth)
             return returned_depth
         else:
             print("No depth available from service.")
@@ -1244,14 +1246,10 @@ class DepthCharacteristic(Characteristic):
         print("notifying depth\n")
         if not self.notifying:
             return
-        #depth_bytes = [dbus.Byte(c) for c in self.depth]
         depth_bytes = struct.pack(f'{len(self.depth)}f', *self.depth)  # Pack as float array
 
         # Convert to list of dbus.Byte
         depth_dbus_bytes = [dbus.Byte(b) for b in depth_bytes]
-        # self.PropertiesChanged(
-        #         GATT_CHRC_IFACE,
-        #         { 'Value': [dbus.Byte(b) for b in depth_bytes] }, [])
         self.PropertiesChanged(
             GATT_CHRC_IFACE,
             {'Value': depth_dbus_bytes}, 

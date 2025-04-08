@@ -64,6 +64,8 @@ class DepthService(dbus.service.Object):
         """Updates to the latest depth array."""
         self.depth_array = depth_array
 
+#id, distance, angle
+
 def run_dbus_service():
     """Runs the D-Bus main loop in a separate thread."""
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
@@ -239,7 +241,7 @@ with dai.Device(pipeline) as device:
                 timestamp_text = current_time.strftime("%Y-%m-%d %H:%M:%S")
                 cv2.putText(frame_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.putText(depthFrameColor_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-                cv2.imshow("video", frame_resized)
+                #cv2.imshow("video", frame_resized)
                 #cv2.imshow("depth", depthFrameColor_resized)
 
                 if current_time - last_capture_time >= capture_interval:
