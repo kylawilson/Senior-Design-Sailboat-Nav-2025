@@ -76,7 +76,6 @@ class BluetoothService: NSObject, ObservableObject {
     }
     
     func stopScanningForPeripherals() {
-//        connectionState = .disconnected
         centralManager.stopScan()
         os_log("Stopped scanning for peripherals")
     }
@@ -175,7 +174,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         _ central: CBCentralManager,
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: (any Error)? ) {
-            if (connectionState != .disconnecting) {
+            if (tritonConnectionState != .disconnecting) {
                 os_log("Disconnected from %@, reconnecting...", peripheral)
                 switch (peripheral.identifier.uuidString) {
                     case "209865E4-7152-710C-C3BB-45A25B2EBCDF":
@@ -186,20 +185,23 @@ extension BluetoothService: CBCentralManagerDelegate {
                         stereoPi2ConnectionState = .disconnected
                 }
                 subscribedCharacteristics = []
+                print("reconnecting peripheral")
                 reconnect(peripheral)
             } else {
                 os_log("Disconnected from %@", peripheral)
                 if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
                     tritonConnectionState = .disconnected
-                    connectedTriton = nil
+//                    connectedTriton = nil
                 } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6") {
                     stereoPi1ConnectionState = .disconnected
-                    connectedStereoPi1 = nil
+//                    connectedStereoPi1 = nil
                 } else {
                     stereoPi2ConnectionState = .disconnected
-                    connectedStereoPi2 = nil
+//                    connectedStereoPi2 = nil
                 }
                 discoveredPeripherals = []
+                subscribedCharacteristics = []
+                liveView = false
             }
     }
     
@@ -217,6 +219,10 @@ extension BluetoothService: CBCentralManagerDelegate {
         } else {
             stereoPi2ConnectionState = .connected
             connectedStereoPi2 = peripheral
+        }
+        
+        if connectedTriton != nil && connectedStereoPi1 != nil && connectedStereoPi2 != nil {
+            stopScanningForPeripherals()
         }
         
         //connected to the peripheral
@@ -245,15 +251,20 @@ extension BluetoothService: CBCentralManagerDelegate {
         // Set closure to handle characteristic discovery completion
         onCharacteristicsDiscovered = { discoveredPeripheral, service in
             guard let characteristics = service.characteristics else { return }
-            for characteristic in characteristics {
-                if self.gpsTransferCharacteristics.contains(characteristic.uuid) ||
-                    self.renderingTransferCharacteristics.contains(characteristic.uuid) || self.stereoPiTransferCharacteristics.contains(characteristic.uuid) {
-                    os_log("Subscribing to characteristic %@", characteristic.uuid.uuidString)
-                    self.subscribedCharacteristics.append(characteristic)
-                    discoveredPeripheral.setNotifyValue(true, for: characteristic)
+            if self.subscribedCharacteristics.isEmpty {
+                for characteristic in characteristics {
+                    if self.gpsTransferCharacteristics.contains(characteristic.uuid) ||
+                        self.renderingTransferCharacteristics.contains(characteristic.uuid) || self.stereoPiTransferCharacteristics.contains(characteristic.uuid) {
+                        os_log("Subscribing to characteristic %@", characteristic.uuid.uuidString)
+                        self.subscribedCharacteristics.append(characteristic)
+                        discoveredPeripheral.setNotifyValue(true, for: characteristic)
+                    }
                 }
-                if self.photoTransferCharacteristics.contains(characteristic.uuid) {
-                    self.liveView ? discoveredPeripheral.setNotifyValue(true, for: characteristic): discoveredPeripheral.setNotifyValue(false, for: characteristic)
+            } else {
+                for characteristic in characteristics {
+                    if self.photoTransferCharacteristics.contains(characteristic.uuid) {
+                        self.liveView ? discoveredPeripheral.setNotifyValue(true, for: characteristic): discoveredPeripheral.setNotifyValue(false, for: characteristic)
+                    }
                 }
             }
         }
@@ -351,13 +362,13 @@ extension BluetoothService: CBPeripheralDelegate {
     }
     
     func startPhotoService() {
-        if (connectedTriton != nil) {
+        if (tritonConnectionState == .connected) {
             connectedTriton!.discoverServices(transferServices)
         }
     }
     
     func stopPhotoService() {
-        if (connectedTriton != nil) {
+        if (tritonConnectionState == .connected) {
             connectedTriton!.discoverServices(transferServices)
         }
     }

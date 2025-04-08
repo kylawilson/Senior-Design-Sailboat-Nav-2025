@@ -41,7 +41,7 @@ struct PolarGridView: View {
     let rawOAKDDistances: [CGFloat]
     let rawLeftSPDistances: [CGFloat]
     let rawRightSPDistances: [CGFloat]
-    let otherboats: [(CGFloat, CGFloat)]
+    let otherboats: [(CGFloat, CGFloat)] = [(CGFloat(1.234), CGFloat(5.678))]
     
     
     
