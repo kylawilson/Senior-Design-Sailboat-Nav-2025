@@ -25,7 +25,7 @@ struct ContentView: View {
                     ConnectionStatusControl(btService: btService, peripheral: btService.connectedStereoPi2, connection: btService.stereoPi2ConnectionState, title: "StereoPi2")
 
                     VStack(spacing: 10) {
-                        NavigationLink(destination: PolarGridView(rawOAKDDistances: btService.depthArray, rawLeftSPDistances: btService.stereoPiArray1, rawRightSPDistances: btService.stereoPiArray2)) {
+                        NavigationLink(destination: PolarGridView(rawOAKDDistances: btService.depthArray, rawLeftSPDistances: btService.stereoPiArray1, rawRightSPDistances: btService.stereoPiArray2, otherboats: btService.coordinateArray)) {
                             TextButton(label: "Docking View")
                         }
                         HStack {

@@ -17,6 +17,7 @@ struct GPSData {
     var altitude: String = "Altitude"
     var COG: String = "COG"
     var speed: String = "Speed"
+    var fix: String = "Fix"
 }
 
 struct AnemometerData {

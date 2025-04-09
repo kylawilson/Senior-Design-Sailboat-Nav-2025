@@ -38,10 +38,10 @@ struct PolarGridView: View {
     
     //MARK: Use Below for Integration
     
-    let rawOAKDDistances: [CGFloat]
-    let rawLeftSPDistances: [CGFloat]
-    let rawRightSPDistances: [CGFloat]
-    let otherboats: [(CGFloat, CGFloat)] = [(CGFloat(1.234), CGFloat(5.678))]
+    var rawOAKDDistances: [CGFloat] 
+    var rawLeftSPDistances: [CGFloat]
+    var rawRightSPDistances: [CGFloat]
+    var otherboats: [(CGFloat, CGFloat)]
     
     
     
@@ -282,9 +282,10 @@ struct OtherBoatsView: View {
 
 
 struct OtherBoatsView: View {
-    let boats: [(distance: CGFloat, angle: CGFloat)]
-    let center: CGPoint
-    let scaleDistance: (CGFloat) -> CGFloat
+    var boats: [(distance: CGFloat, angle: CGFloat)]
+    var center: CGPoint
+    var scaleDistance: (CGFloat) -> CGFloat
+    //print("Rendering boat at distance \(boat.distance), angle \(boat.angle)")
 
     var body: some View {
         let boatColors: [Color] = [.orange, .yellow, .purple]
@@ -294,6 +295,7 @@ struct OtherBoatsView: View {
             let adjustedAngle = 90 - boat.angle
             let radians = Angle(degrees: Double(adjustedAngle)).radians
             let scaledDistance = scaleDistance(boat.distance)
+            
 
             let position = CGPoint(
                 x: center.x + CGFloat(cos(radians)) * scaledDistance,
@@ -321,7 +323,7 @@ struct OtherBoatsView: View {
                     .stroke(Color.black, lineWidth: 2)
                 )
 /*
-                // Label
+                 Label
                 Text("(\(String(format: "%.1f", boat.distance)), \(Int(adjustedAngle)))")
                     .font(.caption2)
                     .foregroundColor(.black)
