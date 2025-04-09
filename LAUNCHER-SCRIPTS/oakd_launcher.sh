@@ -16,7 +16,7 @@ echo "running bluetooth"
 python3 bluetooth.py &
 cd ../Anemometer
 echo "running wind speed"
-python3 AneTest.py &
+sudo python3 AneTest.py &
 echo "running wind direction"
 python3 WindDirection.py &
 echo "running gps"

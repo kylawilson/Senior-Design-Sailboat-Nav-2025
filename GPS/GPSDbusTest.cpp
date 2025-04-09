@@ -11,6 +11,7 @@
 
 std::vector<std::string> latestGGAData;
 std::vector<std::string> latestRMCData;
+std::vector<std::string> latestPGTOPData;
 
 long getCurrentTimeInMilliseconds() {
     struct timeval tv;
@@ -55,6 +56,23 @@ void processRMC(const std::string& line) {
             "Speed: " + fields[7],
             "COG: " + fields[8],
             "Date: " + formatted_date
+        };
+    }
+}
+
+void processPGTOP(const std::string& line) {
+    std::stringstream ss(line);
+    std::string token;
+    std::vector<std::string> fields;
+
+    while (std::getline(ss, token, ',')) {
+        fields.push_back(token);
+    }
+
+
+    if (fields.size() >= 3) {
+        latestPGTOPData = {
+            "Antenna: " + fields[2]
         };
     }
 }
@@ -113,6 +131,7 @@ int main() {
     dbus_connection_add_filter(conn, handle_get_gps_data, nullptr, nullptr);
 
     int serial_fd = serialOpen(GPS_SERIAL_PORT, 9600);
+    sendCommand(PGCMD_ANTENNA);
     if (serial_fd < 0) {
         std::cerr << "Unable to open GPS serial port." << std::endl;
         return 1;
@@ -137,6 +156,9 @@ int main() {
                 } 
                 if (line.find("RMC") != std::string::npos) {
                     processRMC(line);
+                }
+                if (line.find("PGTOP") != std::string::npos) {
+                    processPGTOP(line);
                 }
                 line.clear();  // Clear after processing the data
             }

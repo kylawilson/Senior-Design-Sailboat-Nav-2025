@@ -288,7 +288,7 @@ class Application(dbus.service.Object):
         self.add_service(GPSservice(bus, 0))
         self.add_service(PhotoService(bus, 1))
         self.add_service(RenderingService(bus, 2))
-        #self.add_service(AnemometerService(bus, 3))
+        self.add_service(AnemometerService(bus, 3))
         
     def get_path(self):
         return dbus.ObjectPath(self.path)
