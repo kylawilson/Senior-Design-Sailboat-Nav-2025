@@ -103,7 +103,7 @@ struct ImageViewPage: View {
 
 
 struct RawDataPreview: View {
-    var btService: BluetoothService
+    @ObservedObject var btService: BluetoothService
     
     var body: some View {
             RawDataViewPage(btService: btService)
@@ -150,7 +150,7 @@ struct TextButton: View {
 }
 
 struct RawDataViewPage: View {
-    var btService: BluetoothService
+    @ObservedObject var btService: BluetoothService
     
     var body: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {

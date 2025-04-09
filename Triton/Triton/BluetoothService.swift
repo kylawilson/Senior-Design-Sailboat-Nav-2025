@@ -332,7 +332,10 @@ extension BluetoothService: CBPeripheralDelegate {
             //GPS data
                 let newval = value.map { String(format: "%02x", $0) }.joined()
                 print("GPS data received: \(newval)")
-                updateGPSCharacteristicUI(characteristic.uuid, value)
+                let dataString = String(data: value, encoding: .utf8) ?? "N/A"
+                print("GPS Data: \(dataString)")
+                parseGPSString(dataString)
+                //updateGPSCharacteristicUI(characteristic.uuid, value)
             } else if renderingTransferCharacteristics.contains(characteristic.uuid) {
                 let newval = value.map { String(format: "%02x", $0) }.joined()
                 //now want to convert bytes to array of floats, test in Lab on Mon/Tues
@@ -423,6 +426,38 @@ extension BluetoothService: CBPeripheralDelegate {
             print("Updated time:", gpsData.time)
         } else {
             print("Error: gpsData.time is not a valid number")
+        }
+    }
+    
+    func parseGPSString(_ input: String) {
+
+        // Split by commas
+        let parts = input.components(separatedBy: ",")
+        
+        for part in parts {
+            let trimmed = part.trimmingCharacters(in: .whitespaces)
+
+            if trimmed.hasPrefix("[GGA] UTCtime:") {
+                gpsData.time = trimmed.replacingOccurrences(of: "UTCtime:", with: "").trimmingCharacters(in: .whitespaces)
+            } else if trimmed.hasPrefix("Latitude:") {
+                gpsData.latitude = trimmed.replacingOccurrences(of: "Latitude:", with: "").trimmingCharacters(in: .whitespaces)
+            } else if trimmed.hasPrefix("latIndicator:") {
+                gpsData.latitudeInd = trimmed.replacingOccurrences(of: "latIndicator:", with: "").trimmingCharacters(in: .whitespaces)
+            } else if trimmed.hasPrefix("Longitude:") {
+                gpsData.longitude = trimmed.replacingOccurrences(of: "Longitude:", with: "").trimmingCharacters(in: .whitespaces)
+            } else if trimmed.hasPrefix("longIndicator:") {
+                gpsData.longitudeInd = trimmed.replacingOccurrences(of: "longIndicator:", with: "").trimmingCharacters(in: .whitespaces)
+//            } else if trimmed.hasPrefix("Fix?") {
+//                gpsData.fix = trimmed.replacingOccurrences(of: "Fix?:", with: "").trimmingCharacters(in: .whitespaces)
+            } else if trimmed.hasPrefix("Altitude:") {
+                gpsData.altitude = trimmed.replacingOccurrences(of: "Altitude:", with: "").trimmingCharacters(in: .whitespaces)
+            } else if trimmed.hasPrefix("[RMC] Speed:") {
+                gpsData.speed = trimmed.replacingOccurrences(of: "Speed:", with: "").trimmingCharacters(in: .whitespaces)
+            } else if trimmed.hasPrefix("COG:") {
+                gpsData.COG = trimmed.replacingOccurrences(of: "COG:", with: "").trimmingCharacters(in: .whitespaces)
+            } else if trimmed.hasPrefix("Date:") {
+                gpsData.date = trimmed.replacingOccurrences(of: "Date:", with: "").trimmingCharacters(in: .whitespaces)
+            }
         }
     }
     
