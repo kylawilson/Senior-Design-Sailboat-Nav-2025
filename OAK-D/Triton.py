@@ -323,14 +323,14 @@ with dai.Device(pipeline) as device:
                 distance = distance / 1000
                 square_distance = square_distance / 1000
 
-                cv2.putText(frame_resized, str(label), (x1_resized + 10, y1_resized + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame_resized, f"ID: {[t.id]}", (x1_resized + 10, y1_resized + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame_resized, t.status.name, (x1_resized + 10, y1_resized + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.rectangle(frame_resized, (x1_resized, y1_resized), (x2_resized, y2_resized), color, cv2.FONT_HERSHEY_SIMPLEX)
-                cv2.rectangle(frame_resized, (square_x1, square_y1), (square_x2, square_y2), red, cv2.FONT_HERSHEY_SIMPLEX)
-                cv2.putText(frame_resized, f"Dist: {distance:.1f} m", (x1_resized + 10, y1_resized + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
-                cv2.putText(frame_resized, f"Angle: {angle_deg:.1f}", (x1_resized+ 10, y1_resized + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
-                cv2.putText(frame_resized, f"Small_Dist: {square_distance:.1f} m", (x1_resized + 10, y1_resized + 95), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
+                # cv2.putText(frame_resized, str(label), (x1_resized + 10, y1_resized + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                # cv2.putText(frame_resized, f"ID: {[t.id]}", (x1_resized + 10, y1_resized + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                # cv2.putText(frame_resized, t.status.name, (x1_resized + 10, y1_resized + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                # cv2.rectangle(frame_resized, (x1_resized, y1_resized), (x2_resized, y2_resized), color, cv2.FONT_HERSHEY_SIMPLEX)
+                # cv2.rectangle(frame_resized, (square_x1, square_y1), (square_x2, square_y2), red, cv2.FONT_HERSHEY_SIMPLEX)
+                # cv2.putText(frame_resized, f"Dist: {distance:.1f} m", (x1_resized + 10, y1_resized + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
+                # cv2.putText(frame_resized, f"Angle: {angle_deg:.1f}", (x1_resized+ 10, y1_resized + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
+                # cv2.putText(frame_resized, f"Small_Dist: {square_distance:.1f} m", (x1_resized + 10, y1_resized + 95), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
 
             # Process grid ROIs
             
@@ -383,7 +383,7 @@ with dai.Device(pipeline) as device:
                 if temparr[i] != float('inf'):
                     depth_array[i] = temparr[i]
             #print("Dist: ", ["{:.2f}".format(d/1000) if d!= float('inf') else "inf" for d in depth_array])
-            #depth_service.update_depth_array(depth_array)
+            depth_service.update_depth_array(depth_array)
 
             # Prepare depth heatmap
             if np.all(depth_downscaled == 0):
@@ -401,7 +401,7 @@ with dai.Device(pipeline) as device:
             cv2.putText(depthFrameColor_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
             cv2.putText(frame_resized, f"NN fps: {fps:.2f}", (10, 25), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (255, 255, 255))
             
-            cv2.imshow("video", frame_resized)
+            # cv2.imshow("video", frame_resized)
             #cv2.imshow("tracker", frame_resized)
             #cv2.imshow("depth", depthFrameColor_resized)
 
@@ -420,7 +420,7 @@ with dai.Device(pipeline) as device:
                 cv2.imwrite(image_filename, frame_resized)
                 last_capture_time = current_datetime
                 # Update the latest image path for D-Bus
-                #image_service.update_latest_image(image_filename)
+                image_service.update_latest_image(image_filename)
                 print(f"Captured and updated image: {image_filename}")
 
             if cv2.waitKey(1) == ord('q'):
