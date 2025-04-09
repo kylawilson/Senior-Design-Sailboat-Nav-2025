@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Eugene a.k.a. Realizator, stereopi.com, virt2real team
+# Copyright (C) 2019 Eugene Pomazov, <stereopi.com>, virt2real team
 #
 # This file is part of StereoPi tutorial scripts.
 #
@@ -16,25 +16,68 @@
 # along with StereoPi tutorial.  
 # If not, see <http://www.gnu.org/licenses/>.
 #
-#          <><><> SPECIAL THANKS: <><><>
-#
-# Thanks to Adrian and http://pyimagesearch.com, as a lot of
+# Most of this code is updated version of 3dberry.org project by virt2real
+# 
+# Thanks to Adrian and http://pyimagesearch.com, as there are lot of
 # code in this tutorial was taken from his lessons.
-#  
-# Thanks to RPi-tankbot project: https://github.com/Kheiden/RPi-tankbot
-#
-# Thanks to rakali project: https://github.com/sthysel/rakali
+# 
 
 
-from picamera import PiCamera
+
+import sys
 import time
 import cv2
+from picamera import PiCamera
 import numpy as np
 import json
+from stereovision.calibration import StereoCalibrator
+from stereovision.calibration import StereoCalibration
 from datetime import datetime
+#DBUS
+import dbus
+import dbus.service
+import dbus.mainloop.glib
+from gi.repository import GLib
+import threading
 
-print ("You can press Q to quit this script!")
-time.sleep (5)
+class DepthService(dbus.service.Object):
+    """D-Bus service that provides the depths of objects in view in base64 format."""
+
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/DepthService')
+        self.depth = None  
+
+    @dbus.service.method("com.example.DepthService",
+                         in_signature='', out_signature='ad')    # returns an array
+    def GetDepth(self):
+        """Returns the base64-encoded depth if available."""
+        print(self.depth)
+        if self.depth is not None:         # need to set to None if we're not getting a reading when we set depth_array
+            print(f"Sent depth: {self.depth}")
+            depth_array = [self.depth] * 10
+            return depth_array  # Returns an array of floats containing the depth repeated in 1x10 array
+        else:
+            return [1.0, 2.0, 3.0, 4.0]
+
+    def update_depth(self, depth):
+        """Updates to the latest depth array."""
+        self.depth = depth
+
+def run_dbus_service():
+    """Runs the D-Bus main loop in a separate thread."""
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    session_bus = dbus.SessionBus()
+    bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
+    global depth_service
+    depth_service = DepthService(bus_name_depth)
+
+    print("D-Bus service running...")
+    mainloop = GLib.MainLoop()
+    mainloop.run()
+
+dbus_thread = threading.Thread(target=run_dbus_service)
+dbus_thread.daemon = True
+dbus_thread.start()
 
 # Depth map default preset
 SWS = 5
@@ -46,12 +89,6 @@ TTH = 100
 UR = 10
 SR = 14
 SPWS = 100
-
-# Use the whole image or a stripe for depth map?
-useStripe = False
-dm_colors_autotune = True
-disp_max = -100000
-disp_min = 10000
 
 # Camera settimgs
 cam_width = 1280
@@ -75,44 +112,41 @@ print ("Scaled image resolution: "+str(img_width)+" x "+str(img_height))
 camera = PiCamera(stereo_mode='side-by-side',stereo_decimate=False)
 camera.resolution=(cam_width, cam_height)
 camera.framerate = 20
-#camera.hflip = True
+camera.hflip = True
+
+# Implementing calibration data
+print('Read calibration data and rectifying stereo pair...')
+# calibration = StereoCalibration(input_folder='calib_result')
+calibration = StereoCalibration(input_folder='calibration_data')
 
 # Initialize interface windows
-cv2.namedWindow("Image")
-cv2.moveWindow("Image", 50,100)
-cv2.namedWindow("left")
-cv2.moveWindow("left", 450,100)
-cv2.namedWindow("right")
-cv2.moveWindow("right", 850,100)
+# cv2.namedWindow("Image")
+# cv2.moveWindow("Image", 50,100)
+# cv2.namedWindow("left")
+# cv2.moveWindow("left", 450,100)
+# cv2.namedWindow("right")
+# cv2.moveWindow("right", 850,100)
 
 
 disparity = np.zeros((img_width, img_height), np.uint8)
 sbm = cv2.StereoBM_create(numDisparities=0, blockSize=21)
 
-
 def stereo_depth_map(rectified_pair):
-    global disp_max
-    global disp_min
+    deadzone = -1072
     dmLeft = rectified_pair[0]
     dmRight = rectified_pair[1]
     disparity = sbm.compute(dmLeft, dmRight)
     local_max = disparity.max()
     local_min = disparity.min()
-    if (dm_colors_autotune):
-        disp_max = max(local_max,disp_max)
-        disp_min = min(local_min,disp_min)
-        local_max = disp_max
-        local_min = disp_min
-        print(disp_max, disp_min)
     disparity_grayscale = (disparity-local_min)*(65535.0/(local_max-local_min))
-    #disparity_grayscale = (disparity+208)*(65535.0/1000.0) # test for jumping colors prevention 
     disparity_fixtype = cv2.convertScaleAbs(disparity_grayscale, alpha=(255.0/65535.0))
     disparity_color = cv2.applyColorMap(disparity_fixtype, cv2.COLORMAP_JET)
-    cv2.imshow("Image", disparity_color)
-    key = cv2.waitKey(1) & 0xFF   
-    if key == ord("q"):
-        quit();
-    return disparity_color
+    truemin = filter(lambda x: x>deadzone, disparity)
+    # cv2.imshow("Image", disparity_color)
+    # key = cv2.waitKey(1) & 0xFF   
+    # if key == ord("q"):
+    #     quit();
+    return disparity_color,local_max
 
 def load_map_settings( fName ):
     global SWS, PFS, PFC, MDS, NOD, TTH, UR, SR, SPWS, loading_settings
@@ -143,43 +177,22 @@ def load_map_settings( fName ):
 
 
 load_map_settings ("3dmap_set.txt")
-try:
-    npzfile = np.load('./calibration_data/{}p/stereo_camera_calibration.npz'.format(img_height))
-except:
-    print("Camera calibration data not found in cache, file ", './calibration_data/{}p/stereo_camera_calibration.npz'.format(img_height))
-    exit(0)
-    
-imageSize = tuple(npzfile['imageSize'])
-leftMapX = npzfile['leftMapX']
-leftMapY = npzfile['leftMapY']
-rightMapX = npzfile['rightMapX']
-rightMapY = npzfile['rightMapY']
-
-
 
 # capture frames from the camera
 for frame in camera.capture_continuous(capture, format="bgra", use_video_port=True, resize=(img_width,img_height)):
+
     t1 = datetime.now()
     pair_img = cv2.cvtColor (frame, cv2.COLOR_BGR2GRAY)
-    imgLeft = pair_img [0:img_height,0:int(img_width/2)] #Y+H and X+W
-    imgRight = pair_img [0:img_height,int(img_width/2):img_width] #Y+H and X+W
-    imgL = cv2.remap(imgLeft, leftMapX, leftMapY, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    imgR = cv2.remap(imgRight, rightMapX, rightMapY, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    
-    if (useStripe):
-        imgRcut = imgR [80:160,0:int(img_width/2)]
-        imgLcut = imgL [80:160,0:int(img_width/2)]
-    else:
-        imgRcut = imgR
-        imgLcut = imgL
-        
-    rectified_pair = (imgLcut, imgRcut)
-    disparity = stereo_depth_map(rectified_pair)
+    imgRight = pair_img [0:img_height,0:int(img_width/2)] #Y+H and X+W
+    imgLeft = pair_img [0:img_height,int(img_width/2):img_width] #Y+H and X+W
+    rectified_pair = calibration.rectify((imgLeft, imgRight))
+    disparity, truemax= stereo_depth_map(rectified_pair)
     # show the frame
-    cv2.imshow("left", imgLcut)
-    cv2.imshow("right", imgRcut)    
+    # cv2.imshow("left", imgLeft)
+    # cv2.imshow("right", imgRight)    
 
-    t2 = datetime.now()
-    print ("DM build time: " + str(t2-t1))
+    t2 = datetime.now() 
+    print(truemax)
+    depth_service.update_depth(truemax)
 
 
