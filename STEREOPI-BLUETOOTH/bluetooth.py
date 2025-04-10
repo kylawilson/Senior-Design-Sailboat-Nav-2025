@@ -39,21 +39,21 @@ GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 LE_ADVERTISEMENT_IFACE = 'org.bluez.LEAdvertisement1'
 
 #test
-def get_depth():
-    """Fetches the latest encoded image from the D-Bus service."""
-    try:
-        bus = dbus.SessionBus()
-        obj = bus.get_object("com.example.DepthService", "/DepthService")
-        iface = dbus.Interface(obj, "com.example.DepthService")
-        returned_depth = iface.GetDepth()
-
-        if returned_depth != [1.0, 2.0, 3.0, 4.0]:
-            return returned_depth
-        else:
-            print("No depth available from service.")
-    
-    except Exception as e:
-        print("D-Bus Error:", e)
+#def get_depth():
+#    """Fetches the latest encoded image from the D-Bus service."""
+#    try:
+#        bus = dbus.SessionBus()
+#        obj = bus.get_object("com.example.DepthService", "/DepthService")
+#        iface = dbus.Interface(obj, "com.example.DepthService")
+#        returned_depth = iface.GetDepth()
+#
+#        if returned_depth != [1.0, 2.0, 3.0, 4.0]:
+#            return returned_depth
+#        else:
+#            print("No depth available from service.")
+#    
+#    except Exception as e:
+#        print("D-Bus Error:", e)
 #end test
 
 class InvalidArgsException(dbus.exceptions.DBusException):
@@ -422,7 +422,7 @@ class DepthCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        self.depth = get_depth()
+        self.depth = get_depth_data()
         if not self.notifying:
             return True
         if (self.depth):
