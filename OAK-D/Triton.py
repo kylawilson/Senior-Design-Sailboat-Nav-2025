@@ -49,11 +49,11 @@ class ImageService(dbus.service.Object):
         
         
 class DepthService(dbus.service.Object):
-    """D-Bus service that provides the depths of objects in view in base64 format."""
+    """D-Bus service that provides the depths of objects in view."""
 
     def __init__(self, bus_name):
         dbus.service.Object.__init__(self, bus_name, '/DepthService')
-        self.depth_array = None  # prob can get rid of this
+        self.depth_array = None 
 
     @dbus.service.method("com.example.DepthService",
                          in_signature='', out_signature='ad')    # returns an array
@@ -61,7 +61,6 @@ class DepthService(dbus.service.Object):
         """Returns the base64-encoded depth if available."""
         print(self.depth_array)
         if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
-            #encoded = base64.b64encode(self.depth_array).decode('utf-8')
             print(f"Sent depth: {self.depth_array}")
             return self.depth_array  # Returns the base64 string
         else:
@@ -71,15 +70,40 @@ class DepthService(dbus.service.Object):
         """Updates to the latest depth array."""
         self.depth_array = depth_array
 
+class ObjectService(dbus.service.Object):
+    """D-Bus service that provides the objects in view."""
+
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/ObjectService')
+        self.object_list = None  # prob can get rid of this
+
+    @dbus.service.method("com.example.ObjectService",
+                         in_signature='', out_signature='ad')    # returns an array
+    def GetObjects(self):
+        """Returns the object list if available."""
+        print("OBJECT: ", self.object_list)
+        #line below may be an issue, look here during testing
+        if self.object_list is not None:         # need to set to None if we're not getting a reading when we set depth_array
+            print(f"Sent objects: {self.object_list}")
+            return self.object_list  # Returns the base64 string
+        else:
+            return [1.0, 2.0, 3.0, 4.0]
+
+    def update_object_list(self, object_list):
+        """Updates to the latest depth array."""
+        self.object_list = object_list
+
 def run_dbus_service():
     """Runs the D-Bus main loop in a separate thread."""
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     session_bus = dbus.SessionBus()
     bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
-    global image_service, depth_service
+    bus_name_object = dbus.service.BusName("com.example.ObjectService", session_bus)
+    global image_service, depth_service, object_service
     image_service = ImageService(bus_name_image)
     depth_service = DepthService(bus_name_depth)
+    object_service = ObjectService(bus_name_object)
     
     print("D-Bus service running...")
     mainloop = GLib.MainLoop()
@@ -408,16 +432,25 @@ with dai.Device(pipeline) as device:
             # Capture frame if interval elapsed
 
             current_time = time.time()
+            object_values = []
             if current_time - last_print_time >= .1:
                 last_print_time = current_time
                 for obj in tracked_objects:
-                    print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
-                    print("OBJECT: ", obj)
+                    #print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
+                    #print("OBJECT: ", obj)
+                    values = list(obj.values())[:3]
+                    object_values += values
                     #dbus call for tracked objects/boats here
+            print(object_values)
+            object_service.update_object_list(object_values)
+            
 
             if current_datetime - last_capture_time >= capture_interval:
                 image_filename = f"outputframe.jpg"
+                frame = video.get().getCvFrame()
+                frame_resized = cv2.resize(frame, (640, 480))
                 cv2.imwrite(image_filename, frame_resized)
+                #cv2.imwrite(image_filename, frame)
                 last_capture_time = current_datetime
                 # Update the latest image path for D-Bus
                 image_service.update_latest_image(image_filename)

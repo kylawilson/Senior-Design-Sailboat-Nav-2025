@@ -7,6 +7,7 @@ import dbus
 import dbus.service
 import dbus.mainloop.glib
 from gi.repository import GLib
+import threading
 
 class WindDirectionService(dbus.service.Object):
     """D-Bus service that provides the depths of objects in view in base64 format."""
