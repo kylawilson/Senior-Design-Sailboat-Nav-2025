@@ -131,7 +131,6 @@ int main() {
     dbus_connection_add_filter(conn, handle_get_gps_data, nullptr, nullptr);
 
     int serial_fd = serialOpen(GPS_SERIAL_PORT, 9600);
-    sendCommand(PGCMD_ANTENNA);
     if (serial_fd < 0) {
         std::cerr << "Unable to open GPS serial port." << std::endl;
         return 1;
@@ -150,7 +149,7 @@ int main() {
 
             // Check for end of a line (NMEA sentence)
             if (c == '\n') {
-                //std::cout << line << std::endl;
+                std::cout << line << std::endl;
                 if (line.find("GGA") != std::string::npos) {
                     processGGA(line);
                 } 

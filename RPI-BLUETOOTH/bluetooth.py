@@ -90,7 +90,7 @@ def get_depth():
 def get_wind_speed():
     """Fetches the latest encoded image from the D-Bus service."""
     try:
-        bus = dbus.SystemBus()
+        bus = dbus.SessionBus()
         obj = bus.get_object("com.example.WindSpeedService", "/WindSpeedService")
         iface = dbus.Interface(obj, "com.example.WindSpeedService")
         wind_speed = iface.GetWindSpeed()
@@ -112,8 +112,8 @@ def get_wind_direction():
         iface = dbus.Interface(obj, "com.example.WindDirectionService")
         wind_direction = iface.GetWindDirection()
 
-        if wind_direction != "Unknown":
-            print("Wind Direction: ", wind_speed)
+        if wind_direction != None:
+            print("Wind Direction: ", wind_direction)
             return wind_direction
         else:
             print("No wind direction available from service.")
@@ -131,7 +131,7 @@ def get_gps_data():
 
         if gps_data is not None:
             gps_data = list(gps_data)  # Convert from dbus.Array to Python list
-            print(gps_data)
+            #print(gps_data)
             return gps_data
             
         else:
@@ -1129,6 +1129,7 @@ class AnemometerWindDirectionCharacteristic(Characteristic):
     def get_data(self):
         self.wind_dir = get_wind_direction()
         if not self.notifying:
+            print("NOT NOTIFYING WIND DIR")
             return True
         if (self.wind_dir):
             print('Wind Direction ' + repr(self.wind_dir))

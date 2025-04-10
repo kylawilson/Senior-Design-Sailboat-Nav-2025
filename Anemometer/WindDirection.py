@@ -61,10 +61,10 @@ last_direction = "Unknown"
 
 # Resistance ranges for each direction
 resistance_to_direction = [
-    ("N", 601, 609.4),   # N range: 601-607 ohms
-    ("NE", 560, 578),  # NE range: 560-575 ohms
+    ("N", 644, 645.9),   # N range: 601-607 ohms
+    ("NE", 608.0, 610.9),  # NE range: 560-575 ohms
     ("E", 355, 390),   # E range: 355-390 ohms
-    ("SE", 475, 490),  # SE range: 475-490 ohms
+    ("SE", 397, 399),  # SE range: 475-490 ohms
     ("S", 510, 540),   # S range: 510-540 ohms
     ("SW", 580, 600),  # SW range: 580-600 ohms
     ("W", 614.5, 620),   # W range: 613-620 ohms
