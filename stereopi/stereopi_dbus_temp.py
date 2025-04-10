@@ -19,8 +19,7 @@ class DepthService(dbus.service.Object):
         print(self.depth)
         if self.depth is not None:         # need to set to None if we're not getting a reading when we set depth_array
             print(f"Sent depth: {self.depth}")
-            depth_array = [self.depth] * 10
-            return depth_array  # Returns an array of floats containing the depth repeated in 1x10 array
+            return self.depth  # Returns an array of floats containing the depth repeated in 1x10 array
         else:
             return [1.0, 2.0, 3.0, 4.0]
 
