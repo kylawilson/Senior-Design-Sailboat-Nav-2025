@@ -383,6 +383,16 @@ class Descriptor(dbus.service.Object):
         print('Default WriteValue called, returning error')
         raise NotSupportedException()
 
+def get_depth_data():
+    # Read the latest tempmax value from the file
+    with open("../stereopi/tempmax_log.txt", "r") as f:
+        line = f.readline().strip()  # Read the only line (or last one if you've kept more)
+        if line:
+            tempmax_value = float(value_str)
+            print("Latest tempmax:", tempmax_value)
+        else:
+            print("File is empty.")
+
 
 class StereoPiDepthService(Service):
     """
