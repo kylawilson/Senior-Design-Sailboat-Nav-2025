@@ -432,7 +432,8 @@ extension BluetoothService: CBPeripheralDelegate {
             let trimmed = part.trimmingCharacters(in: .whitespaces)
 
             if trimmed.hasPrefix("[GGA] UTCtime:") {
-                gpsData.time = trimmed.replacingOccurrences(of: "[GGA] UTCtime:", with: "").trimmingCharacters(in: .whitespaces)
+                let temp_time = trimmed.replacingOccurrences(of: "[GGA] UTCtime:", with: "").trimmingCharacters(in: .whitespaces)
+                gpsData.time = convertUTCtoEST(utcTime: temp_time) ?? "000000.000"
             } else if trimmed.hasPrefix("Latitude:") {
                 gpsData.latitude = trimmed.replacingOccurrences(of: "Latitude:", with: "").trimmingCharacters(in: .whitespaces)
             } else if trimmed.hasPrefix("latIndicator:") {
@@ -477,12 +478,13 @@ extension BluetoothService: CBPeripheralDelegate {
             }
             let cgFloatArray = floatArray.map { CGFloat($0) }
             print("Object Array Received: \(cgFloatArray)")
+            //let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
             objectArray = cgFloatArray
             coordinateArray.removeAll()
             for i in stride(from: 0, to: objectArray.count, by: 3) {
-                let x = objectArray[i + 1]
+                let x = objectArray[i + 1] / 1000
                 let y = objectArray[i + 2]
-                coordinateArray.append((x, y))
+                self.coordinateArray.append((x, y))
             }
             print("COORDINATE ARRAY: \(coordinateArray)")
         default:

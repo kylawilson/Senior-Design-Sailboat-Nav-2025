@@ -280,23 +280,22 @@ struct OtherBoatsView: View {
 
 */
 
-
 struct OtherBoatsView: View {
     var boats: [(distance: CGFloat, angle: CGFloat)]
     var center: CGPoint
     var scaleDistance: (CGFloat) -> CGFloat
-    //print("Rendering boat at distance \(boat.distance), angle \(boat.angle)")
 
     var body: some View {
         let boatColors: [Color] = [.orange, .yellow, .purple]
 
-        ForEach(Array(boats.enumerated()), id: \.offset) { index, boat in
+        // Use boats.indices for ForEach to avoid enumerating and creating an array
+        ForEach(boats.indices, id: \.self) { index in
+            let boat = boats[index]
             let color = boatColors[index % boatColors.count]
             let adjustedAngle = 90 - boat.angle
             let radians = Angle(degrees: Double(adjustedAngle)).radians
             let scaledDistance = scaleDistance(boat.distance)
             
-
             let position = CGPoint(
                 x: center.x + CGFloat(cos(radians)) * scaledDistance,
                 y: center.y - CGFloat(sin(radians)) * scaledDistance
@@ -322,17 +321,72 @@ struct OtherBoatsView: View {
                     }
                     .stroke(Color.black, lineWidth: 2)
                 )
-/*
+
+                /*
                  Label
                 Text("(\(String(format: "%.1f", boat.distance)), \(Int(adjustedAngle)))")
                     .font(.caption2)
                     .foregroundColor(.black)
                     .position(x: position.x, y: position.y - 25)
- */
+                 */
             }
         }
     }
 }
+
+
+//struct OtherBoatsView: View {
+//    var boats: [(distance: CGFloat, angle: CGFloat)]
+//    var center: CGPoint
+//    var scaleDistance: (CGFloat) -> CGFloat
+//    //print("Rendering boat at distance \(boat.distance), angle \(boat.angle)")
+//
+//    var body: some View {
+//        let boatColors: [Color] = [.orange, .yellow, .purple]
+//
+//        ForEach(Array(boats.enumerated()), id: \.offset) { index, boat in
+//            let color = boatColors[index % boatColors.count]
+//            let adjustedAngle = 90 - boat.angle
+//            let radians = Angle(degrees: Double(adjustedAngle)).radians
+//            let scaledDistance = scaleDistance(boat.distance)
+//            
+//
+//            let position = CGPoint(
+//                x: center.x + CGFloat(cos(radians)) * scaledDistance,
+//                y: center.y - CGFloat(sin(radians)) * scaledDistance
+//            )
+//
+//            return ZStack {
+//                // Triangle
+//                Path { path in
+//                    let size: CGFloat = 18
+//                    path.move(to: CGPoint(x: position.x, y: position.y - size / 2))
+//                    path.addLine(to: CGPoint(x: position.x - size / 2, y: position.y + size / 2))
+//                    path.addLine(to: CGPoint(x: position.x + size / 2, y: position.y + size / 2))
+//                    path.closeSubpath()
+//                }
+//                .fill(color)
+//                .overlay(
+//                    Path { path in
+//                        let size: CGFloat = 18
+//                        path.move(to: CGPoint(x: position.x, y: position.y - size / 2))
+//                        path.addLine(to: CGPoint(x: position.x - size / 2, y: position.y + size / 2))
+//                        path.addLine(to: CGPoint(x: position.x + size / 2, y: position.y + size / 2))
+//                        path.closeSubpath()
+//                    }
+//                    .stroke(Color.black, lineWidth: 2)
+//                )
+///*
+//                 Label
+//                Text("(\(String(format: "%.1f", boat.distance)), \(Int(adjustedAngle)))")
+//                    .font(.caption2)
+//                    .foregroundColor(.black)
+//                    .position(x: position.x, y: position.y - 25)
+// */
+//            }
+//        }
+//    }
+//}
 
 
 struct PolarGridView_Previews: PreviewProvider {
