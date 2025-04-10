@@ -172,6 +172,16 @@ extension BluetoothService: CBCentralManagerDelegate {
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
             os_log("Failed to connect to %@. %s", peripheral, String(describing: error))
+            switch (peripheral.identifier.uuidString) {
+                case "209865E4-7152-710C-C3BB-45A25B2EBCDF":
+                    tritonConnectionState = .disconnected
+                case "D0EDD06D-F7D7-5D24-0C24-A245604D81C6":
+                    stereoPi1ConnectionState = .disconnected
+                case "D0EDD06D-F7D7-5D24-0C24-A245604D81C0":
+                    stereoPi2ConnectionState = .disconnected
+                default:
+                    stereoPi2ConnectionState = .disconnected
+            }
         }
     
     func centralManager(
@@ -348,7 +358,7 @@ extension BluetoothService: CBPeripheralDelegate {
                     return Array(floatPointer)
                 }
                 let cgFloatArray = floatArray.map { CGFloat($0) }
-                let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
+                let dividedCGFloatArray = cgFloatArray.map { $0 / 100 }
                 print("StereoPiArray Received in Meters: \(dividedCGFloatArray)")
                 stereoPiArray1 = dividedCGFloatArray
             } else if anemometerTransferCharacteristics.contains(characteristic.uuid){
