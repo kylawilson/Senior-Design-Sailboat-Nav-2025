@@ -17,7 +17,7 @@ class WindDirectionService(dbus.service.Object):
         self.wind_direction = None  # prob can get rid of this
 
     @dbus.service.method("com.example.WindDirectionService",
-                         in_signature='', out_signature='d')    # returns a float
+                         in_signature='', out_signature='s')    # returns a float
     def GetWindDirection(self):
         """Returns the base64-encoded depth if available."""
         print(self.wind_direction)
@@ -25,9 +25,9 @@ class WindDirectionService(dbus.service.Object):
             print(f"Sent wind direction: {self.wind_direction}")
             return self.wind_direction  # Returns an array of floats
         else:
-            return 0.0
+            return "Unknown"
 
-    def update_wind_speed(self, wind_direction):
+    def update_wind_direction(self, wind_direction):
         """Updates to the latest depth array."""
         self.wind_direction = wind_direction
 
@@ -110,5 +110,6 @@ while True:
     # Print debugging info
    # print(f"Voltage: {voltage:.3f}V | Resistance: {resistance:.1f}Ω | Direction: {direction}")
     print(f"Voltage: {voltage:.3f}V | Resistance: {resistance:.1f}Ω | Direction: {direction}" if resistance is not None else f"Voltage: {voltage:.3f}V | Resistance: N/A | Direction: {direction}")
+    wind_direction_service.update_wind_direction(direction)
 
     time.sleep(1)  # Delay for stability
