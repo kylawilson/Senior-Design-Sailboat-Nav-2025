@@ -392,7 +392,7 @@ class StereoPiDepthService(Service):
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.DEPTH_SERV_UUID, True)
         self.add_characteristic(DepthCharacteristic(bus, 0, self))
-        self.add_characteristic(LengthCharacteristic(bus, 1, self))
+        #self.add_characteristic(LengthCharacteristic(bus, 1, self))
 
 
 class DepthCharacteristic(Characteristic):
@@ -449,55 +449,55 @@ class DepthCharacteristic(Characteristic):
             return
         self.notifying = False
 
-class LengthCharacteristic(Characteristic):
-    """
+# class LengthCharacteristic(Characteristic):
+#     """
 
-    """
-    LEN_UUID = '36523c64-9a13-4742-89d8-91c9db2374c1'
+#     """
+#     LEN_UUID = '36523c64-9a13-4742-89d8-91c9db2374c1'
 
-    def __init__(self, bus, index, service):
-        Characteristic.__init__(
-                self, bus, index,
-                self.LEN_UUID,
-                ['read', 'notify'],
-                service)
-        self.len = dbus.Byte(0x02)
-        self.notifying = False
-        GLib.timeout_add(1000, self.get_data)
+#     def __init__(self, bus, index, service):
+#         Characteristic.__init__(
+#                 self, bus, index,
+#                 self.LEN_UUID,
+#                 ['read', 'notify'],
+#                 service)
+#         self.len = dbus.Byte(0x02)
+#         self.notifying = False
+#         GLib.timeout_add(1000, self.get_data)
 
-    def get_data(self):
-        #self.len = get_len()
-        if not self.notifying:
-            return True
-        if (self.len):
-            print('Length ' + repr(self.len))
-            self.notify_len()
-        return True
+#     def get_data(self):
+#         #self.len = get_len()
+#         if not self.notifying:
+#             return True
+#         if (self.len):
+#             print('Length ' + repr(self.len))
+#             self.notify_len()
+#         return True
 
-    def notify_len(self):
-        if not self.notifying:
-            return
-        len_bytes = [dbus.Byte(ord(c)) for c in self.len]
-        self.PropertiesChanged(
-                GATT_CHRC_IFACE,
-                { 'Value': [dbus.Byte(b) for b in len_bytes] }, [])
+#     def notify_len(self):
+#         if not self.notifying:
+#             return
+#         len_bytes = [dbus.Byte(ord(c)) for c in self.len]
+#         self.PropertiesChanged(
+#                 GATT_CHRC_IFACE,
+#                 { 'Value': [dbus.Byte(b) for b in len_bytes] }, [])
 
-    def ReadValue(self, options):
-        print('Length ' + repr(self.len))
-        return [dbus.Byte(self.len)]
+#     def ReadValue(self, options):
+#         print('Length ' + repr(self.len))
+#         return [dbus.Byte(self.len)]
 
-    def StartNotify(self):
-        if self.notifying:
-            print('Already notifying, nothing to do')
-            return
-        self.notifying = True
-        self.notify_len()
+#     def StartNotify(self):
+#         if self.notifying:
+#             print('Already notifying, nothing to do')
+#             return
+#         self.notifying = True
+#         self.notify_len()
 
-    def StopNotify(self):
-        if not self.notifying:
-            print('Not notifying, nothing to do')
-            return
-        self.notifying = False
+#     def StopNotify(self):
+#         if not self.notifying:
+#             print('Not notifying, nothing to do')
+#             return
+#         self.notifying = False
 
 def register_app_cb():
     print('GATT application registered')
@@ -568,8 +568,6 @@ def main(timeout = 0):
                                      reply_handler=register_ad_cb,
                                      error_handler=register_ad_error_cb)
 
-    print("getting image")
-    #image_data = get_image()
 
     mainloop.run()
 
