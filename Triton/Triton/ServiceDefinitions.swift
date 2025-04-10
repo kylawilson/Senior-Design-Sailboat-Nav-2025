@@ -52,8 +52,9 @@ struct AnemometerTransferService {
 //used to receive coordinates
 //might have to switch this up for new rendering idea
 struct RenderingTransferService {
-    static let tritonRenderingServiceUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae270")
-    static let tritonRenderingDepthCharacteristicUUID = CBUUID(string: "4312b47d-2c99-4a27-a04d-7117630ae271") //Depth
+    static let tritonRenderingServiceUUID = CBUUID(string: "8c94727b-79cc-45d6-a31f-9a49391bb590")
+    static let tritonRenderingDepthCharacteristicUUID = CBUUID(string: "8c94727b-79cc-45d6-a31f-9a49391bb591") //Depth
+    static let tritonRenderingObjectCharacteristicUUID = CBUUID(string: "8c94727b-79cc-45d6-a31f-9a49391bb592") //Objects
 }
 
 //used to receive depth from serialpis

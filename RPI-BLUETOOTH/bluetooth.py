@@ -80,6 +80,7 @@ def get_depth():
             print("PRINTING RETURNED DEPTH")
             print(returned_depth)
             return returned_depth
+
         else:
             print("No depth available from service.")
     
@@ -133,6 +134,28 @@ def get_gps_data():
             
         else:
             print("No GPS data available from service.")
+    
+    except Exception as e:
+        print("D-Bus Error:", e)
+        return None
+
+def get_objects():
+    """Fetches the latest object list from the D-Bus service."""
+    try:
+        bus = dbus.SessionBus()
+        obj = bus.get_object("com.example.ObjectService", "/ObjectService")
+        iface = dbus.Interface(obj, "com.example.ObjectService")
+        object_list = iface.GetObjects()
+
+        if object_list != [1.0, 2.0, 3.0, 4.0]:
+            #convert all to floats
+            print("GOT OBJECTS!")
+            float_object_list = [float(x) for x in object_list]
+            print(float_object_list)
+            return float_object_list
+            
+        else:
+            print("No Objects available from service.")
     
     except Exception as e:
         print("D-Bus Error:", e)
@@ -288,7 +311,7 @@ class Application(dbus.service.Object):
         self.add_service(GPSservice(bus, 0))
         self.add_service(PhotoService(bus, 1))
         self.add_service(RenderingService(bus, 2))
-        #self.add_service(AnemometerService(bus, 3))
+        self.add_service(AnemometerService(bus, 3))
         
     def get_path(self):
         return dbus.ObjectPath(self.path)
@@ -1227,23 +1250,24 @@ class PhotoCharacteristic(Characteristic):
 class RenderingService(Service):
     """
     """
-    RENDER_UUID = '4312b47d-2c99-4a27-a04d-7117630ae270'
+    RENDER_UUID = '8c94727b-79cc-45d6-a31f-9a49391bb590'
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.RENDER_UUID, True)
         self.add_characteristic(DepthCharacteristic(bus, 0, self))
+        self.add_characteristic(ObjectCharacteristic(bus, 1, self))
 
 class DepthCharacteristic(Characteristic):
     """
 
     """
-    DEPTH_UUID = '4312b47d-2c99-4a27-a04d-7117630ae271'
+    DEPTH_UUID = '8c94727b-79cc-45d6-a31f-9a49391bb591'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
                 self, bus, index,
                 self.DEPTH_UUID,
-                ['read', 'notify'],
+                ['read', 'write', 'notify'],
                 service)
         self.depth = dbus.Byte(0x02)
         self.notifying = False
@@ -1283,6 +1307,63 @@ class DepthCharacteristic(Characteristic):
         print("Notifying on Depth")
         self.notifying = True
         self.notify_depth()
+
+    def StopNotify(self):
+        if not self.notifying:
+            print('Not notifying, nothing to do')
+            return
+        self.notifying = False
+
+class ObjectCharacteristic(Characteristic):
+    """
+
+    """
+    OBJ_UUID = '8C94727B-79CC-45D6-A31F-9A49391BB592'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.OBJ_UUID,
+                ['read','write', 'notify'],
+                service)
+        self.obj = dbus.Byte(0x02)
+        self.notifying = False
+        GLib.timeout_add(1000, self.get_data)
+
+    def get_data(self):
+        self.obj = get_objects()
+        if not self.notifying:
+            return True
+        if (self.obj):
+            print('Object(s) ' + repr(self.obj))
+            self.notify_object()
+        return True
+
+    def notify_object(self):
+        print("notifying Object\n")
+        if not self.notifying:
+            return
+        obj_bytes = struct.pack(f'{len(self.obj)}f', *self.obj)  # Pack as float array
+
+        # Convert to list of dbus.Byte
+        obj_dbus_bytes = [dbus.Byte(b) for b in obj_bytes]
+        self.PropertiesChanged(
+            GATT_CHRC_IFACE,
+            {'Value': obj_dbus_bytes}, 
+            []
+        )
+
+    def ReadValue(self, options):
+        print('Object(s) ' + repr(self.obj))
+        return [dbus.Byte(self.obj)]
+
+    def StartNotify(self):
+        if self.notifying:
+            print('Already notifying, nothing to do')
+            return
+        print("Notifying on Objects")
+        self.notifying = True
+        self.notify_object()
 
     def StopNotify(self):
         if not self.notifying:

@@ -13,82 +13,106 @@ import argparse
 import time
 
 #testing DBUS
-# import dbus
-# import dbus.service
-# import dbus.mainloop.glib
-# from gi.repository import GLib
-# import threading
+import dbus
+import dbus.service
+import dbus.mainloop.glib
+from gi.repository import GLib
+import threading
 
 
 # # Create a D-Bus service class
 
 
-# class ImageService(dbus.service.Object):
-#     """D-Bus service that provides the latest image in base64 format."""
+class ImageService(dbus.service.Object):
+    """D-Bus service that provides the latest image in base64 format."""
 
-#     def __init__(self, bus_name):
-#         dbus.service.Object.__init__(self, bus_name, '/ImageService')
-#         self.latest_image_path = None  # Stores the most recent image path
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/ImageService')
+        self.latest_image_path = None  # Stores the most recent image path
 
-#     @dbus.service.method("com.example.ImageService",
-#                          in_signature='', out_signature='s')
-#     def GetEncodedImage(self):
-#         """Returns the base64-encoded image if available."""
-#         if self.latest_image_path and os.path.exists(self.latest_image_path):
-#             with open(self.latest_image_path, "rb") as img_file:
-#                 encoded = base64.b64encode(img_file.read()).decode('utf-8')
-#                 print(encoded)
-#             print(f"Sent encoded image: {self.latest_image_path}")
-#             return encoded  # Returns the base64 string
-#         else:
-#             return "No image available"
+    @dbus.service.method("com.example.ImageService",
+                         in_signature='', out_signature='s')
+    def GetEncodedImage(self):
+        """Returns the base64-encoded image if available."""
+        if self.latest_image_path and os.path.exists(self.latest_image_path):
+            with open(self.latest_image_path, "rb") as img_file:
+                encoded = base64.b64encode(img_file.read()).decode('utf-8')
+                print(encoded)
+            print(f"Sent encoded image: {self.latest_image_path}")
+            return encoded  # Returns the base64 string
+        else:
+            return "No image available"
 
-#     def update_latest_image(self, image_path):
-#         """Updates the path to the latest image."""
-#         self.latest_image_path = image_path
+    def update_latest_image(self, image_path):
+        """Updates the path to the latest image."""
+        self.latest_image_path = image_path
         
         
-# class DepthService(dbus.service.Object):
-#     """D-Bus service that provides the depths of objects in view in base64 format."""
+class DepthService(dbus.service.Object):
+    """D-Bus service that provides the depths of objects in view."""
 
-#     def __init__(self, bus_name):
-#         dbus.service.Object.__init__(self, bus_name, '/DepthService')
-#         self.depth_array = None  # prob can get rid of this
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/DepthService')
+        self.depth_array = None 
 
-#     @dbus.service.method("com.example.DepthService",
-#                          in_signature='', out_signature='ad')    # returns an array
-#     def GetDepth(self):
-#         """Returns the base64-encoded depth if available."""
-#         print(self.depth_array)
-#         if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
-#             #encoded = base64.b64encode(self.depth_array).decode('utf-8')
-#             print(f"Sent depth: {self.depth_array}")
-#             return self.depth_array  # Returns the base64 string
-#         else:
-#             return [1.0, 2.0, 3.0, 4.0]
+    @dbus.service.method("com.example.DepthService",
+                         in_signature='', out_signature='ad')    # returns an array
+    def GetDepth(self):
+        """Returns the base64-encoded depth if available."""
+        print(self.depth_array)
+        if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
+            print(f"Sent depth: {self.depth_array}")
+            return self.depth_array  # Returns the base64 string
+        else:
+            return [1.0, 2.0, 3.0, 4.0]
 
-#     def update_depth_array(self, depth_array):
-#         """Updates to the latest depth array."""
-#         self.depth_array = depth_array
+    def update_depth_array(self, depth_array):
+        """Updates to the latest depth array."""
+        self.depth_array = depth_array
 
-# def run_dbus_service():
-#     """Runs the D-Bus main loop in a separate thread."""
-#     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-#     session_bus = dbus.SessionBus()
-#     bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
-#     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
-#     global image_service, depth_service
-#     image_service = ImageService(bus_name_image)
-#     depth_service = DepthService(bus_name_depth)
+class ObjectService(dbus.service.Object):
+    """D-Bus service that provides the objects in view."""
+
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/ObjectService')
+        self.object_list = None  # prob can get rid of this
+
+    @dbus.service.method("com.example.ObjectService",
+                         in_signature='', out_signature='ad')    # returns an array
+    def GetObjects(self):
+        """Returns the object list if available."""
+        print("OBJECT: ", self.object_list)
+        #line below may be an issue, look here during testing
+        if self.object_list is not None:         # need to set to None if we're not getting a reading when we set depth_array
+            print(f"Sent objects: {self.object_list}")
+            return self.object_list  # Returns the base64 string
+        else:
+            return [1.0, 2.0, 3.0, 4.0]
+
+    def update_object_list(self, object_list):
+        """Updates to the latest depth array."""
+        self.object_list = object_list
+
+def run_dbus_service():
+    """Runs the D-Bus main loop in a separate thread."""
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    session_bus = dbus.SessionBus()
+    bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
+    bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
+    bus_name_object = dbus.service.BusName("com.example.ObjectService", session_bus)
+    global image_service, depth_service, object_service
+    image_service = ImageService(bus_name_image)
+    depth_service = DepthService(bus_name_depth)
+    object_service = ObjectService(bus_name_object)
     
-#     print("D-Bus service running...")
-#     mainloop = GLib.MainLoop()
-#     mainloop.run()
+    print("D-Bus service running...")
+    mainloop = GLib.MainLoop()
+    mainloop.run()
 
 
-# dbus_thread = threading.Thread(target=run_dbus_service)
-# dbus_thread.daemon = True
-# dbus_thread.start()
+dbus_thread = threading.Thread(target=run_dbus_service)
+dbus_thread.daemon = True
+dbus_thread.start()
 
 #---Boat DBus---
 
@@ -323,14 +347,14 @@ with dai.Device(pipeline) as device:
                 distance = distance / 1000
                 square_distance = square_distance / 1000
 
-                cv2.putText(frame_resized, str(label), (x1_resized + 10, y1_resized + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame_resized, f"ID: {[t.id]}", (x1_resized + 10, y1_resized + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame_resized, t.status.name, (x1_resized + 10, y1_resized + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.rectangle(frame_resized, (x1_resized, y1_resized), (x2_resized, y2_resized), color, cv2.FONT_HERSHEY_SIMPLEX)
-                cv2.rectangle(frame_resized, (square_x1, square_y1), (square_x2, square_y2), red, cv2.FONT_HERSHEY_SIMPLEX)
-                cv2.putText(frame_resized, f"Dist: {distance:.1f} m", (x1_resized + 10, y1_resized + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
-                cv2.putText(frame_resized, f"Angle: {angle_deg:.1f}", (x1_resized+ 10, y1_resized + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
-                cv2.putText(frame_resized, f"Small_Dist: {square_distance:.1f} m", (x1_resized + 10, y1_resized + 95), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
+                # cv2.putText(frame_resized, str(label), (x1_resized + 10, y1_resized + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                # cv2.putText(frame_resized, f"ID: {[t.id]}", (x1_resized + 10, y1_resized + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                # cv2.putText(frame_resized, t.status.name, (x1_resized + 10, y1_resized + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                # cv2.rectangle(frame_resized, (x1_resized, y1_resized), (x2_resized, y2_resized), color, cv2.FONT_HERSHEY_SIMPLEX)
+                # cv2.rectangle(frame_resized, (square_x1, square_y1), (square_x2, square_y2), red, cv2.FONT_HERSHEY_SIMPLEX)
+                # cv2.putText(frame_resized, f"Dist: {distance:.1f} m", (x1_resized + 10, y1_resized + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
+                # cv2.putText(frame_resized, f"Angle: {angle_deg:.1f}", (x1_resized+ 10, y1_resized + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
+                # cv2.putText(frame_resized, f"Small_Dist: {square_distance:.1f} m", (x1_resized + 10, y1_resized + 95), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
 
             # Process grid ROIs
             
@@ -383,7 +407,7 @@ with dai.Device(pipeline) as device:
                 if temparr[i] != float('inf'):
                     depth_array[i] = temparr[i]
             #print("Dist: ", ["{:.2f}".format(d/1000) if d!= float('inf') else "inf" for d in depth_array])
-            #depth_service.update_depth_array(depth_array)
+            depth_service.update_depth_array(depth_array)
 
             # Prepare depth heatmap
             if np.all(depth_downscaled == 0):
@@ -401,25 +425,35 @@ with dai.Device(pipeline) as device:
             cv2.putText(depthFrameColor_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
             cv2.putText(frame_resized, f"NN fps: {fps:.2f}", (10, 25), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (255, 255, 255))
             
-            cv2.imshow("video", frame_resized)
+            # cv2.imshow("video", frame_resized)
             #cv2.imshow("tracker", frame_resized)
             #cv2.imshow("depth", depthFrameColor_resized)
 
             # Capture frame if interval elapsed
 
             current_time = time.time()
+            object_values = []
             if current_time - last_print_time >= .1:
                 last_print_time = current_time
                 for obj in tracked_objects:
-                    print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
+                    #print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
+                    #print("OBJECT: ", obj)
+                    values = list(obj.values())[:3]
+                    object_values += values
                     #dbus call for tracked objects/boats here
+            print(object_values)
+            object_service.update_object_list(object_values)
+            
 
             if current_datetime - last_capture_time >= capture_interval:
                 image_filename = f"outputframe.jpg"
+                frame = video.get().getCvFrame()
+                frame_resized = cv2.resize(frame, (640, 480))
                 cv2.imwrite(image_filename, frame_resized)
+                #cv2.imwrite(image_filename, frame)
                 last_capture_time = current_datetime
                 # Update the latest image path for D-Bus
-                #image_service.update_latest_image(image_filename)
+                image_service.update_latest_image(image_filename)
                 print(f"Captured and updated image: {image_filename}")
 
             if cv2.waitKey(1) == ord('q'):
