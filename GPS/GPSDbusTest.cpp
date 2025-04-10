@@ -146,11 +146,11 @@ int main() {
             //std::cout << c << std::endl;
             
             line += c;
-            std::cout << line << std::endl;
+            //std::cout << line << std::endl;
 
             // Check for end of a line (NMEA sentence)
             if (c == '\n') {
-                std::cout << line << std::endl;
+                //std::cout << line << std::endl;
                 if (line.find("GGA") != std::string::npos) {
                     processGGA(line);
                 } 

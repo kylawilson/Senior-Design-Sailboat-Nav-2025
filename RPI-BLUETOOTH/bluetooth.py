@@ -90,12 +90,13 @@ def get_depth():
 def get_wind_speed():
     """Fetches the latest encoded image from the D-Bus service."""
     try:
-        bus = dbus.SessionBus()
+        bus = dbus.SystemBus()
         obj = bus.get_object("com.example.WindSpeedService", "/WindSpeedService")
         iface = dbus.Interface(obj, "com.example.WindSpeedService")
         wind_speed = iface.GetWindSpeed()
 
         if wind_speed != None:
+            print("Wind Speed: ", wind_speed)
             return wind_speed
         else:
             print("No wind speed available from service.")
@@ -111,7 +112,8 @@ def get_wind_direction():
         iface = dbus.Interface(obj, "com.example.WindDirectionService")
         wind_direction = iface.GetWindDirection()
 
-        if wind_direction != None:
+        if wind_direction != "Unknown":
+            print("Wind Direction: ", wind_speed)
             return wind_direction
         else:
             print("No wind direction available from service.")
@@ -1328,7 +1330,7 @@ class ObjectCharacteristic(Characteristic):
                 service)
         self.obj = dbus.Byte(0x02)
         self.notifying = False
-        GLib.timeout_add(1000, self.get_data)
+        GLib.timeout_add(250, self.get_data)
 
     def get_data(self):
         self.obj = get_objects()

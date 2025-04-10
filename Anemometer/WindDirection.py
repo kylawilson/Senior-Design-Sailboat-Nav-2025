@@ -36,7 +36,7 @@ def run_dbus_service():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     session_bus = dbus.SessionBus()
     bus_name_wind_direction = dbus.service.BusName("com.example.WindDirectionService", session_bus)
-    global wind_speed_direction
+    global wind_direction_service
     wind_direction_service = WindDirectionService(bus_name_wind_direction)
     
     print("D-Bus service running...")

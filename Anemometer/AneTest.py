@@ -33,7 +33,7 @@ class WindSpeedService(dbus.service.Object):
 def run_dbus_service():
     """Runs the D-Bus main loop in a separate thread."""
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    session_bus = dbus.SessionBus()
+    session_bus = dbus.SystemBus()
     bus_name_wind_speed = dbus.service.BusName("com.example.WindSpeedService", session_bus)
     global wind_speed_service
     wind_speed_service = WindSpeedService(bus_name_wind_speed)

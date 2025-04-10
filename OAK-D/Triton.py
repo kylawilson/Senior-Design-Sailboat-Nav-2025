@@ -37,7 +37,7 @@ class ImageService(dbus.service.Object):
         if self.latest_image_path and os.path.exists(self.latest_image_path):
             with open(self.latest_image_path, "rb") as img_file:
                 encoded = base64.b64encode(img_file.read()).decode('utf-8')
-                print(encoded)
+                #print(encoded)
             print(f"Sent encoded image: {self.latest_image_path}")
             return encoded  # Returns the base64 string
         else:
@@ -59,7 +59,7 @@ class DepthService(dbus.service.Object):
                          in_signature='', out_signature='ad')    # returns an array
     def GetDepth(self):
         """Returns the base64-encoded depth if available."""
-        print(self.depth_array)
+        #print(self.depth_array)
         if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
             print(f"Sent depth: {self.depth_array}")
             return self.depth_array  # Returns the base64 string
@@ -81,7 +81,7 @@ class ObjectService(dbus.service.Object):
                          in_signature='', out_signature='ad')    # returns an array
     def GetObjects(self):
         """Returns the object list if available."""
-        print("OBJECT: ", self.object_list)
+        #print("OBJECT: ", self.object_list)
         #line below may be an issue, look here during testing
         if self.object_list is not None:         # need to set to None if we're not getting a reading when we set depth_array
             print(f"Sent objects: {self.object_list}")
