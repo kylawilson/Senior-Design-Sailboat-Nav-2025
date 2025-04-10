@@ -25,4 +25,27 @@ struct AnemometerData {
     var windDirection: String = "Wind Direction"
 }
 
+class BoatDataModel: ObservableObject {
+    @Published var btService: BluetoothService
+    
+    init() {
+        btService = BluetoothService()
+    }
+}
 
+func convertUTCtoEST(utcTime: String) -> String? {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "HHmmss.SSS"
+    guard let utcDate = dateFormatter.date(from: utcTime) else {
+        print("Invalid UTC time format")
+        return nil
+    }
+    
+    let estTimeZone = TimeZone(identifier: "America/New_York")!
+    let estDate = utcDate.addingTimeInterval(TimeInterval(-5 * 60 * 60)) // Subtract 5 hours
+    
+    dateFormatter.timeZone = estTimeZone
+    let estTime = dateFormatter.string(from: estDate)
+    
+    return estTime
+}
