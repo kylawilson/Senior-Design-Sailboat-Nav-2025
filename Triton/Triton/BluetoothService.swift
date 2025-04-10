@@ -24,7 +24,7 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var finalPhotoData = ""
     @Published var depthArray: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var objectArray: [CGFloat] = []
-    @Published var coordinateArray: [(CGFloat, CGFloat)] = []
+    @Published var coordinateArray: [(CGFloat, CGFloat)] = [(1.23, 2.34)]
     @Published var stereoPiArray1: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var stereoPiArray2: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var liveView: Bool = false
@@ -218,10 +218,10 @@ extension BluetoothService: CBCentralManagerDelegate {
         if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
             tritonConnectionState = .connected
             connectedTriton = peripheral
-        } else if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+        } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6") {
             stereoPi1ConnectionState = .connected
             connectedStereoPi1 = peripheral
-        } else {
+        } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C0"){     //this is a random uuid that I am using until we have the next pi up and running
             stereoPi2ConnectionState = .connected
             connectedStereoPi2 = peripheral
         }
@@ -340,16 +340,6 @@ extension BluetoothService: CBPeripheralDelegate {
                 parseGPSString(dataString)
                 //updateGPSCharacteristicUI(characteristic.uuid, value)
             } else if renderingTransferCharacteristics.contains(characteristic.uuid) {
-//                let newval = value.map { String(format: "%02x", $0) }.joined()
-//                //now want to convert bytes to array of floats, test in Lab on Mon/Tues
-//                let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
-//                    let floatPointer = rawBufferPointer.bindMemory(to: Float.self)
-//                    return Array(floatPointer)
-//                }
-//                let cgFloatArray = floatArray.map { CGFloat($0) }
-//                let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
-//                print("Oak-D Array Received in Meters: \(dividedCGFloatArray)")
-//                depthArray = dividedCGFloatArray
                 updateRendering(characteristic.uuid, value)
             } else if stereoPiTransferCharacteristics.contains(characteristic.uuid){
                 let newval = value.map { String(format: "%02x", $0) }.joined()
@@ -488,7 +478,7 @@ extension BluetoothService: CBPeripheralDelegate {
             let cgFloatArray = floatArray.map { CGFloat($0) }
             print("Object Array Received: \(cgFloatArray)")
             objectArray = cgFloatArray
-            coordinateArray = []
+            coordinateArray.removeAll()
             for i in stride(from: 0, to: objectArray.count, by: 3) {
                 let x = objectArray[i + 1]
                 let y = objectArray[i + 2]
