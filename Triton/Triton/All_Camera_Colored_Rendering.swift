@@ -45,6 +45,7 @@ struct PolarGridView: View {
     
     
     
+    
     var body: some View {
         ZStack {
             Color.white.edgesIgnoringSafeArea(.all)
@@ -77,7 +78,7 @@ struct PolarGridView: View {
     }
     func scaleDistance(_ value: CGFloat) -> CGFloat {
         let minInput: CGFloat = 0.5
-        let maxInput: CGFloat = 15
+        let maxInput: CGFloat = 5
         let minOutput: CGFloat = 25
         let maxOutput: CGFloat = 200
         return ((value - minInput) / (maxInput - minInput)) * (maxOutput - minOutput) + minOutput
@@ -130,7 +131,7 @@ struct OAKDObjectView: View {
 
         return ZStack {
             ForEach(Array(positions.enumerated()), id: \.element) { index, position in
-                let isRed = rawDistances[index] <= 3
+                let isRed = rawDistances[index] <= 1.5
                 let fillColor = isRed ? Color.red.opacity(0.5) : Color.green.opacity(0.5)
                 
                 Path { path in
@@ -159,7 +160,7 @@ struct OAKDObjectView: View {
 
             ForEach(Array(positions.enumerated()), id: \.element) { index, position in
                 Circle()
-                    .fill(rawDistances[index] <= 3 ? Color.red : Color.green)
+                    .fill(rawDistances[index] <= 1.5 ? Color.red : Color.green)
                     .frame(width: 10, height: 10)
                     .position(position)
             }
@@ -173,6 +174,7 @@ struct StereoPIZoneView: View {
     let maxRadius: CGFloat
     let startAngle: Double
     let color: Color
+    var tooClose = 1.5
 
     var body: some View {
         let positions = distances.enumerated().map { (index, distance) -> CGPoint in
@@ -204,7 +206,7 @@ struct StereoPIZoneView: View {
 
             path.closeSubpath()
         }
-        .fill(rawDistances.contains(where: { $0 <= 3 }) ? Color.red.opacity(0.5) : color.opacity(0.5))
+        .fill(rawDistances.contains(where: { $0 <= tooClose }) ? Color.red.opacity(0.5) : color.opacity(0.5))
     }
 }
 struct BoatTriangleView: View {

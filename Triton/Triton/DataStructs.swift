@@ -25,14 +25,6 @@ struct AnemometerData {
     var windDirection: String = "Wind Direction"
 }
 
-class BoatDataModel: ObservableObject {
-    @Published var btService: BluetoothService
-    
-    init() {
-        btService = BluetoothService()
-    }
-}
-
 func convertUTCtoEST(utcTime: String) -> String? {
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "HHmmss.SSS"
