@@ -23,6 +23,8 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var anemometerData = AnemometerData()
     @Published var finalPhotoData = ""
     @Published var depthArray: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    @Published var objectArray: [CGFloat] = []
+    @Published var coordinateArray: [(CGFloat, CGFloat)] = []
     @Published var stereoPiArray1: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var stereoPiArray2: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var liveView: Bool = false
@@ -45,7 +47,8 @@ class BluetoothService: NSObject, ObservableObject {
     var stereoPiTransferServices = [ StereoPiTransferService.tritonStereoPiServiceUUID ]
     private var gpsTransferCharacteristics = [ GPSTransferService.tritonLongitudeCharacteristicUUID, GPSTransferService.tritonCOGCharacteristicUUID, GPSTransferService.tritonLatitudeCharacteristicUUID, GPSTransferService.tritonDateCharacteristicUUID, GPSTransferService.tritonAltitudeCharacteristicUUID, GPSTransferService.tritonLatitudeIndicatorCharacteristicUUID, GPSTransferService.tritonLongitudeIndicatorCharacteristicUUID, GPSTransferService.tritonTimeCharacteristicUUID, GPSTransferService.tritonSpeedCharacteristicUUID]
     private var photoTransferCharacteristics = [ PhotoTransferService.tritonPhotoCharacteristicUUID ]
-    private var renderingTransferCharacteristics = [ RenderingTransferService.tritonRenderingDepthCharacteristicUUID ]
+    private var renderingTransferCharacteristics = [ RenderingTransferService.tritonRenderingDepthCharacteristicUUID,
+        RenderingTransferService.tritonRenderingObjectCharacteristicUUID]
     private var stereoPiTransferCharacteristics = [ StereoPiTransferService.tritonStereoPiDepthCharacteristicUUID ]
     private var anemometerTransferCharacteristics = [ AnemometerTransferService.tritonWindSpeedCharacteristicUUID ]
     private var subscribedCharacteristics : [ CBCharacteristic ]
@@ -337,16 +340,17 @@ extension BluetoothService: CBPeripheralDelegate {
                 parseGPSString(dataString)
                 //updateGPSCharacteristicUI(characteristic.uuid, value)
             } else if renderingTransferCharacteristics.contains(characteristic.uuid) {
-                let newval = value.map { String(format: "%02x", $0) }.joined()
-                //now want to convert bytes to array of floats, test in Lab on Mon/Tues
-                let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
-                    let floatPointer = rawBufferPointer.bindMemory(to: Float.self)
-                    return Array(floatPointer)
-                }
-                let cgFloatArray = floatArray.map { CGFloat($0) }
-                let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
-                print("Oak-D Array Received in Meters: \(dividedCGFloatArray)")
-                depthArray = dividedCGFloatArray
+//                let newval = value.map { String(format: "%02x", $0) }.joined()
+//                //now want to convert bytes to array of floats, test in Lab on Mon/Tues
+//                let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
+//                    let floatPointer = rawBufferPointer.bindMemory(to: Float.self)
+//                    return Array(floatPointer)
+//                }
+//                let cgFloatArray = floatArray.map { CGFloat($0) }
+//                let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
+//                print("Oak-D Array Received in Meters: \(dividedCGFloatArray)")
+//                depthArray = dividedCGFloatArray
+                updateRendering(characteristic.uuid, value)
             } else if stereoPiTransferCharacteristics.contains(characteristic.uuid){
                 let newval = value.map { String(format: "%02x", $0) }.joined()
                 let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
@@ -438,7 +442,7 @@ extension BluetoothService: CBPeripheralDelegate {
             let trimmed = part.trimmingCharacters(in: .whitespaces)
 
             if trimmed.hasPrefix("[GGA] UTCtime:") {
-                gpsData.time = trimmed.replacingOccurrences(of: "UTCtime:", with: "").trimmingCharacters(in: .whitespaces)
+                gpsData.time = trimmed.replacingOccurrences(of: "[GGA] UTCtime:", with: "").trimmingCharacters(in: .whitespaces)
             } else if trimmed.hasPrefix("Latitude:") {
                 gpsData.latitude = trimmed.replacingOccurrences(of: "Latitude:", with: "").trimmingCharacters(in: .whitespaces)
             } else if trimmed.hasPrefix("latIndicator:") {
@@ -447,17 +451,52 @@ extension BluetoothService: CBPeripheralDelegate {
                 gpsData.longitude = trimmed.replacingOccurrences(of: "Longitude:", with: "").trimmingCharacters(in: .whitespaces)
             } else if trimmed.hasPrefix("longIndicator:") {
                 gpsData.longitudeInd = trimmed.replacingOccurrences(of: "longIndicator:", with: "").trimmingCharacters(in: .whitespaces)
-//            } else if trimmed.hasPrefix("Fix?") {
-//                gpsData.fix = trimmed.replacingOccurrences(of: "Fix?:", with: "").trimmingCharacters(in: .whitespaces)
+            } else if trimmed.hasPrefix("Fix?") {
+                gpsData.fix = trimmed.replacingOccurrences(of: "Fix?:", with: "").trimmingCharacters(in: .whitespaces)
             } else if trimmed.hasPrefix("Altitude:") {
                 gpsData.altitude = trimmed.replacingOccurrences(of: "Altitude:", with: "").trimmingCharacters(in: .whitespaces)
             } else if trimmed.hasPrefix("[RMC] Speed:") {
-                gpsData.speed = trimmed.replacingOccurrences(of: "Speed:", with: "").trimmingCharacters(in: .whitespaces)
+                gpsData.speed = trimmed.replacingOccurrences(of: "[RMC] Speed:", with: "").trimmingCharacters(in: .whitespaces)
             } else if trimmed.hasPrefix("COG:") {
                 gpsData.COG = trimmed.replacingOccurrences(of: "COG:", with: "").trimmingCharacters(in: .whitespaces)
             } else if trimmed.hasPrefix("Date:") {
                 gpsData.date = trimmed.replacingOccurrences(of: "Date:", with: "").trimmingCharacters(in: .whitespaces)
             }
+        }
+    }
+    
+    func updateRendering(_ uuid: CBUUID, _ value: Data ) {
+        switch(uuid) {
+        case (RenderingTransferService.tritonRenderingDepthCharacteristicUUID) :
+            let newval = value.map { String(format: "%02x", $0) }.joined()
+            //now want to convert bytes to array of floats, test in Lab on Mon/Tues
+            let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
+                let floatPointer = rawBufferPointer.bindMemory(to: Float.self)
+                return Array(floatPointer)
+            }
+            let cgFloatArray = floatArray.map { CGFloat($0) }
+            let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
+            print("Oak-D Array Received in Meters: \(dividedCGFloatArray)")
+            depthArray = dividedCGFloatArray
+        case (RenderingTransferService.tritonRenderingObjectCharacteristicUUID) :
+            let newval = value.map { String(format: "%02x", $0) }.joined()
+            //now want to convert bytes to array of floats, test in Lab on Mon/Tues
+            let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
+                let floatPointer = rawBufferPointer.bindMemory(to: Float.self)
+                return Array(floatPointer)
+            }
+            let cgFloatArray = floatArray.map { CGFloat($0) }
+            print("Object Array Received: \(cgFloatArray)")
+            objectArray = cgFloatArray
+            coordinateArray = []
+            for i in stride(from: 0, to: objectArray.count, by: 3) {
+                let x = objectArray[i + 1]
+                let y = objectArray[i + 2]
+                coordinateArray.append((x, y))
+            }
+            print("COORDINATE ARRAY: \(coordinateArray)")
+        default:
+            print("Unhandled Rendering Characteristics")
         }
     }
     
