@@ -216,6 +216,8 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
         truemax[i]=(truemax[i]*1.96)
     tempmax = max(truemax)
     print("The closest distance to you is ", tempmax)
+    with open("tempmax_log.txt", "w") as f:
+        f.write(f"{tempmax}\n")
 
 #ouput is a 1x10 matrix (truemax)
 #to be more specific, the file takes the calibration data from file 6 and measures the distances (in cm) that that data releases. The frame is cut into 10 sectors, and the distances takes the point value it gets times the conversion rate (which is roughly 1.96) Conversion rate has to change if recalibration happens.

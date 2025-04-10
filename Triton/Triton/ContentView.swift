@@ -30,9 +30,11 @@ struct ContentView: View {
                         }
                         HStack {
                             ButtonSwitch(isOn: $btService.liveView, btService: btService)
+                                .frame(alignment: .leading)
                             NavigationLink(destination: ImageViewPage(btService: btService)) {
                                 PreviewButton(label: "Live View", preview: ImagePreview(btService: btService))
                             }
+                            .frame(maxWidth: .infinity)
                         }
                         NavigationLink(destination: RawDataViewPage(btService: btService)) {
                             TextButton(label: "Raw Data")
