@@ -385,8 +385,15 @@ extension BluetoothService: CBPeripheralDelegate {
         print("Peripheral modified services")
         for service in invalidatedServices {
             print("Invalidated Service: ", service)
+            if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+                tritonConnectionState = .disconnected
+            } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6") {
+                stereoPi1ConnectionState = .disconnected
+            } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C0"){     //this is a random uuid that I am using until we have the next pi up and running
+                stereoPi2ConnectionState = .disconnected
+            }
         }
-        peripheral.discoverServices(transferServices)
+        
     }
     
     func updatePhotoCharacteristicUI() {

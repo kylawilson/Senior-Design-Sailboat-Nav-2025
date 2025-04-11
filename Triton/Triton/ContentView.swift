@@ -160,12 +160,14 @@ struct RawDataViewPage: View {
             TileView(label: "Longitude", value: btService.gpsData.longitude+btService.gpsData.longitudeInd)
             TileView(label: "Latitude", value: btService.gpsData.latitude+btService.gpsData.latitudeInd)
             TileView(label: "Altitude", value: btService.gpsData.altitude)
-            TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
+            //TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
             TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
             TileView(label: "COG", value: btService.gpsData.COG)
             TileView(label: "Speed", value: btService.gpsData.speed)
             TileView(label: "Date", value: btService.gpsData.date)
         }
+        TileView(label: "Fix", value: btService.gpsData.fix)
+            .frame(maxWidth: .infinity)
     }
 }
 
