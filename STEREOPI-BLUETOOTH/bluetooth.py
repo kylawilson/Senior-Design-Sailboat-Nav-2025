@@ -39,21 +39,21 @@ GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 LE_ADVERTISEMENT_IFACE = 'org.bluez.LEAdvertisement1'
 
 #test
-def get_depth():
-    """Fetches the latest encoded image from the D-Bus service."""
-    try:
-        bus = dbus.SessionBus()
-        obj = bus.get_object("com.example.DepthService", "/DepthService")
-        iface = dbus.Interface(obj, "com.example.DepthService")
-        returned_depth = iface.GetDepth()
-
-        if returned_depth != [1.0, 2.0, 3.0, 4.0]:
-            return returned_depth
-        else:
-            print("No depth available from service.")
-    
-    except Exception as e:
-        print("D-Bus Error:", e)
+#def get_depth():
+#    """Fetches the latest encoded image from the D-Bus service."""
+#    try:
+#        bus = dbus.SessionBus()
+#        obj = bus.get_object("com.example.DepthService", "/DepthService")
+#        iface = dbus.Interface(obj, "com.example.DepthService")
+#        returned_depth = iface.GetDepth()
+#
+#        if returned_depth != [1.0, 2.0, 3.0, 4.0]:
+#            return returned_depth
+#        else:
+#            print("No depth available from service.")
+#
+#    except Exception as e:
+#        print("D-Bus Error:", e)
 #end test
 
 class InvalidArgsException(dbus.exceptions.DBusException):
@@ -383,6 +383,17 @@ class Descriptor(dbus.service.Object):
         print('Default WriteValue called, returning error')
         raise NotSupportedException()
 
+def get_depth_data():
+    # Read the latest tempmax value from the file
+    with open("../stereopi/tempmax_log.txt", "r") as f:
+        line = f.readline().strip()  # Read the only line (or last one if you've kept more)
+        if line:
+            tempmax_value = float(line)
+            print("Latest tempmax:", tempmax_value)
+            return [tempmax_value] * 10
+        else:
+            print("File is empty.")
+
 
 class StereoPiDepthService(Service):
     """
@@ -412,7 +423,7 @@ class DepthCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        self.depth = get_depth()
+        self.depth = get_depth_data()
         if not self.notifying:
             return True
         if (self.depth):
@@ -428,7 +439,7 @@ class DepthCharacteristic(Characteristic):
         depth_dbus_bytes = [dbus.Byte(b) for b in depth_bytes]
         self.PropertiesChanged(
             GATT_CHRC_IFACE,
-            {'Value': depth_dbus_bytes}, 
+            {'Value': depth_dbus_bytes},
             []
         )
 
@@ -576,7 +587,7 @@ def main(timeout = 0):
     dbus.service.Object.remove_from_connection(stereoPi_advertisement)
 
 if __name__ == '__main__':
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--timeout', default=0, type=int, help="advertise " +
                         "for this many seconds then stop, 0=run forever " +
@@ -584,5 +595,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args.timeout)
-
-

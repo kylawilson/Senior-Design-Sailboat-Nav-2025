@@ -1,78 +1,10 @@
-#
-# StereoPi tutorial is free software: you can redistribute it 
-# and/or modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation, either version 3 of the 
-# License, or (at your option) any later version.
-#
-# StereoPi tutorial is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with StereoPi tutorial.  
-# If not, see <http://www.gnu.org/licenses/>.
-#
-#          <><><> SPECIAL THANKS: <><><>
-#
-# Thanks to Adrian and http://pyimagesearch.com, as a lot of
-# code in this tutorial was taken from his lessons.
-#  
-# Thanks to RPi-tankbot project: https://github.com/Kheiden/RPi-tankbot
-#
-# Thanks to rakali project: https://github.com/sthysel/rakali
-
-
 from picamera import PiCamera
 import time
 import cv2
 import numpy as np
 import json
 from datetime import datetime
-#DBUS
-import dbus
-import dbus.service
-import dbus.mainloop.glib
-from gi.repository import GLib
-import threading
-
-class DepthService(dbus.service.Object):
-    """D-Bus service that provides the depths of objects in view in base64 format."""
-
-    def __init__(self, bus_name):
-        dbus.service.Object.__init__(self, bus_name, '/DepthService')
-        self.depth_array = None  
-
-    @dbus.service.method("com.example.DepthService",
-                         in_signature='', out_signature='ad')    # returns an array
-    def GetDepth(self):
-        """Returns the base64-encoded depth if available."""
-        print(self.depth_array)
-        if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
-            print(f"Sent depth: {self.depth_array}")
-            return self.depth_array  # Returns an array of floats containing the depth repeated in 1x10 array
-        else:
-            return [1.0, 2.0, 3.0, 4.0]
-
-    def update_depth_array(self, depth_array):
-        """Updates to the latest depth array."""
-        self.depth_array = depth_array
-
-def run_dbus_service():
-    """Runs the D-Bus main loop in a separate thread."""
-    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    session_bus = dbus.SessionBus()
-    bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
-    global depth_service
-    depth_service = DepthService(bus_name_depth)
-    
-    print("D-Bus service running...")
-    mainloop = GLib.MainLoop()
-    mainloop.run()
-
-dbus_thread = threading.Thread(target=run_dbus_service)
-dbus_thread.daemon = True
-dbus_thread.start()
+import sys
 
 print ("You can press 'Q' to quit this script!")
 time.sleep (5)
@@ -133,12 +65,12 @@ camera.framerate = 20
 #camera.hflip = True
 
 # Initialize interface windows
-# cv2.namedWindow("Image")
-# cv2.moveWindow("Image", 50,100)
-# cv2.namedWindow("left")
-# cv2.moveWindow("left", 450,100)
-# cv2.namedWindow("right")
-# cv2.moveWindow("right", 850,100)
+cv2.namedWindow("Image")
+cv2.moveWindow("Image", 50,100)
+cv2.namedWindow("left")
+cv2.moveWindow("left", 450,100)
+cv2.namedWindow("right")
+cv2.moveWindow("right", 850,100)
 
 
 disparity = np.zeros((img_width, img_height), np.uint8)
@@ -150,15 +82,14 @@ def stereo_depth_map(rectified_pair):
     disparity = sbm.compute(dmLeft, dmRight)
     local_max = disparity.max()
     local_min = disparity.min()
-    print(local_max, local_min)
     disparity_grayscale = (disparity-autotune_min)*(65535.0/(autotune_max-autotune_min))
     disparity_fixtype = cv2.convertScaleAbs(disparity_grayscale, alpha=(255.0/65535.0))
     disparity_color = cv2.applyColorMap(disparity_fixtype, cv2.COLORMAP_JET)
     if (showDisparity):
-        # cv2.imshow("Image", disparity_color)
+        cv2.imshow("Image", disparity_color)
         key = cv2.waitKey(1) & 0xFF   
-        if key == ord("q"):
-            quit();
+    if key == ord("q"):
+        quit();
     return disparity_color, disparity_fixtype, disparity
 
 def load_map_settings( fName ):
@@ -228,7 +159,6 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
     
     # Disparity map calculation
     disparity, disparity_bw, native_disparity  = stereo_depth_map(rectified_pair)
-
     maximized_line = native_disparity
     
     maxInColumns = np.amax(maximized_line,0)
@@ -243,7 +173,6 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
     
     # Choose "closest" points in each column
     maximized_line[0:,] = maxInColumns
-    
     # Colorizing final line
     max_line_tune = (maximized_line-autotune_min)*(65535.0/(autotune_max-autotune_min))
     max_line = cv2.convertScaleAbs(max_line_tune, alpha=(255.0/65535.0))
@@ -262,7 +191,6 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
         min_x = min(cur_x, min_x)
         xx = int(cur_x*map_zoom_x) + int(map_width/2)         # zero point is in the middle of the map
         yy = map_height - int((cur_y-min_y)*map_zoom_y)       # zero point is at the bottom of the map
-
         # If the point fits on our 2D map - let's draw it!
         if (xx < map_width) and (xx >= 0) and (yy < map_height) and (yy >= 0):
             xy_projection[yy, xx] = max_line[0,n]
@@ -272,22 +200,24 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
     max_line_color = cv2.applyColorMap(max_line, cv2.COLORMAP_JET)
 
     # show the frame
-    #print ("Autotune: min =", autotune_min, " max =", autotune_max)
-    # if (showUndistortedImages):
-    #     cv2.imshow("left", imgLcut)
-    #     cv2.imshow("right", imgRcut)    
-    # if (showColorizedDistanceLine):
-    #     cv2.imshow("Max distance line", max_line_color)
-    # cv2.imshow("XY projection", xy_projection_color)     
+    print ("Autotune: min =", autotune_min, " max =", autotune_max)
+    if (showUndistortedImages):
+        cv2.imshow("left", imgLcut)
+        cv2.imshow("right", imgRcut)    
+    if (showColorizedDistanceLine):
+        cv2.imshow("Max distance line", max_line_color)
+    cv2.imshow("XY projection", xy_projection_color)     
     t2 = datetime.now()
     #print(max_line[40:43])
     sectorval =16
     truemax = [0]*10
     for i in range(10):
         truemax[i]= np.amax(max_line[80:240,(i*(sectorval)):((i+1)*sectorval)])
-        truemax[i]=(truemax[i]*1.96)
-    print(truemax)
-    depth_service.update_depth_array(truemax)
+        truemax[i]=(truemax[i]*1.47) #current scale, times 1.47 subtract from 375
+    tempmax =  375 - max(truemax) #erase this and everything below this and return truemax if you want to do 10 values. Otherwise, keep it for 1 value.
+    print("The closest distance to you is ", tempmax)
+    with open("tempmax_log.txt", "w") as f:
+        f.write(f"{tempmax}\n")
 
 #ouput is a 1x10 matrix (truemax)
 #to be more specific, the file takes the calibration data from file 6 and measures the distances (in cm) that that data releases. The frame is cut into 10 sectors, and the distances takes the point value it gets times the conversion rate (which is roughly 1.96) Conversion rate has to change if recalibration happens.

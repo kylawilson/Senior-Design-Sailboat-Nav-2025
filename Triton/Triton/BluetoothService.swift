@@ -24,7 +24,7 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var finalPhotoData = ""
     @Published var depthArray: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var objectArray: [CGFloat] = []
-    @Published var coordinateArray: [(CGFloat, CGFloat)] = [(1.23, 2.34)]
+    @Published var coordinateArray: [(CGFloat, CGFloat)] = []
     @Published var stereoPiArray1: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var stereoPiArray2: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var liveView: Bool = false
@@ -50,7 +50,7 @@ class BluetoothService: NSObject, ObservableObject {
     private var renderingTransferCharacteristics = [ RenderingTransferService.tritonRenderingDepthCharacteristicUUID,
         RenderingTransferService.tritonRenderingObjectCharacteristicUUID]
     private var stereoPiTransferCharacteristics = [ StereoPiTransferService.tritonStereoPiDepthCharacteristicUUID ]
-    private var anemometerTransferCharacteristics = [ AnemometerTransferService.tritonWindSpeedCharacteristicUUID ]
+    private var anemometerTransferCharacteristics = [ AnemometerTransferService.tritonWindSpeedCharacteristicUUID, AnemometerTransferService.tritonWindDirectionCharacteristicUUID ]
     private var subscribedCharacteristics : [ CBCharacteristic ]
     private var photoCharacteristic : CBCharacteristic?
     
@@ -88,9 +88,9 @@ class BluetoothService: NSObject, ObservableObject {
         print("connecting to \(String(describing: peripheral.name))")
         if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
             tritonConnectionState = .connecting
-        } else if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+        } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6") {
             stereoPi1ConnectionState = .connecting
-        } else {
+        } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C0") {
             stereoPi2ConnectionState = .connecting
         }
         centralManager.connect(peripheral, options: nil)
@@ -172,6 +172,16 @@ extension BluetoothService: CBCentralManagerDelegate {
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
             os_log("Failed to connect to %@. %s", peripheral, String(describing: error))
+            switch (peripheral.identifier.uuidString) {
+                case "209865E4-7152-710C-C3BB-45A25B2EBCDF":
+                    tritonConnectionState = .disconnected
+                case "D0EDD06D-F7D7-5D24-0C24-A245604D81C6":
+                    stereoPi1ConnectionState = .disconnected
+                case "D0EDD06D-F7D7-5D24-0C24-A245604D81C0":
+                    stereoPi2ConnectionState = .disconnected
+                default:
+                    stereoPi2ConnectionState = .disconnected
+            }
         }
     
     func centralManager(
@@ -348,10 +358,11 @@ extension BluetoothService: CBPeripheralDelegate {
                     return Array(floatPointer)
                 }
                 let cgFloatArray = floatArray.map { CGFloat($0) }
-                let dividedCGFloatArray = cgFloatArray.map { $0 / 1000 }
+                let dividedCGFloatArray = cgFloatArray.map { $0 / 100 }
                 print("StereoPiArray Received in Meters: \(dividedCGFloatArray)")
                 stereoPiArray1 = dividedCGFloatArray
             } else if anemometerTransferCharacteristics.contains(characteristic.uuid){
+                updateAnemometer(characteristic.uuid, value)
                 let newval = value.map { String(format: "%02x", $0) }.joined()
                 print("Anemometer data received: \(newval)")
             }
@@ -374,8 +385,15 @@ extension BluetoothService: CBPeripheralDelegate {
         print("Peripheral modified services")
         for service in invalidatedServices {
             print("Invalidated Service: ", service)
+            if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+                tritonConnectionState = .disconnected
+            } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6") {
+                stereoPi1ConnectionState = .disconnected
+            } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C0"){     //this is a random uuid that I am using until we have the next pi up and running
+                stereoPi2ConnectionState = .disconnected
+            }
         }
-        peripheral.discoverServices(transferServices)
+        
     }
     
     func updatePhotoCharacteristicUI() {
@@ -491,6 +509,28 @@ extension BluetoothService: CBPeripheralDelegate {
             print("Unhandled Rendering Characteristics")
         }
     }
+    
+    func updateAnemometer(_ uuid: CBUUID, _ value: Data) {
+        switch(uuid) {
+        case AnemometerTransferService.tritonWindSpeedCharacteristicUUID:
+            if let newval = String(data: value, encoding: .ascii) {
+                anemometerData.windSpeed = newval
+            } else {
+                print("Failed to decode wind speed as ASCII")
+            }
+
+        case AnemometerTransferService.tritonWindDirectionCharacteristicUUID:
+            if let newval = String(data: value, encoding: .ascii) {
+                anemometerData.windDirection = newval
+            } else {
+                print("Failed to decode wind direction as ASCII")
+            }
+
+        default:
+            print("Unhandled Anemometer Characteristics")
+        }
+    }
+
     
     func updateGPSCharacteristicUI(_ uuid: CBUUID, _ value: Data ) {
         switch (uuid) {

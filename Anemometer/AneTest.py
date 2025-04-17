@@ -73,6 +73,11 @@ try:
         knot_speed = wind_speed * 1.944
         print(f"Wind Speed: {wind_speed:.2f} m/s ({wind_speed * 2.237:.2f} mph) {knot_speed:.2f} knots")
         wind_speed_service.update_wind_speed(knot_speed)
+
+        #Need to test WRITES TO FILE
+        with open('/Senior-Design-Sailboat-Nav-2025/Anemometer/WindSpeed.txt', 'w') as file:
+            file.write(f"{knot_speed:.2f}")
+        
         # Reset for next measurement
         pulse_count = 0
         start_time = time.time()
