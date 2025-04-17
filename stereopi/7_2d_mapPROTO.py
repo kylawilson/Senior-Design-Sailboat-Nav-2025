@@ -213,8 +213,8 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
     truemax = [0]*10
     for i in range(10):
         truemax[i]= np.amax(max_line[80:240,(i*(sectorval)):((i+1)*sectorval)])
-        truemax[i]=(truemax[i]*1.96)
-    tempmax = max(truemax)
+        truemax[i]=(truemax[i]*1.47) #current scale, times 1.47 subtract from 375
+    tempmax =  375 - max(truemax) #erase this and everything below this and return truemax if you want to do 10 values. Otherwise, keep it for 1 value.
     print("The closest distance to you is ", tempmax)
     with open("tempmax_log.txt", "w") as f:
         f.write(f"{tempmax}\n")
