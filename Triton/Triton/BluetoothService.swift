@@ -344,9 +344,9 @@ extension BluetoothService: CBPeripheralDelegate {
             } else if gpsTransferCharacteristics.contains(characteristic.uuid) {
             //GPS data
                 let newval = value.map { String(format: "%02x", $0) }.joined()
-                print("GPS data received: \(newval)")
+                //print("GPS data received: \(newval)")
                 let dataString = String(data: value, encoding: .utf8) ?? "N/A"
-                print("GPS Data: \(dataString)")
+                //print("GPS Data: \(dataString)")
                 parseGPSString(dataString)
                 //updateGPSCharacteristicUI(characteristic.uuid, value)
             } else if renderingTransferCharacteristics.contains(characteristic.uuid) {
@@ -364,7 +364,7 @@ extension BluetoothService: CBPeripheralDelegate {
             } else if anemometerTransferCharacteristics.contains(characteristic.uuid){
                 updateAnemometer(characteristic.uuid, value)
                 let newval = value.map { String(format: "%02x", $0) }.joined()
-                print("Anemometer data received: \(newval)")
+                //print("Anemometer data received: \(newval)")
             }
         }
     }
@@ -504,7 +504,7 @@ extension BluetoothService: CBPeripheralDelegate {
                 let y = objectArray[i + 2]
                 self.coordinateArray.append((x, y))
             }
-            print("COORDINATE ARRAY: \(coordinateArray)")
+            //print("COORDINATE ARRAY: \(coordinateArray)")
         default:
             print("Unhandled Rendering Characteristics")
         }
