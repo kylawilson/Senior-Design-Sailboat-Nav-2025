@@ -13,6 +13,9 @@ import subprocess
 import PIL
 from PIL import Image
 
+#test
+from datetime import datetime
+
 import array
 from gi.repository import GLib
 import sys
@@ -554,15 +557,15 @@ class GPSservice(Service):
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.GPS_UUID, True)
-        self.add_characteristic(LongitudeCharacteristic(bus, 0, self))
-        self.add_characteristic(LongitudeIndicatorCharacteristic(bus, 1, self))
-        self.add_characteristic(LatitudeCharacteristic(bus, 2, self))
-        self.add_characteristic(LatitudeIndicatorCharacteristic(bus, 3, self))
+        # self.add_characteristic(LongitudeCharacteristic(bus, 0, self))
+        # self.add_characteristic(LongitudeIndicatorCharacteristic(bus, 1, self))
+        # self.add_characteristic(LatitudeCharacteristic(bus, 2, self))
+        # self.add_characteristic(LatitudeIndicatorCharacteristic(bus, 3, self))
         self.add_characteristic(GPSTimeCharacteristic(bus, 4, self))
-        self.add_characteristic(GPSAltitudeCharacteristic(bus, 5, self))
-        self.add_characteristic(GPSSpeedCharacteristic(bus, 6, self))   #temporarily uncomment
-        self.add_characteristic(GPSCOGCharacteristic(bus, 7, self))     #temporarily uncomment
-        self.add_characteristic(GPSDateCharacteristic(bus, 8, self))    #temporarily uncomment
+        # self.add_characteristic(GPSAltitudeCharacteristic(bus, 5, self))
+        # self.add_characteristic(GPSSpeedCharacteristic(bus, 6, self))   #temporarily uncomment
+        # self.add_characteristic(GPSCOGCharacteristic(bus, 7, self))     #temporarily uncomment
+        # self.add_characteristic(GPSDateCharacteristic(bus, 8, self))    #temporarily uncomment
         self.energy_expended = 0
 
 
@@ -1056,7 +1059,7 @@ class AnemometerService(Service):
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.ANE_UUID, True)
-        self.add_characteristic(AnemometerWindSpeedCharacteristic(bus, 0, self))
+        #self.add_characteristic(AnemometerWindSpeedCharacteristic(bus, 0, self))
         self.add_characteristic(AnemometerWindDirectionCharacteristic(bus, 1, self))
         
         
@@ -1274,10 +1277,16 @@ class DepthCharacteristic(Characteristic):
                 service)
         self.depth = dbus.Byte(0x02)
         self.notifying = False
-        GLib.timeout_add(1000, self.get_data)
+        GLib.timeout_add(100, self.get_data)
 
     def get_data(self):
         self.depth = get_depth()
+        # now = datetime.now()
+        # hhmm = now.hour * 100 + now.minute
+        # ss = now.second + now.microsecond / 1_000_000
+        # formatted_time = hhmm + (ss / 100)
+        # if self.depth:
+        #     self.depth.append(formatted_time)
         if not self.notifying:
             return True
         if (self.depth):
