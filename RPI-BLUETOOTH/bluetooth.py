@@ -90,22 +90,33 @@ def get_depth():
     except Exception as e:
         print("D-Bus Error:", e)
 
-def get_wind_speed():
-    """Fetches the latest encoded image from the D-Bus service."""
-    try:
-        bus = dbus.SessionBus()
-        obj = bus.get_object("com.example.WindSpeedService", "/WindSpeedService")
-        iface = dbus.Interface(obj, "com.example.WindSpeedService")
-        wind_speed = iface.GetWindSpeed()
-
-        if wind_speed != None:
-            print("Wind Speed: ", wind_speed)
+#def get_wind_speed():
+#    """Fetches the latest encoded image from the D-Bus service."""
+#    try:
+#        bus = dbus.SessionBus()
+#        obj = bus.get_object("com.example.WindSpeedService", "/WindSpeedService")
+#        iface = dbus.Interface(obj, "com.example.WindSpeedService")
+#        wind_speed = iface.GetWindSpeed()
+#
+#        if wind_speed != None:
+#            print("Wind Speed: ", wind_speed)
+#            return wind_speed
+#        else:
+#            print("No wind speed available from service.")
+#    
+#    except Exception as e:
+#        print("D-Bus Error:", e)
+        
+def get_wind_speed_data():
+    # Read the latest tempmax value from the file
+    with open("../Anemometer/WindSpeed.txt", "r") as f:
+        line = f.readline().strip()  # read line
+        if line:
+            wind_speed = float(line)
+            print("Latest Wind Speed:", wind_speed)
             return wind_speed
         else:
-            print("No wind speed available from service.")
-    
-    except Exception as e:
-        print("D-Bus Error:", e)
+            print("File is empty.")
 
 def get_wind_direction():
     """Fetches the latest encoded image from the D-Bus service."""
@@ -1080,7 +1091,8 @@ class AnemometerWindSpeedCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        self.wind_speed = get_wind_speed()
+        #test file implementation
+        self.wind_speed = get_wind_speed_data()
         if not self.notifying:
             return True
         if (self.wind_speed):
