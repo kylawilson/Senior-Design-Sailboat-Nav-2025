@@ -40,6 +40,7 @@ struct PolarGridView: View {
     
     //MARK: Use Below for Integration
     
+    let btService: BluetoothService
     let rawOAKDDistances: [CGFloat]
     let rawLeftSPDistances: [CGFloat]
     let rawRightSPDistances: [CGFloat]
@@ -48,34 +49,41 @@ struct PolarGridView: View {
     
     
     var body: some View {
-        ZStack {
-            Color.white.edgesIgnoringSafeArea(.all)
-            GeometryReader { geometry in
-                let size = min(geometry.size.width, geometry.size.height)
-                let center = CGPoint(x: size / 2, y: size / 2)
-                let maxRadius = size / 2
-                
-                let scaledOAKD = rawOAKDDistances.map(scaleDistance)
-                let scaledLeft = rawLeftSPDistances.map(scaleDistance)
-                let scaledRight = rawRightSPDistances.map(scaleDistance)
-                let tooclose = 3.0
-                
-                ZStack {
-                    ConcentricGridView(center: center, maxRadius: maxRadius, rings: rings, lines: lines)
-
-                    OAKDObjectView(distances: scaledOAKD, rawDistances: rawOAKDDistances, center: center, maxRadius: maxRadius, tooclose:tooclose)
-
-                    StereoPIZoneView(distances: scaledLeft, rawDistances: rawLeftSPDistances, center: center, maxRadius: maxRadius, startAngle: 225, finalAngle:135, tooclose:tooclose)
-
-                    StereoPIZoneView(distances: scaledRight, rawDistances: rawRightSPDistances, center: center, maxRadius: maxRadius, startAngle: 45, finalAngle: 315, tooclose:tooclose)
-
-                    BoatTriangleView(center: center)
+        VStack {
+            ZStack {
+                Color.white.edgesIgnoringSafeArea(.all)
+                GeometryReader { geometry in
+                    let size = min(geometry.size.width, geometry.size.height)
+                    let center = CGPoint(x: size / 2, y: size / 2)
+                    let maxRadius = size / 2
                     
-                    OtherBoatsView(boats: otherboats, center: center, scaleDistance: scaleDistance)
+                    let scaledOAKD = rawOAKDDistances.map(scaleDistance)
+                    let scaledLeft = rawLeftSPDistances.map(scaleDistance)
+                    let scaledRight = rawRightSPDistances.map(scaleDistance)
+                    let tooclose = 3.0
+                    
+                    ZStack {
+                        ConcentricGridView(center: center, maxRadius: maxRadius, rings: rings, lines: lines)
+                        
+                        OAKDObjectView(distances: scaledOAKD, rawDistances: rawOAKDDistances, center: center, maxRadius: maxRadius, tooclose:tooclose)
+                        
+                        StereoPIZoneView(distances: scaledLeft, rawDistances: rawLeftSPDistances, center: center, maxRadius: maxRadius, startAngle: 225, finalAngle:135, tooclose:tooclose)
+                        
+                        StereoPIZoneView(distances: scaledRight, rawDistances: rawRightSPDistances, center: center, maxRadius: maxRadius, startAngle: 45, finalAngle: 315, tooclose:tooclose)
+                        
+                        BoatTriangleView(center: center)
+                        
+                        OtherBoatsView(boats: otherboats, center: center, scaleDistance: scaleDistance)
+                    }
+                    .frame(width: size, height: size)
+                    .position(x: geometry.size.width / 2, y: geometry.size.height * 0.35)
                 }
-                .frame(width: size, height: size)
-                .position(x: geometry.size.width / 2, y: geometry.size.height * 0.35)
+                
             }
+            TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
+            TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
+            TileView(label: "COG", value: btService.gpsData.COG)
+            TileView(label: "Speed", value: btService.gpsData.speed)
         }
     }
     func scaleDistance(_ value: CGFloat) -> CGFloat {
