@@ -38,71 +38,6 @@ GATT_CHRC_IFACE =    'org.bluez.GattCharacteristic1'
 GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 LE_ADVERTISEMENT_IFACE = 'org.bluez.LEAdvertisement1'
 
-#test
-#def get_depth():
-#    """Fetches the latest encoded image from the D-Bus service."""
-#    try:
-#        bus = dbus.SessionBus()
-#        obj = bus.get_object("com.example.DepthService", "/DepthService")
-#        iface = dbus.Interface(obj, "com.example.DepthService")
-#        returned_depth = iface.GetDepth()
-#
-#        if returned_depth != [1.0, 2.0, 3.0, 4.0]:
-#            return returned_depth
-#        else:
-#            print("No depth available from service.")
-#
-#    except Exception as e:
-#        print("D-Bus Error:", e)
-#end test
-
-
-#test
-AGENT_PATH = "/test/agent"
-
-class AutoPairAgent(dbus.service.Object):
-    def __init__(self, bus):
-        dbus.service.Object.__init__(self, bus, AGENT_PATH)
-
-    @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
-    def Release(self):
-        pass
-
-    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
-    def RequestAuthorization(self, device):
-        print(f"Authorizing device {device}")
-        device_obj = bus.get_object(BLUEZ_SERVICE_NAME, device)
-        device_props = dbus.Interface(device_obj, DBUS_PROP_IFACE)
-        device_props.Set("org.bluez.Device1", "Trusted", True)
-
-    @dbus.service.method("org.bluez.Agent1", in_signature="os", out_signature="")
-    def DisplayPinCode(self, device, pincode):
-        print(f"DisplayPinCode {device} {pincode}")
-
-    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="u")
-    def RequestPasskey(self, device):
-        return dbus.UInt32(123456)
-
-    @dbus.service.method("org.bluez.Agent1", in_signature="ou", out_signature="")
-    def DisplayPasskey(self, device, passkey):
-        print(f"DisplayPasskey {device} {passkey}")
-
-    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
-    def RequestConfirmation(self, device, passkey):
-        print(f"Confirming passkey {passkey} for {device}")
-
-    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
-    def AuthorizeService(self, device, uuid):
-        print(f"Authorizing service {uuid} for device {device}")
-        device_obj = bus.get_object(BLUEZ_SERVICE_NAME, device)
-        device_props = dbus.Interface(device_obj, DBUS_PROP_IFACE)
-        device_props.Set("org.bluez.Device1", "Trusted", True)
-
-    @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
-    def Cancel(self):
-        pass
-#end test
-
 class InvalidArgsException(dbus.exceptions.DBusException):
     _dbus_error_name = 'org.freedesktop.DBus.Error.InvalidArgs'
 
@@ -439,7 +374,7 @@ class Descriptor(dbus.service.Object):
 #            return [tempmax_value] * 10
 #        else:
 #            print("File is empty.")
-            
+
 def get_depth_data():
     # Read the 1x10 array of values from the file
     with open("../stereopi/tempmax_log.txt", "r") as f:
@@ -529,56 +464,6 @@ class DepthCharacteristic(Characteristic):
             return
         self.notifying = False
 
-# class LengthCharacteristic(Characteristic):
-#     """
-
-#     """
-#     LEN_UUID = '36523c64-9a13-4742-89d8-91c9db2374c1'
-
-#     def __init__(self, bus, index, service):
-#         Characteristic.__init__(
-#                 self, bus, index,
-#                 self.LEN_UUID,
-#                 ['read', 'notify'],
-#                 service)
-#         self.len = dbus.Byte(0x02)
-#         self.notifying = False
-#         GLib.timeout_add(1000, self.get_data)
-
-#     def get_data(self):
-#         #self.len = get_len()
-#         if not self.notifying:
-#             return True
-#         if (self.len):
-#             print('Length ' + repr(self.len))
-#             self.notify_len()
-#         return True
-
-#     def notify_len(self):
-#         if not self.notifying:
-#             return
-#         len_bytes = [dbus.Byte(ord(c)) for c in self.len]
-#         self.PropertiesChanged(
-#                 GATT_CHRC_IFACE,
-#                 { 'Value': [dbus.Byte(b) for b in len_bytes] }, [])
-
-#     def ReadValue(self, options):
-#         print('Length ' + repr(self.len))
-#         return [dbus.Byte(self.len)]
-
-#     def StartNotify(self):
-#         if self.notifying:
-#             print('Already notifying, nothing to do')
-#             return
-#         self.notifying = True
-#         self.notify_len()
-
-#     def StopNotify(self):
-#         if not self.notifying:
-#             print('Not notifying, nothing to do')
-#             return
-#         self.notifying = False
-
 def register_app_cb():
     print('GATT application registered')
 
@@ -647,16 +532,6 @@ def main(timeout = 0):
     ad_manager.RegisterAdvertisement(stereoPi_advertisement.get_path(), {},
                                      reply_handler=register_ad_cb,
                                      error_handler=register_ad_error_cb)
-    #test
-    agent = AutoPairAgent(bus)
-    agent_manager = dbus.Interface(
-        bus.get_object(BLUEZ_SERVICE_NAME, "/org/bluez"),
-        "org.bluez.AgentManager1"
-    )
-    agent_manager.RegisterAgent(AGENT_PATH, "NoInputNoOutput")
-    agent_manager.RequestDefaultAgent(AGENT_PATH)
-    print("Agent registered and set as default")  
-    #end test                      
 
 
     mainloop.run()
