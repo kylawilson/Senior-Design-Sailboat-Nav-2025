@@ -381,14 +381,38 @@ class Descriptor(dbus.service.Object):
         print('Default WriteValue called, returning error')
         raise NotSupportedException()
 
+# old implementation with one value
+#def get_depth_data():
+#    # Read the latest tempmax value from the file
+#    with open("../stereopi/tempmax_log.txt", "r") as f:
+#        line = f.readline().strip()  # Read the only line (or last one if you've kept more)
+#        if line:
+#            tempmax_value = float(line)
+#            print("Latest tempmax:", tempmax_value)
+#            return [tempmax_value] * 10
+#        else:
+#            print("File is empty.")
+            
 def get_depth_data():
-    # Read the latest tempmax value from the file
+    # Read the 1x10 array of values from the file
     with open("../stereopi/tempmax_log.txt", "r") as f:
-        line = f.readline().strip()  # Read the only line (or last one if you've kept more)
+        line = f.readline().strip()
         if line:
-            tempmax_value = float(line)
-            print("Latest tempmax:", tempmax_value)
-            return [tempmax_value] * 10
+            try:
+                # remove brackets
+                cleaned = line.strip('[]')
+                parts = cleaned.split(',')
+
+                # convert to floats and store in 1x10 array
+                values = [float(p.strip()) for p in parts]
+
+                if len(values) != 10:
+                    raise ValueError(f"Expected 10 values, got {len(values)}")
+
+                print("Latest depth data:", values)
+                return values
+            except Exception as e:
+                print("Error parsing depth data:", e)
         else:
             print("File is empty.")
 
