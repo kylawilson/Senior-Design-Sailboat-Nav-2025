@@ -214,10 +214,11 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
     for i in range(10):
         truemax[i]= np.amax(max_line[80:240,(i*(sectorval)):((i+1)*sectorval)])
         truemax[i]=(truemax[i]*1.47) #current scale, times 1.47 subtract from 375
-    tempmax =  375 - max(truemax) #erase this and everything below this and return truemax if you want to do 10 values. Otherwise, keep it for 1 value.
-    print("The closest distance to you is ", tempmax)
+    #tempmax =  375 - max(truemax) #erase this and everything below this and return truemax if you want to do 10 values. Otherwise, keep it for 1 value.
+    for i in range(10):
+        print(truemax[i])
     with open("tempmax_log.txt", "w") as f:
-        f.write(f"{tempmax}\n")
+        f.write(f"{truemax}\n")
 
 #ouput is a 1x10 matrix (truemax)
 #to be more specific, the file takes the calibration data from file 6 and measures the distances (in cm) that that data releases. The frame is cut into 10 sectors, and the distances takes the point value it gets times the conversion rate (which is roughly 1.96) Conversion rate has to change if recalibration happens.
