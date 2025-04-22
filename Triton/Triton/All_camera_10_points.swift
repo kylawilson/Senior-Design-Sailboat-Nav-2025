@@ -21,7 +21,7 @@ struct PolarGridView: View {
     
     
     //let rawOAKDDistances: [CGFloat] = [15, 15, 15, 15, 15, 15, 15, 15, 15, 15] // Example values in range [0.5, 15]
-    //let rawOAKDDistances: [CGFloat] = [7.75, 7.75, 7.75, 7.75, 7.75, 7.75, 7.75, 7.75, 7.75, 7.75]
+    //let rawOAKDDistances: [CGFloat] = [7.75, 7.75, 7.75, 27, 27.75, 37.75, 7.75, 7.75, 7.75, 7.75]
     //let rawOAKDDistances: [CGFloat] = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
     //let rawLeftSPDistances: [CGFloat] = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8] // Example values for yellow objects
     //let rawRightSPDistances: [CGFloat] = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10] // Example values for yellow objects
@@ -36,7 +36,7 @@ struct PolarGridView: View {
     
     //let rawLeftSPDistances: [CGFloat] = [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
     
-    //let otherboats: [(CGFloat, CGFloat)] = [(0.5, -45), (10, 0), (3, 32)]
+    //let otherboats: [(CGFloat, CGFloat)] = [(0.5, -45), (10, 0), (3, 32), (25, 25)]
     
     //MARK: Use Below for Integration
     
@@ -57,9 +57,13 @@ struct PolarGridView: View {
                     let center = CGPoint(x: size / 2, y: size / 2)
                     let maxRadius = size / 2
                     
-                    let scaledOAKD = rawOAKDDistances.map(scaleDistance)
-                    let scaledLeft = rawLeftSPDistances.map(scaleDistance)
-                    let scaledRight = rawRightSPDistances.map(scaleDistance)
+                    let scaledOAKD = rawOAKDDistances.map(preprocessDistance).map(scaleDistance)
+                    let scaledLeft = rawLeftSPDistances.map(preprocessDistance).map(scaleDistance)
+                    let scaledRight = rawRightSPDistances.map(preprocessDistance).map(scaleDistance)
+                    //let scaledOtherboats = otherboats.map { (distance, angle) in
+                     //   (processedScaleDistance(distance), angle)
+                    //}
+                    //if anything goes wrong uncomment these lines above
                     let tooclose = 3.0
                     
                     ZStack {
@@ -73,17 +77,19 @@ struct PolarGridView: View {
                         
                         BoatTriangleView(center: center)
                         
-                        OtherBoatsView(boats: otherboats, center: center, scaleDistance: scaleDistance)
+                        OtherBoatsView(boats: otherboats, center: center, scaleDistance: processedScaleDistance)
                     }
                     .frame(width: size, height: size)
                     .position(x: geometry.size.width / 2, y: geometry.size.height * 0.35)
                 }
                 
             }
+            
             TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
             TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
             TileView(label: "COG", value: btService.gpsData.COG)
             TileView(label: "Speed", value: btService.gpsData.speed)
+             
         }
     }
     func scaleDistance(_ value: CGFloat) -> CGFloat {
@@ -93,6 +99,23 @@ struct PolarGridView: View {
         let maxOutput: CGFloat = 200
         return ((value - minInput) / (maxInput - minInput)) * (maxOutput - minOutput) + minOutput
     }
+    
+    
+    func preprocessDistance(_ value: CGFloat) -> CGFloat {
+        if value >= 15 {
+            return 15
+        }
+        return value
+    }
+    
+    var processedScaleDistance: (CGFloat) -> CGFloat {
+        return { value in
+            let floored = (value >= 15) ? 15 : value
+            return scaleDistance(floored)
+        }
+    }
+
+    
 }
 
 
@@ -311,7 +334,6 @@ struct OtherBoatsView: View {
         }
     }
 }
-
 
 
 struct PolarGridView_Previews: PreviewProvider {
