@@ -56,6 +56,53 @@ LE_ADVERTISEMENT_IFACE = 'org.bluez.LEAdvertisement1'
 #        print("D-Bus Error:", e)
 #end test
 
+
+#test
+AGENT_PATH = "/test/agent"
+
+class AutoPairAgent(dbus.service.Object):
+    def __init__(self, bus):
+        dbus.service.Object.__init__(self, bus, AGENT_PATH)
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
+    def Release(self):
+        pass
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
+    def RequestAuthorization(self, device):
+        print(f"Authorizing device {device}")
+        device_obj = bus.get_object(BLUEZ_SERVICE_NAME, device)
+        device_props = dbus.Interface(device_obj, DBUS_PROP_IFACE)
+        device_props.Set("org.bluez.Device1", "Trusted", True)
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="os", out_signature="")
+    def DisplayPinCode(self, device, pincode):
+        print(f"DisplayPinCode {device} {pincode}")
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="u")
+    def RequestPasskey(self, device):
+        return dbus.UInt32(123456)
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="ou", out_signature="")
+    def DisplayPasskey(self, device, passkey):
+        print(f"DisplayPasskey {device} {passkey}")
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
+    def RequestConfirmation(self, device, passkey):
+        print(f"Confirming passkey {passkey} for {device}")
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
+    def AuthorizeService(self, device, uuid):
+        print(f"Authorizing service {uuid} for device {device}")
+        device_obj = bus.get_object(BLUEZ_SERVICE_NAME, device)
+        device_props = dbus.Interface(device_obj, DBUS_PROP_IFACE)
+        device_props.Set("org.bluez.Device1", "Trusted", True)
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
+    def Cancel(self):
+        pass
+#end test
+
 class InvalidArgsException(dbus.exceptions.DBusException):
     _dbus_error_name = 'org.freedesktop.DBus.Error.InvalidArgs'
 
@@ -600,6 +647,16 @@ def main(timeout = 0):
     ad_manager.RegisterAdvertisement(stereoPi_advertisement.get_path(), {},
                                      reply_handler=register_ad_cb,
                                      error_handler=register_ad_error_cb)
+    #test
+    agent = AutoPairAgent(bus)
+    agent_manager = dbus.Interface(
+        bus.get_object(BLUEZ_SERVICE_NAME, "/org/bluez"),
+        "org.bluez.AgentManager1"
+    )
+    agent_manager.RegisterAgent(AGENT_PATH, "NoInputNoOutput")
+    agent_manager.RequestDefaultAgent(AGENT_PATH)
+    print("Agent registered and set as default")  
+    #end test                      
 
 
     mainloop.run()
@@ -611,9 +668,9 @@ def main(timeout = 0):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--timeout', default=0, type=int, help="advertise " +
+    parser.add_argument('--timeout', default=60, type=int, help="advertise " +
                         "for this many seconds then stop, 0=run forever " +
-                        "(default: 0)")
+                        "(default: 60)")
     args = parser.parse_args()
 
     main(args.timeout)
