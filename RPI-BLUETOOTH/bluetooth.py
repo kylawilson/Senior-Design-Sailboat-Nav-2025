@@ -80,8 +80,8 @@ def get_depth():
         returned_depth = iface.GetDepth()
 
         if returned_depth != [1.0, 2.0, 3.0, 4.0]:
-            print("PRINTING RETURNED DEPTH")
-            print(returned_depth)
+            #print("PRINTING RETURNED DEPTH")
+            #print(returned_depth)
             return returned_depth
 
         else:
@@ -165,9 +165,9 @@ def get_objects():
 
         if object_list != [1.0, 2.0, 3.0, 4.0]:
             #convert all to floats
-            print("GOT OBJECTS!")
+            #print("GOT OBJECTS!")
             float_object_list = [float(x) for x in object_list]
-            print(float_object_list)
+            #print(float_object_list)
             return float_object_list
             
         else:
@@ -598,7 +598,6 @@ class LongitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        #_, _, _, self.long, _, _ = read_gps_data(GPS_FILE)
         self.long = get_gps_data()
         if not self.notifying:
             return True
@@ -704,7 +703,6 @@ class LatitudeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        #_, self.lati, _, _, _, _ = read_gps_data(GPS_FILE)
         self.lati = get_gps_data()
         if not self.notifying:
             return True
@@ -758,7 +756,6 @@ class LatitudeIndicatorCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        #_, _, self.latiindi, _, _, _ = read_gps_data(GPS_FILE)
         self.latiindi = get_gps_data()
         if not self.notifying:
             return True
@@ -810,18 +807,17 @@ class GPSTimeCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        #self.time, _, _, _, _, _ = read_gps_data(GPS_FILE)
         self.time = get_gps_data()
         if not self.notifying:
             return True
         if (self.time):
-            print('Time ' + repr(self.time))
+            #print('Time ' + repr(self.time))
             self.notify_time()
         return True
 
 
     def notify_time(self):
-        print("notifying time\n")
+        #print("notifying time\n")
         if not self.notifying:
             return
         time_bytes = [dbus.Byte(ord(c)) for c in self.time]
@@ -919,7 +915,6 @@ class GPSSpeedCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        #_, _, _, _, _, _, self.speed, _, _ = read_gps_data(GPS_FILE)
         self.speed = get_gps_data()
         if not self.notifying:
             return True
@@ -973,7 +968,6 @@ class GPSCOGCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        #_, _, _, _, _, _, _, self.cog, _ = read_gps_data(GPS_FILE)
         self.cog = get_gps_data()
         if not self.notifying:
             return True
@@ -1027,7 +1021,6 @@ class GPSDateCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
-        #_, _, _, _, _, _, _, _, self.date = read_gps_data(GPS_FILE)
         self.date = get_gps_data()
         if not self.notifying:
             return True
@@ -1070,7 +1063,7 @@ class AnemometerService(Service):
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.ANE_UUID, True)
-        #self.add_characteristic(AnemometerWindSpeedCharacteristic(bus, 0, self))
+        self.add_characteristic(AnemometerWindSpeedCharacteristic(bus, 0, self))
         self.add_characteristic(AnemometerWindDirectionCharacteristic(bus, 1, self))
         
         
@@ -1092,18 +1085,23 @@ class AnemometerWindSpeedCharacteristic(Characteristic):
 
     def get_data(self):
         #test file implementation
+        print("GETTING WIND SPEED")
         self.wind_speed = get_wind_speed_data()
+        print(self.wind_speed)
         if not self.notifying:
+            print("NOT NOTIFYING WIND SPEED")
             return True
-        if (self.wind_speed):
+        if (self.wind_speed is not None):
             print('Wind Speed ' + repr(self.wind_speed))
             self.notify_windspeed()
         return True
 
     def notify_windspeed(self):
+        print("NOTIFYING WIND SPEED!")
         if not self.notifying:
             return
-        windspeed_bytes = [dbus.Byte(ord(c)) for c in self.wind_speed]
+        windspeed_str = str(self.wind_speed)  # convert to string
+        windspeed_bytes = [dbus.Byte(ord(c)) for c in windspeed_str]
         self.PropertiesChanged(
                 GATT_CHRC_IFACE,
                 { 'Value': [dbus.Byte(b) for b in windspeed_bytes] }, [])
@@ -1142,6 +1140,7 @@ class AnemometerWindDirectionCharacteristic(Characteristic):
         GLib.timeout_add(1000, self.get_data)
 
     def get_data(self):
+        print("GETTING WIND DIRECTION")
         self.wind_dir = get_wind_direction()
         if not self.notifying:
             print("NOT NOTIFYING WIND DIR")
@@ -1302,12 +1301,12 @@ class DepthCharacteristic(Characteristic):
         if not self.notifying:
             return True
         if (self.depth):
-            print('Depth ' + repr(self.depth))
+            #print('Depth ' + repr(self.depth))
             self.notify_depth()
         return True
 
     def notify_depth(self):
-        print("notifying depth\n")
+        #print("notifying depth\n")
         if not self.notifying:
             return
         depth_bytes = struct.pack(f'{len(self.depth)}f', *self.depth)  # Pack as float array

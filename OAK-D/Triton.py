@@ -61,7 +61,7 @@ class DepthService(dbus.service.Object):
         """Returns the base64-encoded depth if available."""
         #print(self.depth_array)
         if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
-            print(f"Sent depth: {self.depth_array}")
+            #print(f"Sent depth: {self.depth_array}")
             return self.depth_array  # Returns the base64 string
         else:
             return [1.0, 2.0, 3.0, 4.0]
@@ -84,7 +84,7 @@ class ObjectService(dbus.service.Object):
         #print("OBJECT: ", self.object_list)
         #line below may be an issue, look here during testing
         if self.object_list is not None:         # need to set to None if we're not getting a reading when we set depth_array
-            print(f"Sent objects: {self.object_list}")
+            #print(f"Sent objects: {self.object_list}")
             return self.object_list  # Returns the base64 string
         else:
             return [1.0, 2.0, 3.0, 4.0]
@@ -454,7 +454,7 @@ with dai.Device(pipeline) as device:
                 last_capture_time = current_datetime
                 # Update the latest image path for D-Bus
                 image_service.update_latest_image(image_filename)
-                print(f"Captured and updated image: {image_filename}")
+                #print(f"Captured and updated image: {image_filename}")
 
             if cv2.waitKey(1) == ord('q'):
                 break
