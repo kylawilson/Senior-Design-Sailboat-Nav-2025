@@ -83,7 +83,7 @@ struct PolarGridView: View {
             TileView(label: "Wind Speed", value: btService.anemometerData.windSpeed)
             TileView(label: "Wind Direction", value: btService.anemometerData.windDirection)
             TileView(label: "COG", value: btService.gpsData.COG)
-            TileView(label: "Speed", value: btService.gpsData.speed)
+            TileView(label: "Speed Over Ground", value: btService.gpsData.speed)
         }
     }
     func scaleDistance(_ value: CGFloat) -> CGFloat {
