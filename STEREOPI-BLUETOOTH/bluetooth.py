@@ -407,7 +407,6 @@ class StereoPiDepthService(Service):
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.DEPTH_SERV_UUID, True)
         self.add_characteristic(DepthCharacteristic(bus, 0, self))
-        #self.add_characteristic(LengthCharacteristic(bus, 1, self))
 
 
 class DepthCharacteristic(Characteristic):
