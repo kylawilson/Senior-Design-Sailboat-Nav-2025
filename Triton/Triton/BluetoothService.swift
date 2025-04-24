@@ -86,13 +86,24 @@ class BluetoothService: NSObject, ObservableObject {
     
     func connectToPeripheral(peripheral: CBPeripheral) {
         print("connecting to \(String(describing: peripheral.name))")
-        if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+//        if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
+//            tritonConnectionState = .connecting
+//            connectedTriton = peripheral
+//        } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6") {
+//            stereoPi1ConnectionState = .connecting
+//            connectedStereoPi1 = peripheral
+//        } else if (peripheral.identifier.uuidString == "F3154440-F082-058C-3AEC-B04BC17D0CD1") {
+//            stereoPi2ConnectionState = .connecting
+//            connectedStereoPi2 = peripheral
+//        }
+        print("connecting to \(String(describing: peripheral.name))")
+        if (peripheral.identifier.uuidString == "triton1") {
             tritonConnectionState = .connecting
             connectedTriton = peripheral
-        } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6") {
+        } else if (peripheral.identifier.uuidString == "StereoPi1") {
             stereoPi1ConnectionState = .connecting
             connectedStereoPi1 = peripheral
-        } else if (peripheral.identifier.uuidString == "F3154440-F082-058C-3AEC-B04BC17D0CD1") {
+        } else if (peripheral.identifier.uuidString == "StereoPi2") {
             stereoPi2ConnectionState = .connecting
             connectedStereoPi2 = peripheral
         }
@@ -163,10 +174,6 @@ extension BluetoothService: CBCentralManagerDelegate {
             discoveredPeripherals.append(peripheral)
             print("Discovered \(peripheral.name ?? peripheral.identifier.uuidString)")
         }
-        
-        //if we're not connected to peripheral and the UUID matches, then stop scanning and connect to peripheral
-        //connectedPeripheral == nil &&
-//        peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF" || peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6" || peripheral.identifier.uuidString == "F3154440-F082-058C-3AEC-B04BC17D0CD1"
         if (peripheral.name != nil && (peripheral.name == "triton1" || peripheral.name == "StereoPi1" || peripheral.name == "StereoPi2")) {
             print("Discovered target peripheral, auto-connecting...")
             //stopScanningForPeripherals()
@@ -194,16 +201,6 @@ extension BluetoothService: CBCentralManagerDelegate {
         error: (any Error)? ) {
             if (tritonConnectionState != .disconnecting) {
                 os_log("Disconnected from %@, reconnecting...", peripheral)
-//                switch (peripheral.identifier.uuidString) {
-//                    case "209865E4-7152-710C-C3BB-45A25B2EBCDF":
-//                        tritonConnectionState = .disconnected
-//                    case "D0EDD06D-F7D7-5D24-0C24-A245604D81C6":
-//                        stereoPi1ConnectionState = .disconnected
-//                    case "F3154440-F082-058C-3AEC-B04BC17D0CD1":
-//                        stereoPi2ConnectionState = .disconnected
-//                    default:
-//                        stereoPi2ConnectionState = .disconnected
-//                }
                 switch (peripheral.name) {
                     case "triton1":
                         tritonConnectionState = .disconnected
@@ -219,25 +216,12 @@ extension BluetoothService: CBCentralManagerDelegate {
                 reconnect(peripheral)
             } else {
                 os_log("Disconnected from %@", peripheral)
-//                if (peripheral.identifier.uuidString == "triton1") {
-//                    tritonConnectionState = .disconnected
-//                    connectedTriton = nil
-//                } else if (peripheral.identifier.uuidString == "StereoPi1") {
-//                    stereoPi1ConnectionState = .disconnected
-//                    connectedStereoPi1 = nil
-//                } else if (peripheral.identifier.uuidString == "StereoPi2"){
-//                    stereoPi2ConnectionState = .disconnected
-//                    connectedStereoPi2 = nil
-//                }
                 if (peripheral.name == "triton1") {
                     tritonConnectionState = .disconnected
-//                    connectedTriton = nil
                 } else if (peripheral.name == "StereoPi1") {
                     stereoPi1ConnectionState = .disconnected
-//                    connectedStereoPi1 = nil
                 } else if (peripheral.name == "StereoPi2"){
                     stereoPi2ConnectionState = .disconnected
-//                    connectedStereoPi2 = nil
                 }
                 discoveredPeripherals = []
                 subscribedCharacteristics = []
@@ -249,17 +233,6 @@ extension BluetoothService: CBCentralManagerDelegate {
         _ central: CBCentralManager,
         didConnect peripheral: CBPeripheral
     ) {
-        
-//        if (peripheral.identifier.uuidString == "209865E4-7152-710C-C3BB-45A25B2EBCDF") {
-//            tritonConnectionState = .connected
-//            connectedTriton = peripheral
-//        } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C6") {
-//            stereoPi1ConnectionState = .connected
-//            connectedStereoPi1 = peripheral
-//        } else if (peripheral.identifier.uuidString == "D0EDD06D-F7D7-5D24-0C24-A245604D81C0"){     //this is a random uuid that I am using until we have the next pi up and running
-//            stereoPi2ConnectionState = .connected
-//            connectedStereoPi2 = peripheral
-//        }
         if (peripheral.name == "triton1") {
             tritonConnectionState = .connected
             connectedTriton = peripheral
