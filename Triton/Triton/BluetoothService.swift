@@ -89,7 +89,7 @@ class BluetoothService: NSObject, ObservableObject {
         if (peripheral.name == "triton1") {
             tritonConnectionState = .connecting
             connectedTriton = peripheral
-        } else if (peripheral.name == "StereoPi1") {
+        } else if (peripheral.name == "stereoPi1") {
             stereoPi1ConnectionState = .connecting
             connectedStereoPi1 = peripheral
         } else if (peripheral.name == "StereoPi2") {
@@ -163,7 +163,7 @@ extension BluetoothService: CBCentralManagerDelegate {
             discoveredPeripherals.append(peripheral)
             print("Discovered \(peripheral.name ?? peripheral.identifier.uuidString)")
         }
-        if (peripheral.name != nil && (peripheral.name == "triton1" || peripheral.name == "StereoPi1" || peripheral.name == "StereoPi2")) {
+        if (peripheral.name != nil && (peripheral.name == "triton1" || peripheral.name == "stereoPi1" || peripheral.name == "StereoPi2")) {
             print("Discovered target peripheral, auto-connecting...")
             //stopScanningForPeripherals()
             connectToPeripheral(peripheral: peripheral)
@@ -175,7 +175,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         switch (peripheral.name) {
             case "triton1":
                 tritonConnectionState = .disconnected
-            case "StereoPi1":
+            case "stereoPi1":
                 stereoPi1ConnectionState = .disconnected
             case "StereoPi2":
                 stereoPi2ConnectionState = .disconnected
@@ -193,7 +193,7 @@ extension BluetoothService: CBCentralManagerDelegate {
                 switch (peripheral.name) {
                     case "triton1":
                         tritonConnectionState = .disconnected
-                    case "StereoPi1":
+                    case "stereoPi1":
                         stereoPi1ConnectionState = .disconnected
                     case "StereoPi2":
                         stereoPi2ConnectionState = .disconnected
@@ -207,7 +207,7 @@ extension BluetoothService: CBCentralManagerDelegate {
                 os_log("Disconnected from %@", peripheral)
                 if (peripheral.name == "triton1") {
                     tritonConnectionState = .disconnected
-                } else if (peripheral.name == "StereoPi1") {
+                } else if (peripheral.name == "stereoPi1") {
                     stereoPi1ConnectionState = .disconnected
                 } else if (peripheral.name == "StereoPi2"){
                     stereoPi2ConnectionState = .disconnected
@@ -225,7 +225,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         if (peripheral.name == "triton1") {
             tritonConnectionState = .connected
             connectedTriton = peripheral
-        } else if (peripheral.name == "StereoPi1") {
+        } else if (peripheral.name == "stereoPi1") {
             stereoPi1ConnectionState = .connected
             connectedStereoPi1 = peripheral
         } else if (peripheral.name == "StereoPi2"){
@@ -247,7 +247,7 @@ extension BluetoothService: CBCentralManagerDelegate {
         print("making call to discover services\n")
         if peripheral.name == "triton1" {
             peripheral.discoverServices(transferServices)
-        } else if peripheral.name == "StereoPi1" {
+        } else if peripheral.name == "stereoPi1" {
             peripheral.discoverServices(stereoPiTransferServices)
         } else if peripheral.name == "StereoPi2" {
             peripheral.discoverServices(stereoPiTransferServices)
@@ -504,7 +504,6 @@ extension BluetoothService: CBPeripheralDelegate {
                 let y = objectArray[i + 2]
                 self.coordinateArray.append((x, y))
             }
-            //print("COORDINATE ARRAY: \(coordinateArray)")
         default:
             print("Unhandled Rendering Characteristics")
         }
