@@ -14,10 +14,10 @@
             filePath = "Triton/BluetoothService.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "298"
-            endingLineNumber = "298"
-            landmarkName = "BluetoothService"
-            landmarkType = "21">
+            startingLineNumber = "282"
+            endingLineNumber = "282"
+            landmarkName = "centralManager(_:didConnect:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
