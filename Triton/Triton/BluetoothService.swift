@@ -231,13 +231,13 @@ extension BluetoothService: CBCentralManagerDelegate {
 //                }
                 if (peripheral.name == "triton1") {
                     tritonConnectionState = .disconnected
-                    connectedTriton = nil
+//                    connectedTriton = nil
                 } else if (peripheral.name == "StereoPi1") {
                     stereoPi1ConnectionState = .disconnected
-                    connectedStereoPi1 = nil
+//                    connectedStereoPi1 = nil
                 } else if (peripheral.name == "StereoPi2"){
                     stereoPi2ConnectionState = .disconnected
-                    connectedStereoPi2 = nil
+//                    connectedStereoPi2 = nil
                 }
                 discoveredPeripherals = []
                 subscribedCharacteristics = []
