@@ -108,3 +108,6 @@ Senior-Design-Sailboat-Nav-2025
 - PyGObject Version 3.0
 
 
+**WHAT DOES EACH MODULE DO?**
+Read the READMEs in each folder to find out!
+
