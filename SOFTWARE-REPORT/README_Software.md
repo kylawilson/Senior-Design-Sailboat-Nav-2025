@@ -103,5 +103,8 @@ Senior-Design-Sailboat-Nav-2025
 5. Reboot the pi (sudo reboot) 
 
 **List of Dependencies**
-- Python 3.11.
+- Python Version 3.11.2
+- dbus-python Version 1.0
+- PyGObject Version 3.0
+
 
