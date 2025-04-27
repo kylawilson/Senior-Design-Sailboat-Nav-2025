@@ -15,6 +15,7 @@ source to binary as applicable.
 
 "
 
+
 ```
 Senior-Design-Sailboat-Nav-2025
 │   README.md
@@ -24,8 +25,6 @@ Senior-Design-Sailboat-Nav-2025
 │   │   AneTest.py
 │   │   WindDirection1.py
 │   │   WindSpeed.txt
-│   │   temperature_log.txt
-│   │   temperature_logger.py
 │   
 └───GPS
 │   │   GPSDbusTest.py
@@ -102,4 +101,7 @@ Senior-Design-Sailboat-Nav-2025
 3. Edit the crontab (sudo crontab -e)
 4. Add this line to the crontab: INSERT LINE
 5. Reboot the pi (sudo reboot) 
+
+**List of Dependencies**
+- Python 3.11.
 

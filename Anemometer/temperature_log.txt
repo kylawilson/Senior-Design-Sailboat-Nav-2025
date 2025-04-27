@@ -1,4 +1,0 @@
-===== Final Results =====
-Highest Temperature: 52.62°C at 2025-04-03 13:24:34
-Total Runtime: 1:07:55
-==========================
