@@ -39,6 +39,7 @@ Senior-Design-Sailboat-Nav-2025
 │       │   adafruit-4-channel-adc-breakouts.pdf
 │       │   cm4-datasheet.pdf
 │       │   coupler_datasheet.pdf
+│
 └───LAUNCHER-SCRIPTS
 │   │   oakd_launcher.sh
 │
