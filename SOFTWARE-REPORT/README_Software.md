@@ -75,3 +75,10 @@ Senior-Design-Sailboat-Nav-2025
 │   │   MRS_Video.py
 │   │   Triton.py
 ```
+
+**HOW TO SET UP SOFTWARE ON A NEW RASPBERRY PI**
+1. Clone this repo (Senior-Design-Sailboat-Nav-2025) in the top level of your Raspberry Pi
+2. Ensure that the paths used in LAUNCHER-SCRIPTS/oakd_launcher.sh match the layout of your device (it should as long as you clone the repo in the right place)
+3. Edit the crontab (sudo crontab -e)
+4. Add this line to the crontab: INSERT LINE
+5. Reboot the pi (sudo reboot) 
