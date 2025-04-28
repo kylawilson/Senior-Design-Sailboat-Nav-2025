@@ -487,13 +487,20 @@ with dai.Device(pipeline) as device:
 
             # Capture frame if interval elapsed
 
+
+
             current_time = time.time()
             stamptime = datetime.now()
+            object_values = []
             if current_time - last_print_time >= .1:
                 last_print_time = current_time
                 for obj in tracked_objects:
-                    print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
+                    values = list(obj.values())[:3]
+                    object_values += values
+                    #print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
                     #dbus call for tracked objects/boats here
+            print(object_values)
+            object_service.update_object_list(object_values)
 
             if current_datetime - last_capture_time >= capture_interval:
                 timestamp = stamptime.strftime("%Y%m%d_%H%M%S")
