@@ -20,11 +20,19 @@ Waterline.py: Testing script for unfinished feature to dynamically track the hor
 from the surface of the water. Based of the work done by Tim Huff to dynamically track the horizon for autonomous drones. Uses open CV to
 track features on the horizon and draw an estimated horizon line.
 
-Dev/build tool information:
-blobconverter             1.4.3
-depthai                   2.28.0.0
-opencv-python             4.10.0.84
-nbclient                  0.10.2
-nbconvert                 7.16.6
-nbformat                  5.10.4
-Python                    3.8.1
+
+**DEPENDENCIES**
+- blobconverter             1.4.3
+- depthai                   2.28.0.0
+- opencv-python             4.10.0.84
+- nbclient                  0.10.2
+- nbconvert                 7.16.6
+- nbformat                  5.10.4
+- Python                    3.11
+- dbus-python 1.3.2
+
+**DEVICE REQUIREMENTS**
+- OAK-D Stereo Camera
+- Raspberry Pi 3B
+
+
