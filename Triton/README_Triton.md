@@ -1,8 +1,3 @@
-![HomePage](HomePage.PNG "Home Page of App")
-![LiveView](LiveView.PNG "App's Live View")
-![Rendering](Rendering.PNG "Rendering Default")
-![RawData](RawData.PNG "Populated Raw Data Page")
-
 <img src="HomePage.PNG" alt="Home Page of App" title="Home Page of App" width="300" style="margin-right: 10px;"/>
 <img src="LiveView.PNG" alt="App's Live View" title="App's Live View" width="300" style="margin-right: 10px;"/>
 <img src="Rendering.PNG" alt="Rendering Default" title="Rendering Default" width="300" style="margin-right: 10px;"/>
