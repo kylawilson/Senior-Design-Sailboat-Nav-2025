@@ -455,9 +455,9 @@ with dai.Device(pipeline) as device:
             cv2.putText(depthFrameColor_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
             cv2.putText(frame_resized, f"NN fps: {fps:.2f}", (10, 25), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (255, 255, 255))
             
-            cv2.imshow("video", frame_resized)
+            #cv2.imshow("video", frame_resized)
             #cv2.imshow("tracker", frame_resized)
-            cv2.imshow("depth", depthFrameColor_resized)
+            #cv2.imshow("depth", depthFrameColor_resized)
 
             # Capture frame if interval elapsed
 
