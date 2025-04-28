@@ -72,16 +72,41 @@ class DepthService(dbus.service.Object):
         """Updates to the latest depth array."""
         self.depth_array = depth_array
 
+class ObjectService(dbus.service.Object):
+    """D-Bus service that provides the objects in view."""
+
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/ObjectService')
+        self.object_list = None  # prob can get rid of this
+
+    @dbus.service.method("com.example.ObjectService",
+                         in_signature='', out_signature='ad')    # returns an array
+    def GetObjects(self):
+        """Returns the object list if available."""
+        #print("OBJECT: ", self.object_list)
+        #line below may be an issue, look here during testing
+        if self.object_list is not None:         # need to set to None if we're not getting a reading when we set depth_array
+            #print(f"Sent objects: {self.object_list}")
+            return self.object_list  # Returns the base64 string
+        else:
+            return [1.0, 2.0, 3.0, 4.0]
+
+    def update_object_list(self, object_list):
+        """Updates to the latest depth array."""
+        self.object_list = object_list
+
 def run_dbus_service():
     """Runs the D-Bus main loop in a separate thread."""
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     session_bus = dbus.SessionBus()
     bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
-    global image_service, depth_service
+    bus_name_object = dbus.service.BusName("com.example.ObjectService", session_bus)
+    global image_service, depth_service, object_service
     image_service = ImageService(bus_name_image)
     depth_service = DepthService(bus_name_depth)
-    
+    object_service = ObjectService(bus_name_object)
+
     print("D-Bus service running...")
     mainloop = GLib.MainLoop()
     mainloop.run()
