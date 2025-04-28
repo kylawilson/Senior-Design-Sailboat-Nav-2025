@@ -11,7 +11,6 @@ import threading
 import struct
 import subprocess
 import PIL
-from PIL import Image
 
 import array
 from gi.repository import GLib
