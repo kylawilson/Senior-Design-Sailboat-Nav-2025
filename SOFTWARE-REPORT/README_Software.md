@@ -18,8 +18,7 @@ source to binary as applicable.
 
 ```
 Senior-Design-Sailboat-Nav-2025
-│   README.md
-│   file001.txt    
+│   README.md  
 │
 └───Anemometer
 │   │   AneTest.py
@@ -52,38 +51,53 @@ Senior-Design-Sailboat-Nav-2025
 │
 └───LAUNCHER-SCRIPTS
 │   │   oakd_launcher.sh
+│   │   ...
 │
 └───OAK-D
 │   │   MRS_Video.py
 │   │   Triton.py
 │   │   Waterline.py
 │   └───models
-│       │   
-│       │ 
+│       │  ... 
 │  
 └───PREVIOUS-REPORTS
-│   │   MRS_Video.py
-│   │   Triton.py
+│   │   Customer Installation Report.pdf
+│   │   Final Testing Report.docx
+│   │   Final Testing Slides.pptx
+│   │   ...
 │
 └───RPI-BLUETOOTH
-│   │   MRS_Video.py
-│   │   Triton.py
+│   │   bluetooth.py
+│   │   README_Bluetooth.md
+│   │   BluetoothInterfaceChart.jpeg
 │
 └───SOFTWARE-REPORT
-│   │   MRS_Video.py
-│   │   Triton.py
+│   │   README_Software.md
 │
 └───STEREOPI-BLUETOOTH
-│   │   MRS_Video.py
-│   │   Triton.py
+│   │   bluetooth.py
+│   │   README_StereopiBluetooth.md
 │
 └───Triton
-│   │   MRS_Video.py
-│   │   Triton.py
+│   │   README_Triton.md
+│   └───Triton
+│       │  All_camera_10_points.swift
+│       │  BluetoothService.swift
+│       │  ContentView.swift
+│       │  DataStructs.swift
+│       │  ImageConversion.swift
+│       │  info_tabs.swift
+│       │  Info.plist
+│       │  ServiceDefinitions.swift
+│       │  TritonApp.swift
 │
 └───stereopi
-│   │   MRS_Video.py
+│   │   7_2d_mapPROTO.py
 │   │   Triton.py
+│   └───calibration_data
+│   │   │  ...
+│   └───pairs
+│       │  ...
 ```
 
 **HOW TO SET UP SOFTWARE ON A NEW RASPBERRY PI**
