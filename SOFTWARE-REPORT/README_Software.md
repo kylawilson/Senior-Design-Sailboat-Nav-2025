@@ -90,16 +90,15 @@ Senior-Design-Sailboat-Nav-2025
 1. Clone this repo (Senior-Design-Sailboat-Nav-2025) in the top level of your Raspberry Pi
 2. Ensure that the paths used in LAUNCHER-SCRIPTS/oakd_launcher.sh match the layout of your device (it should as long as you clone the repo in the right place)
 3. Edit the crontab (sudo crontab -e)
-4. Add this line to the crontab: INSERT LINE
+4. Add this line to the crontab: @reboot ~/Senior-Design-Sailboat-Nav-2025/LAUNCHER-SCRIPTS/oakd_launcher.sh
 5. Reboot the pi (sudo reboot) 
 
 
-**MIGHT HAVE TO CHANGE THIS**
 **HOW TO SET UP SOFTWARE ON A STEREOPI/CM4**
 1. Clone this repo (Senior-Design-Sailboat-Nav-2025) in the top level of your StereoPi/CM4
 2. Ensure that the paths used in LAUNCHER-SCRIPTS/stereopi_launcher.sh match the layout of your device (it should as long as you clone the repo in the right place)
 3. Edit the crontab (sudo crontab -e)
-4. Add this line to the crontab: INSERT LINE
+4. Add this line to the crontab: @reboot ~/Senior-Design-Sailboat-Nav-2025/LAUNCHER-SCRIPTS/launcher.sh
 5. Reboot the pi (sudo reboot) 
 
 **List of Dependencies**
