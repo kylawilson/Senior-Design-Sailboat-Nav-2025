@@ -84,6 +84,9 @@ Senior-Design-Sailboat-Nav-2025
 │       │  ...
 ```
 
+
+This repo contains all of the relevant information for the Triton: a portable, multi-sensor system that provides useful information to the sailor via a mobile iOS application, including object sensing and visualization, GPS data, wind speed and direction, and speed over ground. The Triton's primary function being to assist sailors when docking or maneuvering through crowded areas, such as a busy port. The Triton consists of three separate sensing modules attached to the bow, starboard, and port areas of the boat. Each of these modules communicates via Bluetooth Low Energy. The data from each of these modules is continuously offloaded to the connected iOS device in real time, giving the operator the most up-to-date information about the current conditions.
+
 **STEREOPIS (PERIPHERAL MODULES)**\
 OS: Raspberry Pi Debain Bullseye 32-Bit Full Legacy (Released 10/22/2024)\
 StereoPi Version: StereoPi V2 Slim\
