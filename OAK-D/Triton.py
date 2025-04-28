@@ -12,111 +12,92 @@ from pathlib import Path
 import argparse
 import time
 
+
 #testing DBUS
-import dbus
-import dbus.service
-import dbus.mainloop.glib
-from gi.repository import GLib
-import threading
+# import dbus
+# import dbus.service
+# import dbus.mainloop.glib
+# from gi.repository import GLib
+# import threading
 
 
 # # Create a D-Bus service class
 
 
-class ImageService(dbus.service.Object):
-    """D-Bus service that provides the latest image in base64 format."""
+# class ImageService(dbus.service.Object):
+#     """D-Bus service that provides the latest image in base64 format."""
 
-    def __init__(self, bus_name):
-        dbus.service.Object.__init__(self, bus_name, '/ImageService')
-        self.latest_image_path = None  # Stores the most recent image path
+#     def __init__(self, bus_name):
+#         dbus.service.Object.__init__(self, bus_name, '/ImageService')
+#         self.latest_image_path = None  # Stores the most recent image path
 
-    @dbus.service.method("com.example.ImageService",
-                         in_signature='', out_signature='s')
-    def GetEncodedImage(self):
-        """Returns the base64-encoded image if available."""
-        if self.latest_image_path and os.path.exists(self.latest_image_path):
-            with open(self.latest_image_path, "rb") as img_file:
-                encoded = base64.b64encode(img_file.read()).decode('utf-8')
-                #print(encoded)
-            print(f"Sent encoded image: {self.latest_image_path}")
-            return encoded  # Returns the base64 string
-        else:
-            return "No image available"
+#     @dbus.service.method("com.example.ImageService",
+#                          in_signature='', out_signature='s')
+#     def GetEncodedImage(self):
+#         """Returns the base64-encoded image if available."""
+#         if self.latest_image_path and os.path.exists(self.latest_image_path):
+#             with open(self.latest_image_path, "rb") as img_file:
+#                 encoded = base64.b64encode(img_file.read()).decode('utf-8')
+#                 print(encoded)
+#             print(f"Sent encoded image: {self.latest_image_path}")
+#             return encoded  # Returns the base64 string
+#         else:
+#             return "No image available"
 
-    def update_latest_image(self, image_path):
-        """Updates the path to the latest image."""
-        self.latest_image_path = image_path
+#     def update_latest_image(self, image_path):
+#         """Updates the path to the latest image."""
+#         self.latest_image_path = image_path
         
         
-class DepthService(dbus.service.Object):
-    """D-Bus service that provides the depths of objects in view."""
+# class DepthService(dbus.service.Object):
+#     """D-Bus service that provides the depths of objects in view in base64 format."""
 
-    def __init__(self, bus_name):
-        dbus.service.Object.__init__(self, bus_name, '/DepthService')
-        self.depth_array = None 
+#     def __init__(self, bus_name):
+#         dbus.service.Object.__init__(self, bus_name, '/DepthService')
+#         self.depth_array = None  # prob can get rid of this
 
-    @dbus.service.method("com.example.DepthService",
-                         in_signature='', out_signature='ad')    # returns an array
-    def GetDepth(self):
-        """Returns the base64-encoded depth if available."""
-        #print(self.depth_array)
-        if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
-            #print(f"Sent depth: {self.depth_array}")
-            return self.depth_array  # Returns the base64 string
-        else:
-            return [1.0, 2.0, 3.0, 4.0]
+#     @dbus.service.method("com.example.DepthService",
+#                          in_signature='', out_signature='ad')    # returns an array
+#     def GetDepth(self):
+#         """Returns the base64-encoded depth if available."""
+#         print(self.depth_array)
+#         if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
+#             #encoded = base64.b64encode(self.depth_array).decode('utf-8')
+#             print(f"Sent depth: {self.depth_array}")
+#             return self.depth_array  # Returns the base64 string
+#         else:
+#             return [1.0, 2.0, 3.0, 4.0]
 
-    def update_depth_array(self, depth_array):
-        """Updates to the latest depth array."""
-        self.depth_array = depth_array
+#     def update_depth_array(self, depth_array):
+#         """Updates to the latest depth array."""
+#         self.depth_array = depth_array
 
-class ObjectService(dbus.service.Object):
-    """D-Bus service that provides the objects in view."""
-
-    def __init__(self, bus_name):
-        dbus.service.Object.__init__(self, bus_name, '/ObjectService')
-        self.object_list = None  # prob can get rid of this
-
-    @dbus.service.method("com.example.ObjectService",
-                         in_signature='', out_signature='ad')    # returns an array
-    def GetObjects(self):
-        """Returns the object list if available."""
-        #print("OBJECT: ", self.object_list)
-        #line below may be an issue, look here during testing
-        if self.object_list is not None:         # need to set to None if we're not getting a reading when we set depth_array
-            #print(f"Sent objects: {self.object_list}")
-            return self.object_list  # Returns the base64 string
-        else:
-            return [1.0, 2.0, 3.0, 4.0]
-
-    def update_object_list(self, object_list):
-        """Updates to the latest depth array."""
-        self.object_list = object_list
-
-def run_dbus_service():
-    """Runs the D-Bus main loop in a separate thread."""
-    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    session_bus = dbus.SessionBus()
-    bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
-    bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
-    bus_name_object = dbus.service.BusName("com.example.ObjectService", session_bus)
-    global image_service, depth_service, object_service
-    image_service = ImageService(bus_name_image)
-    depth_service = DepthService(bus_name_depth)
-    object_service = ObjectService(bus_name_object)
+# def run_dbus_service():
+#     """Runs the D-Bus main loop in a separate thread."""
+#     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+#     session_bus = dbus.SessionBus()
+#     bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
+#     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
+#     global image_service, depth_service
+#     image_service = ImageService(bus_name_image)
+#     depth_service = DepthService(bus_name_depth)
     
-    print("D-Bus service running...")
-    mainloop = GLib.MainLoop()
-    mainloop.run()
+#     print("D-Bus service running...")
+#     mainloop = GLib.MainLoop()
+#     mainloop.run()
 
 
-dbus_thread = threading.Thread(target=run_dbus_service)
-dbus_thread.daemon = True
-dbus_thread.start()
+# dbus_thread = threading.Thread(target=run_dbus_service)
+# dbus_thread.daemon = True
+# dbus_thread.start()
 
 #---Boat DBus---
 
-#---NN Init---
+#--- Depth Smoothing Config ---
+extended_disparity = False  # Closer-in minimum depth, disparity range is doubled
+subpixel = False  # Better accuracy for longer distance
+lr_check = True  # Better handling for occlusions
+
 labelMap = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
             "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
 
@@ -136,7 +117,7 @@ pipeline = dai.Pipeline()
 # --- RGB Camera Setup ---
 camRgb = pipeline.create(dai.node.ColorCamera)
 camRgb.setPreviewSize(640, 480)
-camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
+camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_720_P)
 camRgb.setInterleaved(False)
 camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.BGR)
 
@@ -151,11 +132,11 @@ detectionNetwork.setConfidenceThreshold(0.5)
 detectionNetwork.input.setBlocking(False)
 
 objectTracker = pipeline.create(dai.node.ObjectTracker)
-objectTracker.setDetectionLabelsToTrack([15])  # track only person
+objectTracker.setDetectionLabelsToTrack([4,15])  # track only person and boat
 objectTracker.setTrackerType(dai.TrackerType.ZERO_TERM_COLOR_HISTOGRAM)
 objectTracker.setTrackerIdAssignmentPolicy(dai.TrackerIdAssignmentPolicy.SMALLEST_ID)
 
-# --- Depth Setup ---
+# --- Depth Setup with Smoothing ---
 monoLeft = pipeline.create(dai.node.MonoCamera)
 monoRight = pipeline.create(dai.node.MonoCamera)
 stereo = pipeline.create(dai.node.StereoDepth)
@@ -166,14 +147,31 @@ monoLeft.setCamera("left")
 monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
 monoRight.setCamera("right")
 
+# Apply depth smoothing configuration
+stereo.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
 stereo.setDepthAlign(dai.CameraBoardSocket.RGB)
-stereo.setLeftRightCheck(True)
-stereo.setSubpixel(True)
+stereo.setLeftRightCheck(lr_check)
+stereo.setExtendedDisparity(extended_disparity)
+stereo.setSubpixel(subpixel)
+stereo.setMedianFilter(dai.MedianFilter.KERNEL_7x7)
 stereo.setOutputSize(640, 480)
+
+# Configure post-processing filters
+config = stereo.initialConfig.get()
+config.postProcessing.speckleFilter.enable = False
+config.postProcessing.speckleFilter.speckleRange = 50
+config.postProcessing.temporalFilter.enable = True
+config.postProcessing.spatialFilter.enable = True
+config.postProcessing.spatialFilter.holeFillingRadius = 2
+config.postProcessing.spatialFilter.numIterations = 1
+config.postProcessing.thresholdFilter.minRange = 400
+config.postProcessing.thresholdFilter.maxRange = 15000
+config.postProcessing.decimationFilter.decimationFactor = 1
+stereo.initialConfig.set(config)
 
 # Create sizexsize ROIs
 for i in range(size):
-    for j in range(size):
+    for j in range(7):
         config = dai.SpatialLocationCalculatorConfigData()
         config.depthThresholds.lowerThreshold = 100
         config.depthThresholds.upperThreshold = 12000
@@ -224,6 +222,19 @@ xinSpatialCalcConfig.out.link(spatialLocationCalculator.inputConfig)
 
 print("Starting MRS_Picutre.py as a D-Bus service...")
 
+last_capture_time = datetime.now()
+capture_interval = timedelta(seconds = 1)
+vfps = 30
+'''
+video_filename = "test_video.avi"
+depth_video_filename = "depth_test.avi"
+combined_video_filename = "combined_video.avi"
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+video_writer = cv2.VideoWriter(video_filename, fourcc, vfps, (640, 480))
+depth_video_writer = cv2.VideoWriter(depth_video_filename, fourcc, vfps, (640, 480))
+combined_writer = cv2.VideoWriter(combined_video_filename, fourcc, vfps, (1280, 480))
+'''
+
 # Connect to device and start pipeline
 with dai.Device(pipeline) as device:
     preview = device.getOutputQueue("preview", 4, False)
@@ -248,6 +259,10 @@ with dai.Device(pipeline) as device:
     counter = 0
     fps = 0
 
+    safedist = {}
+    distance_history = {}  # Store distance of previous frames
+    window = 3  # How many frames to average
+
     with open("roi_distances.txt", "a") as file:
         while True:
             current_time = time.monotonic()
@@ -259,7 +274,7 @@ with dai.Device(pipeline) as device:
 
             previewFrame = preview.get()
             track = tracklets.get()
-            vframe = video.get()
+            #vframe = video.get()
             inDepth = depthQueue.get()
 
             frame = previewFrame.getCvFrame()
@@ -335,26 +350,27 @@ with dai.Device(pipeline) as device:
                         'frames_missing': 0
                     })
 
-                if distance <= 2500 and distance > 1000: 
+                if distance <= 10000 and distance > 5000: 
                     Bcolor = yellow
                     #print(f"ROI: ({t.id}): {square_distance / 1000:.1f}m - Angle: {angle_deg:.2f}\n\t\tX: {x_comp:.2f} Y: {y_comp:.2f}")
-                elif distance <= 1000:
+                elif distance <= 5000:
                     Bcolor = red
                 else:
                     Bcolor = default_color
                     #print(f"ROI: ({t.id}): {square_distance / 1000:.1f}m - Angle: {angle_deg:.2f}\n\t\tX: {x_comp:.2f} Y: {y_comp:.2f}")
+                    
 
                 distance = distance / 1000
                 square_distance = square_distance / 1000
 
-                # cv2.putText(frame_resized, str(label), (x1_resized + 10, y1_resized + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                # cv2.putText(frame_resized, f"ID: {[t.id]}", (x1_resized + 10, y1_resized + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                # cv2.putText(frame_resized, t.status.name, (x1_resized + 10, y1_resized + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                # cv2.rectangle(frame_resized, (x1_resized, y1_resized), (x2_resized, y2_resized), color, cv2.FONT_HERSHEY_SIMPLEX)
-                # cv2.rectangle(frame_resized, (square_x1, square_y1), (square_x2, square_y2), red, cv2.FONT_HERSHEY_SIMPLEX)
-                # cv2.putText(frame_resized, f"Dist: {distance:.1f} m", (x1_resized + 10, y1_resized + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
-                # cv2.putText(frame_resized, f"Angle: {angle_deg:.1f}", (x1_resized+ 10, y1_resized + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
-                # cv2.putText(frame_resized, f"Small_Dist: {square_distance:.1f} m", (x1_resized + 10, y1_resized + 95), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
+                cv2.putText(frame_resized, str(label), (x1_resized + 10, y1_resized + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(frame_resized, f"ID: {[t.id]}", (x1_resized + 10, y1_resized + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(frame_resized, t.status.name, (x1_resized + 10, y1_resized + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.rectangle(frame_resized, (x1_resized, y1_resized), (x2_resized, y2_resized), color, cv2.FONT_HERSHEY_SIMPLEX)
+                cv2.rectangle(frame_resized, (square_x1, square_y1), (square_x2, square_y2), red, cv2.FONT_HERSHEY_SIMPLEX)
+                cv2.putText(frame_resized, f"Dist: {distance:.1f} m", (x1_resized + 10, y1_resized + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
+                cv2.putText(frame_resized, f"Angle: {angle_deg:.1f}", (x1_resized+ 10, y1_resized + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
+                cv2.putText(frame_resized, f"Small_Dist: {square_distance:.1f} m", (x1_resized + 10, y1_resized + 95), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
 
             # Process grid ROIs
             
@@ -381,17 +397,31 @@ with dai.Device(pipeline) as device:
                 ymax = int(roi.bottomRight().y)
 
                 coords = depthData.spatialCoordinates
-                
-                roi_depth = depthFrame[ymin:ymax, xmin:xmax]
-                distance = np.mean(roi_depth) if roi_depth.size > 0 else 0
 
-                if distance <= 2500 and distance > 1500:
+                roi_depth = depthFrame[ymin:ymax, xmin:xmax]
+                tempdistance = np.mean(roi_depth) if roi_depth.size > 0 else 0
+
+                ROI_ID = (xmin, ymin)
+
+                if ROI_ID not in safedist:
+                    safedist[ROI_ID] = True
+
+                if ROI_ID not in distance_history:
+                    distance_history[ROI_ID] = []
+
+                distance_history[ROI_ID].append(tempdistance)
+                if len(distance_history[ROI_ID]) > window:
+                    distance_history[ROI_ID].pop(0)
+
+                distance = sum(distance_history[ROI_ID]) / len(distance_history[ROI_ID])
+
+                if distance <= 10000 and distance > 5000:
                     color = yellow
-                elif distance <= 1500 and distance > 100:
+                elif distance <= 5000 and distance > 500:
                     color = red
-                elif distance <= 100: #idea being that .5m is our min distance so readings less than 100 giving some padding are actually far away
+                elif distance <= 500: #idea being that .5m is our min distance so readings less than 100 giving some padding are actually far away
                     color = default_color
-                    distance = 100000000000
+                    distance = 100000000000 #arbitray large number 
                 else:
                     color = default_color
                 
@@ -407,7 +437,7 @@ with dai.Device(pipeline) as device:
                 if temparr[i] != float('inf'):
                     depth_array[i] = temparr[i]
             #print("Dist: ", ["{:.2f}".format(d/1000) if d!= float('inf') else "inf" for d in depth_array])
-            depth_service.update_depth_array(depth_array)
+            #depth_service.update_depth_array(depth_array)
 
             # Prepare depth heatmap
             if np.all(depth_downscaled == 0):
@@ -417,7 +447,7 @@ with dai.Device(pipeline) as device:
             max_depth = np.percentile(depth_downscaled, 99)
             depthFrameColor = np.interp(depthFrame, (min_depth, max_depth), (0, 255)).astype(np.uint8)
             depthFrameColor = cv2.applyColorMap(depthFrameColor, cv2.COLORMAP_HOT)
-            depthFrameColor_resized = cv2.resize(depthFrameColor, (1280, 720))
+            depthFrameColor_resized = cv2.resize(depthFrameColor, (640, 480))
 
             # Display info
             timestamp_text = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -425,38 +455,37 @@ with dai.Device(pipeline) as device:
             cv2.putText(depthFrameColor_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
             cv2.putText(frame_resized, f"NN fps: {fps:.2f}", (10, 25), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (255, 255, 255))
             
-            # cv2.imshow("video", frame_resized)
+            #cv2.imshow("video", frame_resized)
             #cv2.imshow("tracker", frame_resized)
             #cv2.imshow("depth", depthFrameColor_resized)
 
             # Capture frame if interval elapsed
 
             current_time = time.time()
-            object_values = []
+            stamptime = datetime.now()
             if current_time - last_print_time >= .1:
                 last_print_time = current_time
                 for obj in tracked_objects:
-                    #print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
-                    #print("OBJECT: ", obj)
-                    values = list(obj.values())[:3]
-                    object_values += values
+                    print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
                     #dbus call for tracked objects/boats here
-            print(object_values)
-            object_service.update_object_list(object_values)
-            
 
             if current_datetime - last_capture_time >= capture_interval:
+                timestamp = stamptime.strftime("%Y%m%d_%H%M%S")
                 image_filename = f"outputframe.jpg"
-                frame = video.get().getCvFrame()
-                frame_resized = cv2.resize(frame, (640, 480))
+                #depth_filename = f"Depth_Images/depth_{timestamp}.jpg"
                 cv2.imwrite(image_filename, frame_resized)
-                #cv2.imwrite(image_filename, frame)
+                #cv2.imwrite(depth_filename, depthFrameColor)
                 last_capture_time = current_datetime
                 # Update the latest image path for D-Bus
-                image_service.update_latest_image(image_filename)
-                #print(f"Captured and updated image: {image_filename}")
+                #image_service.update_latest_image(image_filename)
+                print(f"Captured and updated image: {image_filename}")
 
+            #video_writer.write(frame_resized)
+            #depth_video_writer.write(depthFrameColor_resized)
+            combined_frame = np.hstack((frame_resized, depthFrameColor_resized))
+            #combined_writer.write(combined_frame)
             if cv2.waitKey(1) == ord('q'):
                 break
 
 cv2.destroyAllWindows()
+video_writer.release()

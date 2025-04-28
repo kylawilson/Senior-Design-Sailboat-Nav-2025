@@ -48,9 +48,10 @@ struct DockingProcedureView: View {
 
             RuleCard(title: "5. Shut Down", description: "Turn off the engine, tidy the deck, and make sure everything is safe and stowed.")
 
-                       Spacer()
+            Spacer()
         }
         .padding()
+        
         .background(Color.white)
     }
 }
@@ -73,6 +74,23 @@ struct RuleCard: View {
         .padding()
         .background(Color(.systemBlue).opacity(0.1))
         .cornerRadius(12)
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+}
+
+struct InfoTabViewPage: View {
+    var body: some View {
+        TabView {
+            RightOfWayView()
+                .tabItem {
+                    Label("Right of Way", systemImage: "sailboat.fill")
+                }
+
+            DockingProcedureView()
+                .tabItem {
+                    Label("Docking", systemImage: "dock.rectangle")
+                }
+        }
     }
 }
 
