@@ -562,9 +562,9 @@ def main(timeout = 0):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--timeout', default=60, type=int, help="advertise " +
+    parser.add_argument('--timeout', default=0, type=int, help="advertise " +
                         "for this many seconds then stop, 0=run forever " +
-                        "(default: 60)")
+                        "(default: 0)")
     args = parser.parse_args()
 
     main(args.timeout)
