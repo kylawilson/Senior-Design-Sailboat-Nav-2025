@@ -14,82 +14,82 @@ import time
 
 
 #testing DBUS
-# import dbus
-# import dbus.service
-# import dbus.mainloop.glib
-# from gi.repository import GLib
-# import threading
+import dbus
+import dbus.service
+import dbus.mainloop.glib
+from gi.repository import GLib
+import threading
 
 
-# # Create a D-Bus service class
+# Create a D-Bus service class
 
 
-# class ImageService(dbus.service.Object):
-#     """D-Bus service that provides the latest image in base64 format."""
+class ImageService(dbus.service.Object):
+    """D-Bus service that provides the latest image in base64 format."""
 
-#     def __init__(self, bus_name):
-#         dbus.service.Object.__init__(self, bus_name, '/ImageService')
-#         self.latest_image_path = None  # Stores the most recent image path
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/ImageService')
+        self.latest_image_path = None  # Stores the most recent image path
 
-#     @dbus.service.method("com.example.ImageService",
-#                          in_signature='', out_signature='s')
-#     def GetEncodedImage(self):
-#         """Returns the base64-encoded image if available."""
-#         if self.latest_image_path and os.path.exists(self.latest_image_path):
-#             with open(self.latest_image_path, "rb") as img_file:
-#                 encoded = base64.b64encode(img_file.read()).decode('utf-8')
-#                 print(encoded)
-#             print(f"Sent encoded image: {self.latest_image_path}")
-#             return encoded  # Returns the base64 string
-#         else:
-#             return "No image available"
+    @dbus.service.method("com.example.ImageService",
+                         in_signature='', out_signature='s')
+    def GetEncodedImage(self):
+        """Returns the base64-encoded image if available."""
+        if self.latest_image_path and os.path.exists(self.latest_image_path):
+            with open(self.latest_image_path, "rb") as img_file:
+                encoded = base64.b64encode(img_file.read()).decode('utf-8')
+                print(encoded)
+            print(f"Sent encoded image: {self.latest_image_path}")
+            return encoded  # Returns the base64 string
+        else:
+            return "No image available"
 
-#     def update_latest_image(self, image_path):
-#         """Updates the path to the latest image."""
-#         self.latest_image_path = image_path
+    def update_latest_image(self, image_path):
+        """Updates the path to the latest image."""
+        self.latest_image_path = image_path
         
         
-# class DepthService(dbus.service.Object):
-#     """D-Bus service that provides the depths of objects in view in base64 format."""
+class DepthService(dbus.service.Object):
+    """D-Bus service that provides the depths of objects in view in base64 format."""
 
-#     def __init__(self, bus_name):
-#         dbus.service.Object.__init__(self, bus_name, '/DepthService')
-#         self.depth_array = None  # prob can get rid of this
+    def __init__(self, bus_name):
+        dbus.service.Object.__init__(self, bus_name, '/DepthService')
+        self.depth_array = None  # prob can get rid of this
 
-#     @dbus.service.method("com.example.DepthService",
-#                          in_signature='', out_signature='ad')    # returns an array
-#     def GetDepth(self):
-#         """Returns the base64-encoded depth if available."""
-#         print(self.depth_array)
-#         if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
-#             #encoded = base64.b64encode(self.depth_array).decode('utf-8')
-#             print(f"Sent depth: {self.depth_array}")
-#             return self.depth_array  # Returns the base64 string
-#         else:
-#             return [1.0, 2.0, 3.0, 4.0]
+    @dbus.service.method("com.example.DepthService",
+                         in_signature='', out_signature='ad')    # returns an array
+    def GetDepth(self):
+        """Returns the base64-encoded depth if available."""
+        print(self.depth_array)
+        if self.depth_array is not None:         # need to set to None if we're not getting a reading when we set depth_array
+            #encoded = base64.b64encode(self.depth_array).decode('utf-8')
+            print(f"Sent depth: {self.depth_array}")
+            return self.depth_array  # Returns the base64 string
+        else:
+            return [1.0, 2.0, 3.0, 4.0]
 
-#     def update_depth_array(self, depth_array):
-#         """Updates to the latest depth array."""
-#         self.depth_array = depth_array
+    def update_depth_array(self, depth_array):
+        """Updates to the latest depth array."""
+        self.depth_array = depth_array
 
-# def run_dbus_service():
-#     """Runs the D-Bus main loop in a separate thread."""
-#     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-#     session_bus = dbus.SessionBus()
-#     bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
-#     bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
-#     global image_service, depth_service
-#     image_service = ImageService(bus_name_image)
-#     depth_service = DepthService(bus_name_depth)
+def run_dbus_service():
+    """Runs the D-Bus main loop in a separate thread."""
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    session_bus = dbus.SessionBus()
+    bus_name_image = dbus.service.BusName("com.example.ImageService", session_bus)
+    bus_name_depth = dbus.service.BusName("com.example.DepthService", session_bus)
+    global image_service, depth_service
+    image_service = ImageService(bus_name_image)
+    depth_service = DepthService(bus_name_depth)
     
-#     print("D-Bus service running...")
-#     mainloop = GLib.MainLoop()
-#     mainloop.run()
+    print("D-Bus service running...")
+    mainloop = GLib.MainLoop()
+    mainloop.run()
 
 
-# dbus_thread = threading.Thread(target=run_dbus_service)
-# dbus_thread.daemon = True
-# dbus_thread.start()
+dbus_thread = threading.Thread(target=run_dbus_service)
+dbus_thread.daemon = True
+dbus_thread.start()
 
 #---Boat DBus---
 
@@ -225,7 +225,8 @@ print("Starting MRS_Picutre.py as a D-Bus service...")
 last_capture_time = datetime.now()
 capture_interval = timedelta(seconds = 1)
 vfps = 30
-'''
+
+#start video
 video_filename = "test_video.avi"
 depth_video_filename = "depth_test.avi"
 combined_video_filename = "combined_video.avi"
@@ -233,7 +234,7 @@ fourcc = cv2.VideoWriter_fourcc(*'XVID')
 video_writer = cv2.VideoWriter(video_filename, fourcc, vfps, (640, 480))
 depth_video_writer = cv2.VideoWriter(depth_video_filename, fourcc, vfps, (640, 480))
 combined_writer = cv2.VideoWriter(combined_video_filename, fourcc, vfps, (1280, 480))
-'''
+#end video
 
 # Connect to device and start pipeline
 with dai.Device(pipeline) as device:
@@ -437,7 +438,7 @@ with dai.Device(pipeline) as device:
                 if temparr[i] != float('inf'):
                     depth_array[i] = temparr[i]
             #print("Dist: ", ["{:.2f}".format(d/1000) if d!= float('inf') else "inf" for d in depth_array])
-            #depth_service.update_depth_array(depth_array)
+            depth_service.update_depth_array(depth_array)
 
             # Prepare depth heatmap
             if np.all(depth_downscaled == 0):
@@ -477,13 +478,15 @@ with dai.Device(pipeline) as device:
                 #cv2.imwrite(depth_filename, depthFrameColor)
                 last_capture_time = current_datetime
                 # Update the latest image path for D-Bus
-                #image_service.update_latest_image(image_filename)
+                image_service.update_latest_image(image_filename)
                 print(f"Captured and updated image: {image_filename}")
 
             #video_writer.write(frame_resized)
             #depth_video_writer.write(depthFrameColor_resized)
             combined_frame = np.hstack((frame_resized, depthFrameColor_resized))
-            #combined_writer.write(combined_frame)
+            #start video
+            combined_writer.write(combined_frame) 
+            #end video
             if cv2.waitKey(1) == ord('q'):
                 break
 
