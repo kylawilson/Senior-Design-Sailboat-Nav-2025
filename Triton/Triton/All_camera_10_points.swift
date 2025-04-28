@@ -73,7 +73,7 @@ struct PolarGridView: View {
                         
                         StereoPIZoneView(distances: scaledLeft, rawDistances: rawLeftSPDistances, center: center, maxRadius: maxRadius, startAngle: 225, finalAngle:135, tooclose:tooclose)
                         
-                        StereoPIZoneView(distances: scaledRight, rawDistances: rawRightSPDistances, center: center, maxRadius: maxRadius, startAngle: 45, finalAngle: 315, tooclose:tooclose)
+                        //StereoPIZoneView(distances: scaledRight, rawDistances: rawRightSPDistances, center: center, maxRadius: maxRadius, startAngle: 45, finalAngle: 315, tooclose:tooclose)
                         
                         BoatTriangleView(center: center)
                         

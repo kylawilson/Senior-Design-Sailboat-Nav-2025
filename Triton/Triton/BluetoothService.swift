@@ -359,7 +359,11 @@ extension BluetoothService: CBPeripheralDelegate {
                 let cgFloatArray = floatArray.map { CGFloat($0) }
                 let dividedCGFloatArray = cgFloatArray.map { $0 / 100 }
                 print("StereoPiArray Received in Meters: \(dividedCGFloatArray)")
-                stereoPiArray1 = dividedCGFloatArray
+                if (peripheral.name == "stereoPi1") {
+                    stereoPiArray1 = dividedCGFloatArray
+                } else if (peripheral.name == "StereoPi2") {
+                    stereoPiArray2 = dividedCGFloatArray
+                }
             } else if anemometerTransferCharacteristics.contains(characteristic.uuid){
                 updateAnemometer(characteristic.uuid, value)
                 let newval = value.map { String(format: "%02x", $0) }.joined()
@@ -386,7 +390,7 @@ extension BluetoothService: CBPeripheralDelegate {
             print("Invalidated Service: ", service)
             if (peripheral.name == "triton1") {
                 tritonConnectionState = .disconnected
-            } else if (peripheral.name == "StereoPi1") {
+            } else if (peripheral.name == "stereoPi1") {
                 stereoPi1ConnectionState = .disconnected
             } else if (peripheral.name == "StereoPi2"){     //this is a random uuid that I am using until we have the next pi up and running
                 stereoPi2ConnectionState = .disconnected
