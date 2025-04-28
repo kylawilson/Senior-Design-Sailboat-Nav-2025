@@ -18,5 +18,5 @@
     - Anemometer (Wind Direction and Speed)
     - 16-Bit ADC
     
-**OVERVIEW OF EACH SOFTWARE MODULE**
+**OVERVIEW OF EACH SOFTWARE MODULE**\
 bluetooth.py - This file enables Bluetooth Low Energy communication with the iOS device (see the ../Triton folder). It registers the GATT server, advertisements, services, and characteristics. This file also collects information from the OAK-D camera via dbus, the GPS module via dbus, the Wind Direction module via dbus, and the Wind Speed module via a file.
