@@ -533,19 +533,28 @@ def main(timeout = 0):
                                      reply_handler=register_ad_cb,
                                      error_handler=register_ad_error_cb)
 
+    #test
+    try:
+        mainloop.run()
+    finally:
+        print('Cleaning up: unregistering advertsiement')
+        try:
+            ad_manager.UnregisterAdvertisement(stereoPi_advertisement)
+            print('Advertisement unregistered')
+        except Exception as e:
+            print('Failed to unregister advertsiement', e)
 
-    mainloop.run()
-
-    ad_manager.UnregisterAdvertisement(stereoPi_advertisement)
-    print('Advertisement unregistered')
-    dbus.service.Object.remove_from_connection(stereoPi_advertisement)
+        try:
+            dbus.service.Object.remove_from_connection(stereoPi_advertisement)
+        except Exception as e:
+            print('Failed to unregister advertisement from DBUS connection: ', e)
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--timeout', default=60, type=int, help="advertise " +
+    parser.add_argument('--timeout', default=0, type=int, help="advertise " +
                         "for this many seconds then stop, 0=run forever " +
-                        "(default: 60)")
+                        "(default: 0)")
     args = parser.parse_args()
 
     main(args.timeout)
