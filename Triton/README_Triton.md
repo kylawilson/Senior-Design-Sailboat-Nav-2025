@@ -1,6 +1,6 @@
-![HomePage](HomePage.PNG "Home Page of App")\
-![LiveView](LiveView.PNG "App's Live View")\
-![Rendering](Rendering.PNG "Rendering Default")\
+![HomePage](HomePage.PNG "Home Page of App")
+![LiveView](LiveView.PNG "App's Live View")
+![Rendering](Rendering.PNG "Rendering Default")
 ![RawData](RawData.PNG "Populated Raw Data Page")
 
 
