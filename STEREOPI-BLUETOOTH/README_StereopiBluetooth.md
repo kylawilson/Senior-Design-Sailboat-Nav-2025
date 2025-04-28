@@ -5,20 +5,12 @@ main.py and LCD.py, you need to show that LCD.py is a module used by main.py.
 Python 3.8.1, using CUDA Toolbox 10.0 and GCC 9.1 and CMake 3.14.2
 
 **DEPENDENCIES**
-- BlueZ
-- DBus
-- Time
-- GObject
-- 
+- dbus-python 1.3.2
+- gobject 0.1.0
 
 **DEVICE REQUIREMENTS**
-- For Development: A Mac with XCode 16.3 or Higher
-- For Running the App: An iPhone with iOS 18 or Higher
-
-**DEVICES USED**
-- For Development: MacBook Pro, 16-inch, 2019, macOS Sequoia 15.3.2
-- For Testing: 
-    - iPhone 11 Pro, iOS 18.1.1
-    - iPhone 16 Pro, iOS 18.3.2
+- StereoPi V2 Slim with a Raspberry Pi Compute Module 4 running Raspberry Pi Debian Bookworm 64-Bit
     
 **OVERVIEW OF EACH SOFTWARE MODULE**
+bluetooth.py - This file enables Bluetooth Low Energy communication with the iOS device (see the ../Triton folder). It registers the GATT server, advertisements, services, and characteristics. This file also collects information from the stereo cameras, reading from tempmax_log.txt in the ../stereopi folder to collect these values once every second.
+
