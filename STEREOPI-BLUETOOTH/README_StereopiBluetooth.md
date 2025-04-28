@@ -8,6 +8,8 @@ Python 3.8.1, using CUDA Toolbox 10.0 and GCC 9.1 and CMake 3.14.2
 - BlueZ
 - DBus
 - Time
+- GObject
+- 
 
 **DEVICE REQUIREMENTS**
 - For Development: A Mac with XCode 16.3 or Higher

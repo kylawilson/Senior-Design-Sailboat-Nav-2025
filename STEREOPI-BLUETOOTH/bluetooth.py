@@ -20,8 +20,6 @@ try:
 except ImportError:
     import gobject as GObject  # python2
 
-from random import randint
-import base64
 
 mainloop = None
 
