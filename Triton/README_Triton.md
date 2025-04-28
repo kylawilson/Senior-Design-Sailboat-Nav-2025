@@ -1,7 +1,7 @@
-![HomePage](HomePage.png "Home Page of App")\
-![LiveView](LiveView.png "App's Live View")\
-![Rendering](Rendering.png "Rendering Default")\
-![RawData](RawData.png "Populated Raw Data Page")\
+![HomePage](HomePage.PNG "Home Page of App")\
+![LiveView](LiveView.PNG "App's Live View")\
+![Rendering](Rendering.PNG "Rendering Default")\
+![RawData](RawData.PNG "Populated Raw Data Page")
 
 
 **DEPENDENCIES**
