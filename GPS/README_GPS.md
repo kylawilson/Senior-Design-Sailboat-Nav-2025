@@ -1,6 +1,7 @@
 **DEPENDENCIES**
-- WiringPi
+- WiringPi (<wiringSerial.h>)
 - <dbus/dbus.h>
+- <sys/time.h>
 
 **DEVICE REQUIREMENTS**
 - Raspberry Pi 3B with Raspberry Pi OS Debian Bookworm 64-Bit
