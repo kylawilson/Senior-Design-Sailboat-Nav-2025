@@ -534,6 +534,30 @@ def main(timeout = 0):
     ad_manager.UnregisterAdvertisement(stereoPi_advertisement)
     print('Advertisement unregistered')
     dbus.service.Object.remove_from_connection(stereoPi_advertisement)
+    
+    #try this on Monday
+#    def signal_handler(sig, frame):
+#        print('Signal received, quitting main loop...')
+#        mainloop.quit()
+#
+#    signal.signal(signal.SIGINT, signal_handler)
+#    signal.signal(signal.SIGTERM, signal_handler)
+#
+#    try:
+#        mainloop.run()
+#    finally:
+#        print('Cleaning up: unregistering advertisement...')
+#        try:
+#            ad_manager.UnregisterAdvertisement(stereoPi_advertisement)
+#            print('Advertisement unregistered')
+#        except Exception as e:
+#            print('Failed to unregister advertisement:', e)
+#
+#        # Also detach the dbus object
+#        try:
+#            dbus.service.Object.remove_from_connection(stereoPi_advertisement)
+#        except Exception as e:
+#            print('Failed to remove advertisement from DBus connection:', e)
 
 if __name__ == '__main__':
 
