@@ -3,6 +3,12 @@
 ![Rendering](Rendering.PNG "Rendering Default")
 ![RawData](RawData.PNG "Populated Raw Data Page")
 
+<img src="HomePage.png" alt="Home Page of App" title="Home Page of App" width="300" style="margin-right: 10px;"/>
+<img src="LiveView.png" alt="App's Live View" title="App's Live View" width="300" style="margin-right: 10px;"/>
+<img src="Rendering.png" alt="Rendering Default" title="Rendering Default" width="300" style="margin-right: 10px;"/>
+<img src="RawData.png" alt="Populated Raw Data Page" title="Populated Raw Data Page" width="300" style="margin-right: 10px;"/>
+
+
 
 **DEPENDENCIES**
 - CoreBluetooth
