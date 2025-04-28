@@ -1,11 +1,5 @@
 # Senior-Design-Sailboat-Nav-2025
 
-"The Engineering Addendum is quick-start documentation written to any future team that may continue
-to work on your project. This is where you outline the gotchas of your project, types of things to look out
-for, the current state of the project, etc. The purpose of README.md is to save any future team weeks
-of detective work just to get to where you are today. Think back to what types of things you had wished
-you knew earlier, doing future teams a favor by passing that knowledge along. "
-
 ```
 Senior-Design-Sailboat-Nav-2025
 │   README.md  
@@ -99,6 +93,9 @@ Raspberry Pi Device: Compute Module 4, 1GB, Wireless (SC0691)
 OS: Raspberry Pi Debian Bookworm 64-Bit (Released 11/19/2024)\
 Raspberry Pi Device: Raspberry Pi 3B
 
+
+
+**COMMANDS, TIPS & TRICKS THAT CAME IN HANDY**
 To activate virtual environment:\
 source ./bin/activate
 
