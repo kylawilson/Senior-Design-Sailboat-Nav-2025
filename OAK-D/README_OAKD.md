@@ -21,8 +21,8 @@ from the surface of the water. Based of the work done by Tim Huff to dynamically
 track features on the horizon and draw an estimated horizon line.
 
 Dev/build tool information:
-blobconverter             1.4.3\n
-depthai                   2.28.0.0\n
+blobconverter             1.4.3
+depthai                   2.28.0.0
 opencv-python             4.10.0.84
 nbclient                  0.10.2
 nbconvert                 7.16.6
