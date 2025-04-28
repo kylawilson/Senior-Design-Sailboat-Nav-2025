@@ -1,7 +1,9 @@
-<img src="HomePage.PNG" alt="Home Page of App" title="Home Page of App" width="300" style="margin-right: 10px;"/>
-<img src="LiveView.PNG" alt="App's Live View" title="App's Live View" width="300" style="margin-right: 10px;"/>
-<img src="Rendering.PNG" alt="Rendering Default" title="Rendering Default" width="300" style="margin-right: 10px;"/>
-<img src="RawData.PNG" alt="Populated Raw Data Page" title="Populated Raw Data Page" width="300" style="margin-right: 10px;"/>
+<p align="center">
+  <img src="HomePage.PNG" alt="Home Page of App" title="Home Page of App" width="250" style="margin-right: 10px;"/>
+  <img src="LiveView.PNG" alt="App's Live View" title="App's Live View" width="250" style="margin-right: 10px;"/>
+  <img src="Rendering.PNG" alt="Rendering Default" title="Rendering Default" width="250" style="margin-right: 10px;"/>
+  <img src="RawData.PNG" alt="Populated Raw Data Page" title="Populated Raw Data Page" width="250"/>
+</p>
 
 
 
