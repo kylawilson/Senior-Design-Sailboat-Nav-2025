@@ -10,7 +10,6 @@ import time
 import threading
 import struct
 import subprocess
-import PIL
 
 import array
 from gi.repository import GLib
