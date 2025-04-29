@@ -56,7 +56,7 @@ struct DockingProcedureView: View {
     }
 }
 
-
+/*
 struct RuleCard: View {
     var title: String
     var description: String
@@ -75,6 +75,32 @@ struct RuleCard: View {
         .background(Color(.systemBlue).opacity(0.1))
         .cornerRadius(12)
         .frame(maxWidth: .infinity, alignment: .center)
+    }
+}
+
+*/
+
+struct RuleCard: View {
+    var title: String
+    var description: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.blue)
+                .frame(maxWidth: .infinity, alignment: .leading) // Force leading alignment
+
+            Text(description)
+                .font(.body)
+                .foregroundColor(.black)
+                .frame(maxWidth: .infinity, alignment: .leading) // Force leading alignment
+                .fixedSize(horizontal: false, vertical: true)   // Allow text to wrap naturally
+        }
+        .padding()
+        .frame(maxWidth: .infinity)  // Stretch card to full width of container
+        .background(Color(.systemBlue).opacity(0.1))
+        .cornerRadius(12)
     }
 }
 
