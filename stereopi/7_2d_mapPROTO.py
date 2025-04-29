@@ -85,11 +85,11 @@ def stereo_depth_map(rectified_pair):
     disparity_grayscale = (disparity-autotune_min)*(65535.0/(autotune_max-autotune_min))
     disparity_fixtype = cv2.convertScaleAbs(disparity_grayscale, alpha=(255.0/65535.0))
     disparity_color = cv2.applyColorMap(disparity_fixtype, cv2.COLORMAP_JET)
-    #if (showDisparity):
-    #    cv2.imshow("Image", disparity_color)
-    #    key = cv2.waitKey(1) & 0xFF   
-    #if key == ord("q"):
-    #    quit();
+    if (showDisparity):
+ #       cv2.imshow("Image", disparity_color)
+        key = cv2.waitKey(1) & 0xFF   
+    if key == ord("q"):
+        quit();
     return disparity_color, disparity_fixtype, disparity
 
 def load_map_settings( fName ):
@@ -200,21 +200,23 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
     max_line_color = cv2.applyColorMap(max_line, cv2.COLORMAP_JET)
 
     # show the frame
-    print ("Autotune: min =", autotune_min, " max =", autotune_max)
+    #print ("Autotune: min =", autotune_min, " max =", autotune_max)
     #if (showUndistortedImages):
-    #    cv2.imshow("left", imgLcut)
-    #    cv2.imshow("right", imgRcut)    
+   #     cv2.imshow("left", imgLcut)
+   #     cv2.imshow("right", imgRcut)    
     #if (showColorizedDistanceLine):
-    #    cv2.imshow("Max distance line", max_line_color)
+   #     cv2.imshow("Max distance line", max_line_color)
     #cv2.imshow("XY projection", xy_projection_color)     
-    t2 = datetime.now()
+    #t2 = datetime.now()
     #print(max_line[40:43])
-    sectorval =16
+    sectorval =13
     truemax = [0]*10
     for i in range(10):
-        truemax[i]= np.amax(max_line[80:240,(i*(sectorval)):((i+1)*sectorval)])
+        truemax[i]= np.amax(max_line[80:240,((i+5)*(sectorval)):((i+6)*sectorval)])
         truemax[i]=300 - (truemax[i]*1.175) #current scale, times 1.47 subtract from 375
     #tempmax =  300 - max(truemax) #erase this and everything below this and return truemax if you want to do 10 values. Otherwise, keep it for 1 value.
+    #for i in range(4):
+       # truemax[i] = 1500
     for i in range(10):
         print(truemax[i])
     with open("tempmax_log.txt", "w") as f:
