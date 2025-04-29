@@ -39,6 +39,9 @@ struct ContentView: View {
                         NavigationLink(destination: RawDataViewPage(btService: btService)) {
                             TextButton(label: "Raw Data")
                         }
+                        NavigationLink(destination: InfoTabViewPage()) {
+                            TextButton(label: "Sailing Information")
+                        }
                     }
                     .frame(maxWidth: geometry.size.width * 0.9)
                 }

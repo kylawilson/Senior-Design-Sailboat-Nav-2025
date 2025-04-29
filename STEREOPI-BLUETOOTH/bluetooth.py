@@ -10,8 +10,6 @@ import time
 import threading
 import struct
 import subprocess
-import PIL
-from PIL import Image
 
 import array
 from gi.repository import GLib
@@ -22,8 +20,6 @@ try:
 except ImportError:
     import gobject as GObject  # python2
 
-from random import randint
-import base64
 
 mainloop = None
 
@@ -407,7 +403,6 @@ class StereoPiDepthService(Service):
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.DEPTH_SERV_UUID, True)
         self.add_characteristic(DepthCharacteristic(bus, 0, self))
-        #self.add_characteristic(LengthCharacteristic(bus, 1, self))
 
 
 class DepthCharacteristic(Characteristic):
@@ -533,21 +528,36 @@ def main(timeout = 0):
                                      reply_handler=register_ad_cb,
                                      error_handler=register_ad_error_cb)
 
-    #test
-    try:
-        mainloop.run()
-    finally:
-        print('Cleaning up: unregistering advertsiement')
-        try:
-            ad_manager.UnregisterAdvertisement(stereoPi_advertisement)
-            print('Advertisement unregistered')
-        except Exception as e:
-            print('Failed to unregister advertsiement', e)
 
-        try:
-            dbus.service.Object.remove_from_connection(stereoPi_advertisement)
-        except Exception as e:
-            print('Failed to unregister advertisement from DBUS connection: ', e)
+    mainloop.run()
+
+    ad_manager.UnregisterAdvertisement(stereoPi_advertisement)
+    print('Advertisement unregistered')
+    dbus.service.Object.remove_from_connection(stereoPi_advertisement)
+    
+    #try this on Monday
+#    def signal_handler(sig, frame):
+#        print('Signal received, quitting main loop...')
+#        mainloop.quit()
+#
+#    signal.signal(signal.SIGINT, signal_handler)
+#    signal.signal(signal.SIGTERM, signal_handler)
+#
+#    try:
+#        mainloop.run()
+#    finally:
+#        print('Cleaning up: unregistering advertisement...')
+#        try:
+#            ad_manager.UnregisterAdvertisement(stereoPi_advertisement)
+#            print('Advertisement unregistered')
+#        except Exception as e:
+#            print('Failed to unregister advertisement:', e)
+#
+#        # Also detach the dbus object
+#        try:
+#            dbus.service.Object.remove_from_connection(stereoPi_advertisement)
+#        except Exception as e:
+#            print('Failed to remove advertisement from DBus connection:', e)
 
 if __name__ == '__main__':
 

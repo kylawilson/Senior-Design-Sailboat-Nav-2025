@@ -85,11 +85,11 @@ def stereo_depth_map(rectified_pair):
     disparity_grayscale = (disparity-autotune_min)*(65535.0/(autotune_max-autotune_min))
     disparity_fixtype = cv2.convertScaleAbs(disparity_grayscale, alpha=(255.0/65535.0))
     disparity_color = cv2.applyColorMap(disparity_fixtype, cv2.COLORMAP_JET)
-    if (showDisparity):
- #       cv2.imshow("Image", disparity_color)
-        key = cv2.waitKey(1) & 0xFF   
-    if key == ord("q"):
-        quit();
+    # if (showDisparity):
+    #     cv2.imshow("Image", disparity_color)
+    #     key = cv2.waitKey(1) & 0xFF   
+    # if key == ord("q"):
+    #     quit();
     return disparity_color, disparity_fixtype, disparity
 
 def load_map_settings( fName ):
@@ -200,14 +200,14 @@ for frame in camera.capture_continuous(capture, format="bgra", use_video_port=Tr
     max_line_color = cv2.applyColorMap(max_line, cv2.COLORMAP_JET)
 
     # show the frame
-    #print ("Autotune: min =", autotune_min, " max =", autotune_max)
-    #if (showUndistortedImages):
-   #     cv2.imshow("left", imgLcut)
-   #     cv2.imshow("right", imgRcut)    
-    #if (showColorizedDistanceLine):
-   #     cv2.imshow("Max distance line", max_line_color)
-    #cv2.imshow("XY projection", xy_projection_color)     
-    #t2 = datetime.now()
+    print ("Autotune: min =", autotune_min, " max =", autotune_max)
+    # if (showUndistortedImages):
+    #     cv2.imshow("left", imgLcut)
+    #     cv2.imshow("right", imgRcut)    
+    # if (showColorizedDistanceLine):
+    #     cv2.imshow("Max distance line", max_line_color)
+    # cv2.imshow("XY projection", xy_projection_color)     
+    t2 = datetime.now()
     #print(max_line[40:43])
     sectorval =13
     truemax = [0]*10
