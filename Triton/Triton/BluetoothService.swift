@@ -381,6 +381,7 @@ extension BluetoothService: CBPeripheralDelegate {
     func stopPhotoService() {
         if (tritonConnectionState == .connected) {
             connectedTriton!.discoverServices(transferServices)
+            updatingTime = false
         }
     }
     
