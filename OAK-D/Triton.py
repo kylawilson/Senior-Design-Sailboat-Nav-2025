@@ -12,7 +12,7 @@ from pathlib import Path
 import argparse
 import time
 
-
+'''
 #testing DBUS
 import dbus
 import dbus.service
@@ -115,7 +115,7 @@ def run_dbus_service():
 dbus_thread = threading.Thread(target=run_dbus_service)
 dbus_thread.daemon = True
 dbus_thread.start()
-
+'''
 #---Boat DBus---
 
 #--- Depth Smoothing Config ---
@@ -196,7 +196,7 @@ stereo.initialConfig.set(config)
 
 # Create sizexsize ROIs
 for i in range(size):
-    for j in range(7):
+    for j in range(5):
         config = dai.SpatialLocationCalculatorConfigData()
         config.depthThresholds.lowerThreshold = 100
         config.depthThresholds.upperThreshold = 12000
@@ -249,13 +249,41 @@ print("Starting MRS_Picutre.py as a D-Bus service...")
 
 last_capture_time = datetime.now()
 capture_interval = timedelta(seconds = 1)
-vfps = 30
+vfps = 15  # Changed from 30 to 15 for more reliable recording on Raspberry Pi
+
+# Video compression functions
+def compress_video(input_path, output_path):
+    """Compress video using ffmpeg"""
+    import subprocess
+    cmd = [
+        'ffmpeg',
+        '-i', input_path,
+        '-vcodec', 'libx265',  # HEVC/H.265 for better compression
+        '-crf', '28',  # Quality level (18-28 is good, lower=better quality)
+        '-preset', 'fast',
+        output_path
+    ]
+    subprocess.run(cmd, check=True)
+
+def decompress_video(input_path, output_path):
+    """Decompress video back to original format"""
+    import subprocess
+    cmd = [
+        'ffmpeg',
+        '-i', input_path,
+        '-vcodec', 'libx264',  # Standard H.264 codec
+        '-preset', 'ultrafast',
+        output_path
+    ]
+    subprocess.run(cmd, check=True)
 
 #start video
+stamptime = datetime.now()
+timestamp = stamptime.strftime("%Y%m%d_%H%M%S")
 video_filename = "test_video.avi"
 depth_video_filename = "depth_test.avi"
-combined_video_filename = "combined_video.avi"
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
+combined_video_filename = f"combined_video{timestamp}.avi"
+fourcc = cv2.VideoWriter_fourcc(*'MJPG')  # Changed from XVID to MJPG
 video_writer = cv2.VideoWriter(video_filename, fourcc, vfps, (640, 480))
 depth_video_writer = cv2.VideoWriter(depth_video_filename, fourcc, vfps, (640, 480))
 combined_writer = cv2.VideoWriter(combined_video_filename, fourcc, vfps, (1280, 480))
@@ -463,7 +491,7 @@ with dai.Device(pipeline) as device:
                 if temparr[i] != float('inf'):
                     depth_array[i] = temparr[i]
             #print("Dist: ", ["{:.2f}".format(d/1000) if d!= float('inf') else "inf" for d in depth_array])
-            depth_service.update_depth_array(depth_array)
+            #depth_service.update_depth_array(depth_array)
 
             # Prepare depth heatmap
             if np.all(depth_downscaled == 0):
@@ -481,13 +509,11 @@ with dai.Device(pipeline) as device:
             cv2.putText(depthFrameColor_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
             cv2.putText(frame_resized, f"NN fps: {fps:.2f}", (10, 25), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (255, 255, 255))
             
-            #cv2.imshow("video", frame_resized)
+            cv2.imshow("video", frame_resized)
             #cv2.imshow("tracker", frame_resized)
-            #cv2.imshow("depth", depthFrameColor_resized)
+            cv2.imshow("depth", depthFrameColor_resized)
 
             # Capture frame if interval elapsed
-
-
 
             current_time = time.time()
             stamptime = datetime.now()
@@ -499,8 +525,8 @@ with dai.Device(pipeline) as device:
                     object_values += values
                     #print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
                     #dbus call for tracked objects/boats here
-            print(object_values)
-            object_service.update_object_list(object_values)
+            #print(object_values)
+            #object_service.update_object_list(object_values)
 
             if current_datetime - last_capture_time >= capture_interval:
                 timestamp = stamptime.strftime("%Y%m%d_%H%M%S")
@@ -510,17 +536,16 @@ with dai.Device(pipeline) as device:
                 #cv2.imwrite(depth_filename, depthFrameColor)
                 last_capture_time = current_datetime
                 # Update the latest image path for D-Bus
-                image_service.update_latest_image(image_filename)
+                #image_service.update_latest_image(image_filename)
                 print(f"Captured and updated image: {image_filename}")
 
-            #video_writer.write(frame_resized)
-            #depth_video_writer.write(depthFrameColor_resized)
+            # Write frames to video
             combined_frame = np.hstack((frame_resized, depthFrameColor_resized))
-            #start video
             combined_writer.write(combined_frame) 
-            #end video
+
             if cv2.waitKey(1) == ord('q'):
                 break
 
+# Release video writers and compress the final video
 cv2.destroyAllWindows()
-video_writer.release()
+combined_writer.release()
