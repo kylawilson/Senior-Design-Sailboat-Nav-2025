@@ -64,7 +64,7 @@ struct PolarGridView: View {
                      //   (processedScaleDistance(distance), angle)
                     //}
                     //if anything goes wrong uncomment these lines above
-                    let tooclose = 3.0
+                    let tooclose = 1.0
                     
                     ZStack {
                         ConcentricGridView(center: center, maxRadius: maxRadius, rings: rings, lines: lines)
@@ -94,7 +94,7 @@ struct PolarGridView: View {
     }
     func scaleDistance(_ value: CGFloat) -> CGFloat {
         let minInput: CGFloat = 0.5
-        let maxInput: CGFloat = 15
+        let maxInput: CGFloat = 7
         let minOutput: CGFloat = 25
         let maxOutput: CGFloat = 200
         return ((value - minInput) / (maxInput - minInput)) * (maxOutput - minOutput) + minOutput
@@ -102,15 +102,15 @@ struct PolarGridView: View {
     
     
     func preprocessDistance(_ value: CGFloat) -> CGFloat {
-        if value >= 15 {
-            return 15
+        if value >= 7 {
+            return 7
         }
         return value
     }
     
     var processedScaleDistance: (CGFloat) -> CGFloat {
         return { value in
-            let floored = (value >= 15) ? 15 : value
+            let floored = (value >= 7) ? 7 : value
             return scaleDistance(floored)
         }
     }
