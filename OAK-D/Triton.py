@@ -12,7 +12,7 @@ from pathlib import Path
 import argparse
 import time
 
-'''
+
 #testing DBUS
 import dbus
 import dbus.service
@@ -115,7 +115,7 @@ def run_dbus_service():
 dbus_thread = threading.Thread(target=run_dbus_service)
 dbus_thread.daemon = True
 dbus_thread.start()
-'''
+
 #---Boat DBus---
 
 #--- Depth Smoothing Config ---
@@ -126,7 +126,7 @@ lr_check = True  # Better handling for occlusions
 labelMap = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
             "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
 
-size = 10
+size = 20
 scale = 1 / size
 
 # Argument parsing
@@ -196,7 +196,7 @@ stereo.initialConfig.set(config)
 
 # Create sizexsize ROIs
 for i in range(size):
-    for j in range(5):
+    for j in range(10):
         config = dai.SpatialLocationCalculatorConfigData()
         config.depthThresholds.lowerThreshold = 100
         config.depthThresholds.upperThreshold = 12000
@@ -249,33 +249,7 @@ print("Starting MRS_Picutre.py as a D-Bus service...")
 
 last_capture_time = datetime.now()
 capture_interval = timedelta(seconds = 1)
-vfps = 15  # Changed from 30 to 15 for more reliable recording on Raspberry Pi
-
-# Video compression functions
-def compress_video(input_path, output_path):
-    """Compress video using ffmpeg"""
-    import subprocess
-    cmd = [
-        'ffmpeg',
-        '-i', input_path,
-        '-vcodec', 'libx265',  # HEVC/H.265 for better compression
-        '-crf', '28',  # Quality level (18-28 is good, lower=better quality)
-        '-preset', 'fast',
-        output_path
-    ]
-    subprocess.run(cmd, check=True)
-
-def decompress_video(input_path, output_path):
-    """Decompress video back to original format"""
-    import subprocess
-    cmd = [
-        'ffmpeg',
-        '-i', input_path,
-        '-vcodec', 'libx264',  # Standard H.264 codec
-        '-preset', 'ultrafast',
-        output_path
-    ]
-    subprocess.run(cmd, check=True)
+vfps = 30
 
 #start video
 stamptime = datetime.now()
@@ -283,7 +257,7 @@ timestamp = stamptime.strftime("%Y%m%d_%H%M%S")
 video_filename = "test_video.avi"
 depth_video_filename = "depth_test.avi"
 combined_video_filename = f"combined_video{timestamp}.avi"
-fourcc = cv2.VideoWriter_fourcc(*'MJPG')  # Changed from XVID to MJPG
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
 video_writer = cv2.VideoWriter(video_filename, fourcc, vfps, (640, 480))
 depth_video_writer = cv2.VideoWriter(depth_video_filename, fourcc, vfps, (640, 480))
 combined_writer = cv2.VideoWriter(combined_video_filename, fourcc, vfps, (1280, 480))
@@ -317,6 +291,10 @@ with dai.Device(pipeline) as device:
     distance_history = {}  # Store distance of previous frames
     window = 3  # How many frames to average
 
+    # Define valid depth range (only addition to config)
+    MIN_DEPTH_MM = 300    # 0.3m (ignore sensor noise)
+    MAX_DEPTH_MM = 15000  # 15m max range
+
     with open("roi_distances.txt", "a") as file:
         while True:
             current_time = time.monotonic()
@@ -328,7 +306,6 @@ with dai.Device(pipeline) as device:
 
             previewFrame = preview.get()
             track = tracklets.get()
-            #vframe = video.get()
             inDepth = depthQueue.get()
 
             frame = previewFrame.getCvFrame()
@@ -366,12 +343,14 @@ with dai.Device(pipeline) as device:
                     label = t.label
                 Bcolor = (255, 0, 0)
 
-                # Extract depth for object
+                # Extract depth for object (with validity check)
                 roi_depth = depthFrame[y1_resized:y2_resized, x1_resized:x2_resized]
-                half_roi = depthFrame[square_y1:square_y2, square_x1:square_x2]
+                valid_pixels = roi_depth[(roi_depth > MIN_DEPTH_MM) & (roi_depth < MAX_DEPTH_MM)]
+                distance = np.median(valid_pixels) if valid_pixels.size > 0 else 0
 
-                distance = np.mean(roi_depth) if roi_depth.size > 0 else 0
-                square_distance = np.mean(half_roi) if half_roi.size > 0 else 0
+                half_roi = depthFrame[square_y1:square_y2, square_x1:square_x2]
+                valid_half_pixels = half_roi[(half_roi > MIN_DEPTH_MM) & (half_roi < MAX_DEPTH_MM)]
+                square_distance = np.median(valid_half_pixels) if valid_half_pixels.size > 0 else 0
 
                 center_x = (x1_resized + x2_resized) // 2
                 focal_length = 2.35
@@ -390,7 +369,7 @@ with dai.Device(pipeline) as device:
                             'distance': square_distance,
                             'angle_deg': angle_deg,
                             'detected_this_frame': True,
-                            'frames_missing': 0  # Reset missing counter
+                            'frames_missing': 0
                         }
                         found = True
                         break
@@ -406,13 +385,13 @@ with dai.Device(pipeline) as device:
 
                 if distance <= 10000 and distance > 5000: 
                     Bcolor = yellow
-                    #print(f"ROI: ({t.id}): {square_distance / 1000:.1f}m - Angle: {angle_deg:.2f}\n\t\tX: {x_comp:.2f} Y: {y_comp:.2f}")
-                elif distance <= 5000:
+                elif distance <= 5000 and distance > 500:
                     Bcolor = red
-                else:
+                elif distance <= 500:
                     Bcolor = default_color
-                    #print(f"ROI: ({t.id}): {square_distance / 1000:.1f}m - Angle: {angle_deg:.2f}\n\t\tX: {x_comp:.2f} Y: {y_comp:.2f}")
-                    
+                    square_distance = 100000000000
+                else:
+                    Bcolor = default_color 
 
                 distance = distance / 1000
                 square_distance = square_distance / 1000
@@ -426,72 +405,53 @@ with dai.Device(pipeline) as device:
                 cv2.putText(frame_resized, f"Angle: {angle_deg:.1f}", (x1_resized+ 10, y1_resized + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
                 cv2.putText(frame_resized, f"Small_Dist: {square_distance:.1f} m", (x1_resized + 10, y1_resized + 95), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
 
-            # Process grid ROIs
-            
-            updated_tracked_objects = []
-            for obj in tracked_objects:
-                if not obj.get('detected_this_frame', False):
-                    obj['frames_missing'] = obj.get('frames_missing', 0) + 1
-                    #print(f"Object {obj['id']} not detected this frame (missing {obj['frames_missing']}/{max_frames_missing})")
-                
-                if obj.get('frames_missing', 0) < max_frames_missing:
-                    updated_tracked_objects.append(obj)
-
-
-            tracked_objects = updated_tracked_objects
-            spatialData = spatialCalcQueue.get().getSpatialLocations()
+            # Process grid ROIs (MODIFIED SECTION)
             temparr = [float('inf')] * size
             column_min_roi = {}
 
+            spatialData = spatialCalcQueue.get().getSpatialLocations()
             for depthData in spatialData:
-                roi = depthData.config.roi.denormalize(width=frame_resized.shape[1], height=frame_resized.shape[0])
-                xmin = int(roi.topLeft().x)
-                ymin = int(roi.topLeft().y)
-                xmax = int(roi.bottomRight().x)
-                ymax = int(roi.bottomRight().y)
-
-                coords = depthData.spatialCoordinates
-
+                roi = depthData.config.roi.denormalize(frame_resized.shape[1], frame_resized.shape[0])
+                xmin, ymin, xmax, ymax = int(roi.topLeft().x), int(roi.topLeft().y), int(roi.bottomRight().x), int(roi.bottomRight().y)
+                
+                # Extract ROI and filter invalid depths
                 roi_depth = depthFrame[ymin:ymax, xmin:xmax]
-                tempdistance = np.mean(roi_depth) if roi_depth.size > 0 else 0
+                valid_pixels = roi_depth[(roi_depth > MIN_DEPTH_MM) & (roi_depth < MAX_DEPTH_MM)]
+                distance = np.median(valid_pixels) if valid_pixels.size > 0 else float('inf')
 
                 ROI_ID = (xmin, ymin)
-
-                if ROI_ID not in safedist:
-                    safedist[ROI_ID] = True
-
                 if ROI_ID not in distance_history:
                     distance_history[ROI_ID] = []
-
-                distance_history[ROI_ID].append(tempdistance)
+                distance_history[ROI_ID].append(distance)
                 if len(distance_history[ROI_ID]) > window:
                     distance_history[ROI_ID].pop(0)
+                smoothed_distance = np.mean(distance_history[ROI_ID]) if distance_history[ROI_ID] else float('inf')
 
-                distance = sum(distance_history[ROI_ID]) / len(distance_history[ROI_ID])
-
-                if distance <= 10000 and distance > 5000:
+                # Original color logic
+                if smoothed_distance <= 10000 and smoothed_distance > 5000: 
                     color = yellow
-                elif distance <= 5000 and distance > 500:
+                elif smoothed_distance <= 5000 and smoothed_distance > 500:
                     color = red
-                elif distance <= 500: #idea being that .5m is our min distance so readings less than 100 giving some padding are actually far away
+                elif smoothed_distance <= 500:
                     color = default_color
-                    distance = 100000000000 #arbitray large number 
+                    smoothed_distance = float('inf')
                 else:
                     color = default_color
-                
+
+                # Column-wise minimum tracking
                 column_index = int(xmin / (frame_resized.shape[1] / size))
-                if distance < temparr[column_index]:
-                    temparr[column_index] = distance
+                if smoothed_distance < temparr[column_index]:
+                    temparr[column_index] = smoothed_distance
                     column_min_roi[column_index] = (xmin, ymin, xmax, ymax)
 
+                # Original visualization
                 cv2.rectangle(frame_resized, (xmin, ymin), (xmax, ymax), color, thickness=2)
-                cv2.putText(frame_resized, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
-            
+                cv2.putText(frame_resized, "{:.1f}m".format(smoothed_distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
+
             for i in range(size):
                 if temparr[i] != float('inf'):
                     depth_array[i] = temparr[i]
-            #print("Dist: ", ["{:.2f}".format(d/1000) if d!= float('inf') else "inf" for d in depth_array])
-            #depth_service.update_depth_array(depth_array)
+            depth_service.update_depth_array(depth_array)
 
             # Prepare depth heatmap
             if np.all(depth_downscaled == 0):
@@ -509,12 +469,10 @@ with dai.Device(pipeline) as device:
             cv2.putText(depthFrameColor_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
             cv2.putText(frame_resized, f"NN fps: {fps:.2f}", (10, 25), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (255, 255, 255))
             
-            cv2.imshow("video", frame_resized)
-            #cv2.imshow("tracker", frame_resized)
-            cv2.imshow("depth", depthFrameColor_resized)
+            #cv2.imshow("video", frame_resized)
+            #cv2.imshow("depth", depthFrameColor_resized)
 
             # Capture frame if interval elapsed
-
             current_time = time.time()
             stamptime = datetime.now()
             object_values = []
@@ -523,29 +481,20 @@ with dai.Device(pipeline) as device:
                 for obj in tracked_objects:
                     values = list(obj.values())[:3]
                     object_values += values
-                    #print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
-                    #dbus call for tracked objects/boats here
-            #print(object_values)
-            #object_service.update_object_list(object_values)
+            object_service.update_object_list(object_values)
 
             if current_datetime - last_capture_time >= capture_interval:
                 timestamp = stamptime.strftime("%Y%m%d_%H%M%S")
                 image_filename = f"outputframe.jpg"
-                #depth_filename = f"Depth_Images/depth_{timestamp}.jpg"
                 cv2.imwrite(image_filename, frame_resized)
-                #cv2.imwrite(depth_filename, depthFrameColor)
                 last_capture_time = current_datetime
-                # Update the latest image path for D-Bus
-                #image_service.update_latest_image(image_filename)
+                image_service.update_latest_image(image_filename)
                 print(f"Captured and updated image: {image_filename}")
 
-            # Write frames to video
             combined_frame = np.hstack((frame_resized, depthFrameColor_resized))
             combined_writer.write(combined_frame) 
-
             if cv2.waitKey(1) == ord('q'):
                 break
 
-# Release video writers and compress the final video
 cv2.destroyAllWindows()
-combined_writer.release()
+video_writer.release()
