@@ -345,7 +345,7 @@ with dai.Device(pipeline) as device:
                 half_roi = depthFrame[square_y1:square_y2, square_x1:square_x2]
                 
                 # Mask out invalid depths (0 or beyond max_range) before averaging
-                min_range = 100  # Your existing min threshold from stereo config
+                min_range = 500  # Your existing min threshold from stereo config
                 max_range = 15000  # Your existing max threshold from stereo config
                 roi_depth_valid = roi_depth[(roi_depth > min_range) & (roi_depth < max_range)]
                 half_roi_valid = half_roi[(half_roi > min_range) & (half_roi < max_range)]
@@ -386,6 +386,7 @@ with dai.Device(pipeline) as device:
 
                 if distance <= 10000 and distance > 5000: 
                     Bcolor = yellow
+                    #print(f"ROI: ({t.id}): {square_distance / 1000:.1f}m - Angle: {angle_deg:.2f}\n\t\tX: {x_comp:.2f} Y: {y_comp:.2f}")
                 elif distance <= 5000 and distance > 500:
                     Bcolor = red
                 elif distance <= 500:
@@ -412,6 +413,7 @@ with dai.Device(pipeline) as device:
             for obj in tracked_objects:
                 if not obj.get('detected_this_frame', False):
                     obj['frames_missing'] = obj.get('frames_missing', 0) + 1
+                    #print(f"Object {obj['id']} not detected this frame (missing {obj['frames_missing']}/{max_frames_missing})")
                 
                 if obj.get('frames_missing', 0) < max_frames_missing:
                     updated_tracked_objects.append(obj)
@@ -455,9 +457,9 @@ with dai.Device(pipeline) as device:
                     color = yellow
                 elif distance <= 5000 and distance > 500:
                     color = red
-                elif distance <= 500:
+                elif distance <= 500: #idea being that .5m is our min distance so readings less than 100 giving some padding are actually far away
                     color = default_color
-                    distance = 100000000000
+                    distance = 100000000000 #arbitray large number 
                 else:
                     color = default_color
                 
@@ -472,6 +474,8 @@ with dai.Device(pipeline) as device:
             for i in range(size):
                 if temparr[i] != float('inf'):
                     depth_array[i] = temparr[i]
+            #print("Dist: ", ["{:.2f}".format(d/1000) if d!= float('inf') else "inf" for d in depth_array])
+            #depth_service.update_depth_array(depth_array)
 
             # Prepare depth heatmap
             if np.all(depth_downscaled == 0):
@@ -490,7 +494,10 @@ with dai.Device(pipeline) as device:
             cv2.putText(frame_resized, f"NN fps: {fps:.2f}", (10, 25), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (255, 255, 255))
             
             cv2.imshow("video", frame_resized)
+            #cv2.imshow("tracker", frame_resized)
             cv2.imshow("depth", depthFrameColor_resized)
+
+            # Capture frame if interval elapsed
 
             current_time = time.time()
             stamptime = datetime.now()
@@ -500,16 +507,28 @@ with dai.Device(pipeline) as device:
                 for obj in tracked_objects:
                     values = list(obj.values())[:3]
                     object_values += values
+                    #print(f"ID: {obj['id']}, Distance: {obj['distance']/1000:.2f}m, Angle: {obj['angle_deg']:.1f}°")
+                    #dbus call for tracked objects/boats here
+            #print(object_values)
+            #object_service.update_object_list(object_values)
 
             if current_datetime - last_capture_time >= capture_interval:
                 timestamp = stamptime.strftime("%Y%m%d_%H%M%S")
                 image_filename = f"outputframe.jpg"
+                #depth_filename = f"Depth_Images/depth_{timestamp}.jpg"
                 cv2.imwrite(image_filename, frame_resized)
+                #cv2.imwrite(depth_filename, depthFrameColor)
                 last_capture_time = current_datetime
+                # Update the latest image path for D-Bus
+                #image_service.update_latest_image(image_filename)
+                print(f"Captured and updated image: {image_filename}")
 
+            #video_writer.write(frame_resized)
+            #depth_video_writer.write(depthFrameColor_resized)
             combined_frame = np.hstack((frame_resized, depthFrameColor_resized))
+            #start video
             combined_writer.write(combined_frame) 
-            
+            #end video
             if cv2.waitKey(1) == ord('q'):
                 break
 
