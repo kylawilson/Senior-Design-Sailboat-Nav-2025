@@ -291,10 +291,6 @@ with dai.Device(pipeline) as device:
     distance_history = {}  # Store distance of previous frames
     window = 3  # How many frames to average
 
-    # Define valid depth range (only addition to config)
-    MIN_DEPTH_MM = 500    # 0.3m (ignore sensor noise)
-    MAX_DEPTH_MM = 15000  # 15m max range
-
     with open("roi_distances.txt", "a") as file:
         while True:
             current_time = time.monotonic()
@@ -306,7 +302,7 @@ with dai.Device(pipeline) as device:
 
             previewFrame = preview.get()
             track = tracklets.get()
-
+            #vframe = video.get()
             inDepth = depthQueue.get()
 
             frame = previewFrame.getCvFrame()
@@ -344,14 +340,18 @@ with dai.Device(pipeline) as device:
                     label = t.label
                 Bcolor = (255, 0, 0)
 
-                # Extract depth for object (with validity check)
+                # Extract depth for object - CHANGED TO USE VALID DEPTHS ONLY
                 roi_depth = depthFrame[y1_resized:y2_resized, x1_resized:x2_resized]
-                valid_pixels = roi_depth[(roi_depth > MIN_DEPTH_MM) & (roi_depth < MAX_DEPTH_MM)]
-                distance = np.median(valid_pixels) if valid_pixels.size > 0 else 0
-
                 half_roi = depthFrame[square_y1:square_y2, square_x1:square_x2]
-                valid_half_pixels = half_roi[(half_roi > MIN_DEPTH_MM) & (half_roi < MAX_DEPTH_MM)]
-                square_distance = np.median(valid_half_pixels) if valid_half_pixels.size > 0 else 0
+                
+                # Mask out invalid depths (0 or beyond max_range) before averaging
+                min_range = 100  # Your existing min threshold from stereo config
+                max_range = 15000  # Your existing max threshold from stereo config
+                roi_depth_valid = roi_depth[(roi_depth > min_range) & (roi_depth < max_range)]
+                half_roi_valid = half_roi[(half_roi > min_range) & (half_roi < max_range)]
+                
+                distance = np.median(roi_depth_valid) if roi_depth_valid.size > 0 else float('inf')
+                square_distance = np.median(half_roi_valid) if half_roi_valid.size > 0 else float('inf')
 
                 center_x = (x1_resized + x2_resized) // 2
                 focal_length = 2.35
@@ -370,7 +370,7 @@ with dai.Device(pipeline) as device:
                             'distance': square_distance,
                             'angle_deg': angle_deg,
                             'detected_this_frame': True,
-                            'frames_missing': 0
+                            'frames_missing': 0  # Reset missing counter
                         }
                         found = True
                         break
@@ -386,7 +386,6 @@ with dai.Device(pipeline) as device:
 
                 if distance <= 10000 and distance > 5000: 
                     Bcolor = yellow
-                    print(f"ROI: ({t.id}): {square_distance / 1000:.1f}m - Angle: {angle_deg:.2f}\n\t\tX: {x_comp:.2f} Y: {y_comp:.2f}")
                 elif distance <= 5000 and distance > 500:
                     Bcolor = red
                 elif distance <= 500:
@@ -407,65 +406,72 @@ with dai.Device(pipeline) as device:
                 cv2.putText(frame_resized, f"Angle: {angle_deg:.1f}", (x1_resized+ 10, y1_resized + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
                 cv2.putText(frame_resized, f"Small_Dist: {square_distance:.1f} m", (x1_resized + 10, y1_resized + 95), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
 
-            # Process grid ROIs (MODIFIED SECTION)
-
+            # Process grid ROIs
+            
             updated_tracked_objects = []
             for obj in tracked_objects:
                 if not obj.get('detected_this_frame', False):
                     obj['frames_missing'] = obj.get('frames_missing', 0) + 1
-                    print(f"Object {obj['id']} not detected this frame (missing {obj['frames_missing']}/{max_frames_missing})")
                 
                 if obj.get('frames_missing', 0) < max_frames_missing:
                     updated_tracked_objects.append(obj)
 
-
             tracked_objects = updated_tracked_objects
+            spatialData = spatialCalcQueue.get().getSpatialLocations()
             temparr = [float('inf')] * size
             column_min_roi = {}
-            spatialData = spatialCalcQueue.get().getSpatialLocations()
 
             for depthData in spatialData:
-                roi = depthData.config.roi.denormalize(frame_resized.shape[1], frame_resized.shape[0])
-                xmin, ymin, xmax, ymax = int(roi.topLeft().x), int(roi.topLeft().y), int(roi.bottomRight().x), int(roi.bottomRight().y)
-                
-                # Extract ROI and filter invalid depths
+                roi = depthData.config.roi.denormalize(width=frame_resized.shape[1], height=frame_resized.shape[0])
+                xmin = int(roi.topLeft().x)
+                ymin = int(roi.topLeft().y)
+                xmax = int(roi.bottomRight().x)
+                ymax = int(roi.bottomRight().y)
+
+                coords = depthData.spatialCoordinates
+
                 roi_depth = depthFrame[ymin:ymax, xmin:xmax]
-                valid_pixels = roi_depth[(roi_depth > MIN_DEPTH_MM) & (roi_depth < MAX_DEPTH_MM)]
-                distance = np.median(valid_pixels) if valid_pixels.size > 0 else float('inf')
+                # CHANGED TO USE VALID DEPTHS ONLY
+                min_range = 100  # Your existing min threshold from stereo config
+                max_range = 15000  # Your existing max threshold from stereo config
+                roi_depth_valid = roi_depth[(roi_depth > min_range) & (roi_depth < max_range)]
+                tempdistance = np.median(roi_depth_valid) if roi_depth_valid.size > 0 else float('inf')
 
                 ROI_ID = (xmin, ymin)
+
+                if ROI_ID not in safedist:
+                    safedist[ROI_ID] = True
+
                 if ROI_ID not in distance_history:
                     distance_history[ROI_ID] = []
-                distance_history[ROI_ID].append(distance)
+
+                distance_history[ROI_ID].append(tempdistance)
                 if len(distance_history[ROI_ID]) > window:
                     distance_history[ROI_ID].pop(0)
-                smoothed_distance = np.mean(distance_history[ROI_ID]) if distance_history[ROI_ID] else float('inf')
 
-                # Original color logic
-                if smoothed_distance <= 10000 and smoothed_distance > 5000: 
+                distance = sum(distance_history[ROI_ID]) / len(distance_history[ROI_ID])
+
+                if distance <= 10000 and distance > 5000:
                     color = yellow
-                elif smoothed_distance <= 5000 and smoothed_distance > 500:
+                elif distance <= 5000 and distance > 500:
                     color = red
-                elif smoothed_distance <= 500:
+                elif distance <= 500:
                     color = default_color
-                    smoothed_distance = float('inf')
+                    distance = 100000000000
                 else:
                     color = default_color
-
-                # Column-wise minimum tracking
+                
                 column_index = int(xmin / (frame_resized.shape[1] / size))
-                if smoothed_distance < temparr[column_index]:
-                    temparr[column_index] = smoothed_distance
+                if distance < temparr[column_index]:
+                    temparr[column_index] = distance
                     column_min_roi[column_index] = (xmin, ymin, xmax, ymax)
 
-                # Original visualization
                 cv2.rectangle(frame_resized, (xmin, ymin), (xmax, ymax), color, thickness=2)
-                cv2.putText(frame_resized, "{:.1f}m".format(smoothed_distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
-
+                cv2.putText(frame_resized, "{:.1f}m".format(distance / 1000), (xmin + 10, ymin + 20), fontType, 0.3, color)
+            
             for i in range(size):
                 if temparr[i] != float('inf'):
                     depth_array[i] = temparr[i]
-            #depth_service.update_depth_array(depth_array)
 
             # Prepare depth heatmap
             if np.all(depth_downscaled == 0):
@@ -486,7 +492,6 @@ with dai.Device(pipeline) as device:
             cv2.imshow("video", frame_resized)
             cv2.imshow("depth", depthFrameColor_resized)
 
-            # Capture frame if interval elapsed
             current_time = time.time()
             stamptime = datetime.now()
             object_values = []
@@ -495,19 +500,16 @@ with dai.Device(pipeline) as device:
                 for obj in tracked_objects:
                     values = list(obj.values())[:3]
                     object_values += values
-            #object_service.update_object_list(object_values)
-            #print(object_values)
 
             if current_datetime - last_capture_time >= capture_interval:
                 timestamp = stamptime.strftime("%Y%m%d_%H%M%S")
                 image_filename = f"outputframe.jpg"
                 cv2.imwrite(image_filename, frame_resized)
                 last_capture_time = current_datetime
-                #image_service.update_latest_image(image_filename)
-                print(f"Captured and updated image: {image_filename}")
 
             combined_frame = np.hstack((frame_resized, depthFrameColor_resized))
             combined_writer.write(combined_frame) 
+            
             if cv2.waitKey(1) == ord('q'):
                 break
 
