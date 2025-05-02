@@ -45,6 +45,9 @@ struct PolarGridView: View {
     let rawLeftSPDistances: [CGFloat]
     let rawRightSPDistances: [CGFloat]
     let otherboats: [(CGFloat, CGFloat)]
+    var filteredOtherBoats: [(CGFloat, CGFloat)] {
+        otherboats.filter { $0.0 > 0.5 }
+    }
     
     
     
@@ -71,13 +74,15 @@ struct PolarGridView: View {
                         
                         OAKDObjectView(distances: scaledOAKD, rawDistances: rawOAKDDistances, center: center, maxRadius: maxRadius, tooclose:tooclose)
                         
-                        StereoPIZoneView(distances: scaledLeft, rawDistances: rawLeftSPDistances, center: center, maxRadius: maxRadius, startAngle: 225, finalAngle:135, tooclose:tooclose)
+                        //StereoPIZoneView(distances: scaledLeft, rawDistances: rawLeftSPDistances, center: center, maxRadius: maxRadius, startAngle: 225, finalAngle:135, tooclose:tooclose)
+                        StereoPIZoneView(distances: scaledLeft, rawDistances: rawLeftSPDistances, center: center, maxRadius: maxRadius, startAngle: 189, finalAngle:135, tooclose:tooclose)
                         
-                        StereoPIZoneView(distances: scaledRight, rawDistances: rawRightSPDistances, center: center, maxRadius: maxRadius, startAngle: 45, finalAngle: 315, tooclose:tooclose)
+                        //StereoPIZoneView(distances: scaledRight, rawDistances: rawRightSPDistances, center: center, maxRadius: maxRadius, startAngle: 45, finalAngle: 315, tooclose:tooclose)
+                        //StereoPIZoneView(distances: scaledRight, rawDistances: rawRightSPDistances, center: center, maxRadius: maxRadius, startAngle: 405, finalAngle: 315, tooclose:tooclose)
                         
                         BoatTriangleView(center: center)
                         
-                        OtherBoatsView(boats: otherboats, center: center, scaleDistance: processedScaleDistance)
+                        OtherBoatsView(boats: filteredOtherBoats, center: center, scaleDistance: processedScaleDistance)
                     }
                     .frame(width: size, height: size)
                     .position(x: geometry.size.width / 2, y: geometry.size.height * 0.35)
@@ -214,7 +219,8 @@ struct StereoPIZoneView: View {
 
     var body: some View {
         let positions = distances.enumerated().map { (index, distance) -> CGPoint in
-            let angle = Angle(degrees: startAngle - (90.0 / Double(distances.count - 1)) * Double(index))
+            let angleSpan = startAngle-finalAngle
+            let angle = Angle(degrees: startAngle - (angleSpan / Double(distances.count - 1)) * Double(index))
             return CGPoint(
                 x: center.x + CGFloat(cos(angle.radians)) * distance,
                 y: center.y - CGFloat(sin(angle.radians)) * distance
@@ -227,7 +233,8 @@ struct StereoPIZoneView: View {
                 let fillColor = isRed ? Color.red.opacity(0.5) : Color.green.opacity(0.5)
                 
                 Path { path in
-                    let angle = Angle(degrees: startAngle - (90.0 / Double(distances.count - 1)) * Double(index))
+                    let angleSpan = startAngle-finalAngle
+                    let angle = Angle(degrees: startAngle - (angleSpan / Double(distances.count - 1)) * Double(index))
                     let outerX = center.x + CGFloat(cos(angle.radians)) * maxRadius
                     let outerY = center.y - CGFloat(sin(angle.radians)) * maxRadius
 
@@ -236,7 +243,7 @@ struct StereoPIZoneView: View {
 
                     if index < positions.count - 1 {
                         path.addLine(to: positions[index + 1])
-                        let nextAngle = Angle(degrees: startAngle - (90.0 / Double(distances.count - 1)) * Double(index + 1))
+                        let nextAngle = Angle(degrees: startAngle - (angleSpan / Double(distances.count - 1)) * Double(index + 1))
                         path.addLine(to: CGPoint(x: center.x + CGFloat(cos(nextAngle.radians)) * maxRadius,
                                                  y: center.y - CGFloat(sin(nextAngle.radians)) * maxRadius))
                     } else {

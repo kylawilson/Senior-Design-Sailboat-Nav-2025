@@ -29,6 +29,8 @@ class BluetoothService: NSObject, ObservableObject {
     @Published var stereoPiArray2: [CGFloat] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     @Published var liveView: Bool = false
     private var tempPhotoData = Data()                                       //raw jpeg data
+    private var checkingObjects = false
+    private var lastUpdatedTime = Date()
     
     //private var centralManager: CBCentralManager = CBCentralManager()
     private var centralManager: CBCentralManager!
@@ -360,9 +362,17 @@ extension BluetoothService: CBPeripheralDelegate {
                 let dividedCGFloatArray = cgFloatArray.map { $0 / 100 }
                 print("StereoPiArray Received in Meters: \(dividedCGFloatArray)")
                 if (peripheral.name == "stereoPi1") {
-                    stereoPiArray1 = dividedCGFloatArray
+                    let lastSix = (dividedCGFloatArray.suffix(6))
+                    print(lastSix)
+                    //stereoPiArray1 = lastSix
+                    print(stereoPiArray1)
+                    //stereoPiArray1 = dividedCGFloatArray
+                    
                 } else if (peripheral.name == "StereoPi2") {
-                    stereoPiArray2 = dividedCGFloatArray
+                    let lastSix = Array(dividedCGFloatArray.suffix(6))
+                    print(lastSix)
+                    stereoPiArray2 = lastSix
+                    print(stereoPiArray2)
                 }
             } else if anemometerTransferCharacteristics.contains(characteristic.uuid){
                 updateAnemometer(characteristic.uuid, value)
@@ -435,7 +445,7 @@ extension BluetoothService: CBPeripheralDelegate {
             timer?.invalidate()
             timer = nil
             print("Time updating stopped.")
-        }
+    }
         
     func updateTime() {
         if let timeFloat = Float(gpsData.time) {
@@ -443,6 +453,21 @@ extension BluetoothService: CBPeripheralDelegate {
             print("Updated time:", gpsData.time)
         } else {
             print("Error: gpsData.time is not a valid number")
+        }
+    }
+    
+    func startCheckingObjectArray() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.checkObjectArray()
+        }
+    }
+    
+    func checkObjectArray() {
+        let currentTime = Date()
+        print(lastUpdatedTime.timeIntervalSince(currentTime))
+        if lastUpdatedTime.timeIntervalSince(currentTime) <= -0.5 {
+            print("Stale object, removing...")
+            coordinateArray.removeAll()
         }
     }
     
@@ -493,6 +518,10 @@ extension BluetoothService: CBPeripheralDelegate {
             print("Oak-D Array Received in Meters: \(dividedCGFloatArray)")
             depthArray = dividedCGFloatArray
         case (RenderingTransferService.tritonRenderingObjectCharacteristicUUID) :
+            if checkingObjects == false {
+                startCheckingObjectArray()
+                checkingObjects = true
+            }
             let newval = value.map { String(format: "%02x", $0) }.joined()
             //now want to convert bytes to array of floats, test in Lab on Mon/Tues
             let floatArray = value.withUnsafeBytes { rawBufferPointer -> [Float] in
@@ -509,6 +538,8 @@ extension BluetoothService: CBPeripheralDelegate {
                 let y = objectArray[i + 2]
                 self.coordinateArray.append((x, y))
             }
+            print("UPDATING LAst updated TIME")
+            lastUpdatedTime = Date()
         default:
             print("Unhandled Rendering Characteristics")
         }
