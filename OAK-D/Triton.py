@@ -12,7 +12,7 @@ from pathlib import Path
 import argparse
 import time
 
-
+'''
 #testing DBUS
 import dbus
 import dbus.service
@@ -115,7 +115,7 @@ def run_dbus_service():
 dbus_thread = threading.Thread(target=run_dbus_service)
 dbus_thread.daemon = True
 dbus_thread.start()
-
+'''
 #---Boat DBus---
 
 #--- Depth Smoothing Config ---
@@ -292,7 +292,7 @@ with dai.Device(pipeline) as device:
     window = 3  # How many frames to average
 
     # Define valid depth range (only addition to config)
-    MIN_DEPTH_MM = 300    # 0.3m (ignore sensor noise)
+    MIN_DEPTH_MM = 500    # 0.3m (ignore sensor noise)
     MAX_DEPTH_MM = 15000  # 15m max range
 
     with open("roi_distances.txt", "a") as file:
@@ -306,6 +306,7 @@ with dai.Device(pipeline) as device:
 
             previewFrame = preview.get()
             track = tracklets.get()
+
             inDepth = depthQueue.get()
 
             frame = previewFrame.getCvFrame()
@@ -385,6 +386,7 @@ with dai.Device(pipeline) as device:
 
                 if distance <= 10000 and distance > 5000: 
                     Bcolor = yellow
+                    print(f"ROI: ({t.id}): {square_distance / 1000:.1f}m - Angle: {angle_deg:.2f}\n\t\tX: {x_comp:.2f} Y: {y_comp:.2f}")
                 elif distance <= 5000 and distance > 500:
                     Bcolor = red
                 elif distance <= 500:
@@ -406,10 +408,22 @@ with dai.Device(pipeline) as device:
                 cv2.putText(frame_resized, f"Small_Dist: {square_distance:.1f} m", (x1_resized + 10, y1_resized + 95), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
 
             # Process grid ROIs (MODIFIED SECTION)
+
+            updated_tracked_objects = []
+            for obj in tracked_objects:
+                if not obj.get('detected_this_frame', False):
+                    obj['frames_missing'] = obj.get('frames_missing', 0) + 1
+                    print(f"Object {obj['id']} not detected this frame (missing {obj['frames_missing']}/{max_frames_missing})")
+                
+                if obj.get('frames_missing', 0) < max_frames_missing:
+                    updated_tracked_objects.append(obj)
+
+
+            tracked_objects = updated_tracked_objects
             temparr = [float('inf')] * size
             column_min_roi = {}
-
             spatialData = spatialCalcQueue.get().getSpatialLocations()
+
             for depthData in spatialData:
                 roi = depthData.config.roi.denormalize(frame_resized.shape[1], frame_resized.shape[0])
                 xmin, ymin, xmax, ymax = int(roi.topLeft().x), int(roi.topLeft().y), int(roi.bottomRight().x), int(roi.bottomRight().y)
@@ -451,7 +465,7 @@ with dai.Device(pipeline) as device:
             for i in range(size):
                 if temparr[i] != float('inf'):
                     depth_array[i] = temparr[i]
-            depth_service.update_depth_array(depth_array)
+            #depth_service.update_depth_array(depth_array)
 
             # Prepare depth heatmap
             if np.all(depth_downscaled == 0):
@@ -469,8 +483,8 @@ with dai.Device(pipeline) as device:
             cv2.putText(depthFrameColor_resized, timestamp_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
             cv2.putText(frame_resized, f"NN fps: {fps:.2f}", (10, 25), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (255, 255, 255))
             
-            #cv2.imshow("video", frame_resized)
-            #cv2.imshow("depth", depthFrameColor_resized)
+            cv2.imshow("video", frame_resized)
+            cv2.imshow("depth", depthFrameColor_resized)
 
             # Capture frame if interval elapsed
             current_time = time.time()
@@ -481,14 +495,15 @@ with dai.Device(pipeline) as device:
                 for obj in tracked_objects:
                     values = list(obj.values())[:3]
                     object_values += values
-            object_service.update_object_list(object_values)
+            #object_service.update_object_list(object_values)
+            #print(object_values)
 
             if current_datetime - last_capture_time >= capture_interval:
                 timestamp = stamptime.strftime("%Y%m%d_%H%M%S")
                 image_filename = f"outputframe.jpg"
                 cv2.imwrite(image_filename, frame_resized)
                 last_capture_time = current_datetime
-                image_service.update_latest_image(image_filename)
+                #image_service.update_latest_image(image_filename)
                 print(f"Captured and updated image: {image_filename}")
 
             combined_frame = np.hstack((frame_resized, depthFrameColor_resized))
